@@ -84,7 +84,7 @@ Reads the three calls the desktop Today card reads (`/api/schedule/daily-list`, 
 - [ ] I6. Nothing is wider than its column: rotating, collapsing, going back from details or dragging the divider never pushes content off the screen.
 
 ### J. Added after the fourth review (28 October)
-- [ ] J1. Shelf rows are laid out explicitly: an open group always gets the width it needs (its books stay side by side), collapsed groups share what is left without stretching beside an open one, and a row of only collapsed groups fills the width evenly.
+- [ ] J1. Shelf rows are laid out explicitly and always fill the width: open groups stretch to share it (their covers stay left-aligned, never squeezed below their natural width), collapsed groups beside an open one stay pill-sized, and a row of only collapsed groups shares the width evenly.
 
 ## On the desktop Home, **not** in 0.1.0 (parity items for later cards)
 

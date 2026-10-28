@@ -102,22 +102,28 @@ extension View {
 struct ShelfRowLayout: Layout {
     var spacing: CGFloat = 16
     var minFlexible: CGFloat = 150
-    var maxFlexibleBesideOpen: CGFloat = 240
+    var maxFlexibleBesideOpen: CGFloat = 190
 
     private func widths(_ subviews: Subviews, available: CGFloat) -> [CGFloat] {
         let natural = subviews.map { $0[RowWidthKey.self] }
         let n = subviews.count
         let room = max(available - spacing * CGFloat(max(n - 1, 0)), 0)
         let fixedTotal = natural.compactMap { $0 }.reduce(0, +)
-        let flexCount = natural.filter { $0 == nil }.count
-        if fixedTotal + CGFloat(flexCount) * minFlexible <= room {
-            var flexible = flexCount > 0 ? (room - fixedTotal) / CGFloat(flexCount) : 0
-            if fixedTotal > 0 { flexible = min(flexible, maxFlexibleBesideOpen) }
-            return natural.map { $0 ?? flexible }
+        let fixedCount = natural.compactMap { $0 }.count
+        let flexCount = n - fixedCount
+        guard fixedTotal + CGFloat(flexCount) * minFlexible <= room else {
+            // Too narrow: open groups give way proportionally (their covers wrap), collapsed ones keep a minimum.
+            let scale = max((room - CGFloat(flexCount) * minFlexible) / max(fixedTotal, 1), 0)
+            return natural.map { $0.map { $0 * scale } ?? minFlexible }
         }
-        // Too narrow: open groups give way proportionally (their covers wrap), collapsed ones keep a minimum.
-        let scale = max((room - CGFloat(flexCount) * minFlexible) / max(fixedTotal, 1), 0)
-        return natural.map { $0.map { $0 * scale } ?? minFlexible }
+        if fixedCount == 0 {
+            // Everything collapsed (or one group alone): share the whole row evenly.
+            return natural.map { _ in room / CGFloat(max(flexCount, 1)) }
+        }
+        // Open groups stretch to fill the row, so every row lines up with the others; collapsed ones stay pill-sized.
+        let pill = flexCount > 0 ? min(maxFlexibleBesideOpen, (room - fixedTotal) / CGFloat(flexCount)) : 0
+        let spare = max(room - fixedTotal - pill * CGFloat(flexCount), 0)
+        return natural.map { $0.map { $0 + spare / CGFloat(fixedCount) } ?? pill }
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
