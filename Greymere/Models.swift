@@ -56,6 +56,8 @@ struct ShelfItem: Decodable, Identifiable, Sendable {
     var isSeed: Bool { kind == "idea" || state == "idea" }
     /// Book Details is for a released book or one with a plan, never a seed.
     var hasDetails: Bool { kind == "book" && detail != nil && (state == "published" || hasPlan == true) }
+    /// Something opens when it is tapped: Book Details for a book, the seed screen for a seed.
+    var opensPanel: Bool { hasDetails || isSeed }
 }
 
 struct NextMilestone: Decodable, Sendable { let name: String; let date: String; let daysAway: Int }
