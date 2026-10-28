@@ -30,6 +30,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.greymere.ios
         INFOPLIST_KEY_CFBundleDisplayName: Greymere
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: Greymere/Info-Prod.plist
       properties:
@@ -45,6 +46,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.greymere.ios.preprod
         INFOPLIST_KEY_CFBundleDisplayName: Greymere Pre-prod
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIconPreProd
     info:
       path: Greymere/Info-PreProd.plist
       properties:

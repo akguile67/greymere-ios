@@ -24,23 +24,54 @@ struct EnvironmentBar: View {
     }
 }
 
+/// Covers are fetched once and kept: in memory for this run, and on disk between runs. A cover's address carries its
+/// own version (?v=), so a replaced cover has a new address and is fetched again; nothing stale is ever shown.
+@MainActor
+final class ImageStore {
+    static let shared = ImageStore()
+    private let memory = NSCache<NSURL, UIImage>()
+    private let session: URLSession
+
+    private init() {
+        let config = URLSessionConfiguration.default
+        config.urlCache = URLCache(memoryCapacity: 0, diskCapacity: 200 * 1024 * 1024)
+        config.requestCachePolicy = .returnCacheDataElseLoad
+        session = URLSession(configuration: config)
+        memory.countLimit = 200
+    }
+
+    func cached(_ url: URL) -> UIImage? { memory.object(forKey: url as NSURL) }
+
+    func image(_ url: URL) async -> UIImage? {
+        if let hit = cached(url) { return hit }
+        guard let (data, _) = try? await session.data(from: url), let image = UIImage(data: data) else { return nil }
+        memory.setObject(image, forKey: url as NSURL)
+        return image
+    }
+}
+
 struct CoverView: View {
     let url: URL?
     let seed: Bool
+    @State private var image: UIImage?
+
     var body: some View {
-        AsyncImage(url: url) { phase in
-            switch phase {
-            case .success(let image): image.resizable().scaledToFill()
-            default:
-                ZStack {
-                    Rectangle().fill(.quaternary)
-                    Image(systemName: seed ? "sparkles" : "book.closed").font(.title2).foregroundStyle(.secondary)
-                }
+        ZStack {
+            Rectangle().fill(.quaternary)
+            if let image {
+                Image(uiImage: image).resizable().scaledToFill()
+            } else {
+                Image(systemName: seed ? "sparkles" : "book.closed").font(.title2).foregroundStyle(.secondary)
             }
         }
         .aspectRatio(2.0 / 3.0, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .shadow(color: .black.opacity(0.18), radius: 5, y: 2)
+        .task(id: url) {
+            guard let url else { image = nil; return }
+            if let hit = ImageStore.shared.cached(url) { image = hit; return }
+            image = await ImageStore.shared.image(url)
+        }
     }
 }
 
