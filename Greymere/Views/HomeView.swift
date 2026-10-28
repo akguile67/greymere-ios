@@ -28,23 +28,21 @@ struct HomeScreen: View {
         let detailWidth = min(max(total * detailFraction, 340), total - 380)
         let chosen = home.item(selected)
         return Group {
-            if expanded, let item = chosen, let detail = item.detail {
+            if expanded, let item = chosen, item.opensPanel {
                 // The details take the whole screen; the arrows bring Home back.
-                BookDetailView(item: item, figures: detail, client: client, showsBar: true,
-                               isExpanded: true, onToggleExpand: { expanded = false },
-                               onClose: { selected = nil; expanded = false })
+                panel(item, showsBar: true, isExpanded: true, onToggleExpand: { expanded = false },
+                      onClose: { selected = nil; expanded = false })
                     .transition(.opacity)
             } else {
                 HStack(spacing: 0) {
                     // Home is given exactly what the details leave; left to itself it will not shrink below its widest row.
                     HomeContent(home: home, client: client, selected: $selected, showsBar: true)
-                        .frame(width: chosen?.detail == nil ? total : total - detailWidth - 18)
+                        .frame(width: chosen?.opensPanel == true ? total - detailWidth - 18 : total)
                         .clipped()
-                    if let item = chosen, let detail = item.detail {
+                    if let item = chosen, item.opensPanel {
                         handle(total: total, current: detailWidth)
-                        BookDetailView(item: item, figures: detail, client: client, showsBar: false,
-                                       isExpanded: false, onToggleExpand: { expanded = true },
-                                       onClose: { selected = nil })
+                        panel(item, showsBar: false, isExpanded: false, onToggleExpand: { expanded = true },
+                              onClose: { selected = nil })
                             .frame(width: detailWidth)
                             .layoutPriority(1)
                             .transition(.move(edge: .trailing))
@@ -54,6 +52,19 @@ struct HomeScreen: View {
         }
         .animation(.snappy, value: selected)
         .animation(.snappy, value: expanded)
+    }
+
+    /// Book Details for a book, the seed screen for a seed.
+    @ViewBuilder
+    private func panel(_ item: ShelfItem, showsBar: Bool, isExpanded: Bool,
+                       onToggleExpand: (() -> Void)?, onClose: (() -> Void)?) -> some View {
+        if item.isSeed {
+            SeedDetailView(item: item, client: client, showsBar: showsBar, isExpanded: isExpanded,
+                           onToggleExpand: onToggleExpand, onClose: onClose)
+        } else if let detail = item.detail {
+            BookDetailView(item: item, figures: detail, client: client, showsBar: showsBar,
+                           isExpanded: isExpanded, onToggleExpand: onToggleExpand, onClose: onClose)
+        }
     }
 
     /// Drag to give Home or the details more room; the width is remembered.
@@ -79,9 +90,8 @@ struct HomeScreen: View {
         NavigationStack {
             HomeContent(home: home, client: client, selected: $selected, showsBar: true)
                 .navigationDestination(item: $selected) { id in
-                    if let item = home.item(id), let detail = item.detail {
-                        BookDetailView(item: item, figures: detail, client: client, showsBar: true,
-                                       isExpanded: false, onToggleExpand: nil, onClose: nil)
+                    if let item = home.item(id), item.opensPanel {
+                        panel(item, showsBar: true, isExpanded: false, onToggleExpand: nil, onClose: nil)
                     }
                 }
                 .toolbar(.hidden, for: .navigationBar)
@@ -288,7 +298,7 @@ private struct HomeContent: View {
         }
         .frame(width: cardWidth, alignment: .leading)
         return Group {
-            if item.hasDetails {
+            if item.opensPanel {
                 Button { selected = item.id } label: { card }.buttonStyle(.plain)
             } else {
                 card

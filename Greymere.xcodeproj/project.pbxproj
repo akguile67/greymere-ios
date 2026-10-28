@@ -7,13 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
 		0FDF9BB418484A16173C0C96 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
 		14BD7AD964370B5F6FE59792 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		15E5807B72DD17267E6F8373 /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 		160B684EC2EB933F1DE35AC6 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
 		21B795185266C5188F9EC109 /* Info-Prod.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6F44E434245611A6300096AB /* Info-Prod.plist */; };
 		24818EC1637E964B90E6615D /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 81C04A5556A704F3558717E4 /* OFL.txt */; };
+		2717208BBD8DFA33BC4CC0C4 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
 		2749F8E57ED064078EA8D38F /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
+		29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
 		2E2DACA08D458FA873B8B3B1 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 81C04A5556A704F3558717E4 /* OFL.txt */; };
 		31D9376D53BF60F6E7789016 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
 		4B79E3CE6A7FFE57997AB6C4 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
@@ -23,6 +26,7 @@
 		525361C9125FE5D8A153037E /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
 		5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
 		5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
+		6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
 		6B91A7BE07C9EEDD808515A5 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
 		6E8CA23976C112AB624CE05C /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
 		6F56430A0CA1F9556CA23002 /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CCFFA219A47C320A78B75B /* HomeModel.swift */; };
@@ -71,6 +75,8 @@
 		A3CCFFA219A47C320A78B75B /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
 		A3E874CACCA6F59089D34C70 /* Reorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reorder.swift; sourceTree = "<group>"; };
 		A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "EBGaramond-SemiBold.ttf"; sourceTree = "<group>"; };
+		B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedDetailView.swift; sourceTree = "<group>"; };
+		C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedModel.swift; sourceTree = "<group>"; };
 		C749C683F83148085FE97A29 /* TodayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModels.swift; sourceTree = "<group>"; };
 		E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionViews.swift; sourceTree = "<group>"; };
 		E86DC597154FB476C5247EE5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -98,6 +104,7 @@
 				0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */,
 				A3E874CACCA6F59089D34C70 /* Reorder.swift */,
 				FD6AB11F2597837B284FD01B /* RootView.swift */,
+				B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */,
 				2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */,
 			);
 			path = Views;
@@ -123,6 +130,7 @@
 				42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */,
 				6F44E434245611A6300096AB /* Info-Prod.plist */,
 				54AC0B957DEE150ACDE31400 /* Models.swift */,
+				C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */,
 				4BF8E1132B247929CB788E3D /* Theme.swift */,
 				276D4C7BBC5996DA6E25D15C /* TodayModel.swift */,
 				C749C683F83148085FE97A29 /* TodayModels.swift */,
@@ -263,6 +271,8 @@
 				5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */,
 				CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */,
 				E67F46C38727A245E699F064 /* RootView.swift in Sources */,
+				6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */,
+				05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */,
 				5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */,
 				6B91A7BE07C9EEDD808515A5 /* TodayCard.swift in Sources */,
 				7399F36A0C551E0CCD2FF405 /* TodayModel.swift in Sources */,
@@ -286,6 +296,8 @@
 				B17F2D5BA2A122B7D6BB9007 /* Models.swift in Sources */,
 				A4B69C56E6B20519B4848608 /* Reorder.swift in Sources */,
 				CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */,
+				29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */,
+				2717208BBD8DFA33BC4CC0C4 /* SeedModel.swift in Sources */,
 				7028E894AD862CE2A5E0EDEB /* Theme.swift in Sources */,
 				C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */,
 				837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */,
@@ -372,7 +384,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -434,7 +446,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

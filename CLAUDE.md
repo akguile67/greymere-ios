@@ -9,6 +9,8 @@ of the Greymere server, which lives in `~/Code/greymere` (GitHub
   `GET /api/instance`.
 - **First release: iOS 0.1.0**, a read-only Home screen. The scope is ADR 0.50.0:
   `~/Code/greymere/docs/adrs/adr-0.50.0-ios-0-1-0-mobile-foundation-home-landing-screen.md`.
+- **iOS 0.2.0** adds the read-only seed screen (ADR 0.51.0, server release 0.51.0, no server change; minimum server
+  version stays 0.50.0). It reads `/api/vault/ideas/:id` and `/api/vault/ideas/:id/research`; the app still writes nothing.
 - **Builds happen on the MacBook Pro only** (Xcode, Team ID D25P46655T). Two
   bundle IDs, prod and pre-prod, distributed through TestFlight. Connection is
   over Tailscale.
