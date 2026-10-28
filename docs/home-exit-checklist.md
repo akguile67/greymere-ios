@@ -56,16 +56,30 @@ Source: the desktop Home on dev (prod data, 0.50.0) and its Book Details screen.
 - [ ] E3. Light and dark follow the server's theme side.
 - [ ] E4. The app reports itself as iOS 0.1.0.
 
+### G. Today (added to 0.1.0 on 28 October at your request; read-only)
+Reads the three calls the desktop Today card reads (`/api/schedule/daily-list`, `/api/home/tasks`, `/api/home/flags`), so the two cannot disagree.
+- [ ] G1. Title "Today — Wednesday 28 October" with Previous day, Today and Next day (days only; a future day is shown as the desktop shows it, projected).
+- [ ] G2. Flags for the day, if any (text only; "Not today" is a write).
+- [ ] G3. The day's work: "Nothing in the plan is due today — you're ahead on every book." when nothing is due; otherwise each book's due work with its hours, and the "books want Nh of a Nh day" line when the day is oversubscribed; a non-working day or a clear day says so.
+- [ ] G4. "Available to pull forward": book, step, amount, hours, "not needed for N working days · plan has it from <date>" (the Add to today button is a write, not shown).
+- [ ] G5. Task list: "N to do · N done today", each task with its size, hours, who raised it, "deferred to here — reason" or "since <date>"; a ring or tick shows done or not (not tappable).
+- [ ] G6. "N deferred", closed until tapped, then each with its return date and reason.
+- [ ] G7. "On offer from the studio": area, title, source, reason, hours and how they were sized, "N more waiting" (Add to today and Pin first are writes, not shown).
+- [ ] G8. Capacity: "Nh committed of Nh available", the bar, "Nh still free" or the over-capacity warning, and the production/tasks split.
+- [ ] G9. Refreshed by pulling down and each time the app comes back to the front.
+
 ## On the desktop Home, **not** in 0.1.0 (parity items for later cards)
 
 | Desktop element | Why not now | Where it goes |
 |---|---|---|
-| Today card: day/week arrows, due work, "available to pull forward" with Add to today, task list (tick, defer, re-size), "On offer from the studio", capacity bar, flags | Mostly writes; a read-only Today is its own piece of work | Card after Godric chat, or sooner on your word |
+| Today: tick, defer, re-size, Add to today, Back to offers, Pin first, Not today, estimate buttons | Writes | Later card, each with its own risk review |
+| Today: Week view | Not asked for yet | Later |
 | The Daily Chronicle (Leah Tran's news briefing) | You no longer use it and are retiring it | Not built |
 | Daily Brief (Godric's five paragraphs) | You no longer use it and are retiring it | Not built; removed from the server summary |
 | Godric panel on the right | iOS 0.2.0 | Card #305 |
 | "All series" selector in the header | Not in the card's scope | Later |
 | Left navigation rail (every other screen) | Each screen is a later card | Mobile roadmap #306 |
+| Seeds: opening a seed's own screen | A seed's screen is a conversation | Later |
 | Book Details: day planner strip, version history, identifiers (ISBN, ASIN), tracked links, Republish ebook, every edit pencil | Writes, or screens of their own | Later |
 
 ## Decided (28 October)
@@ -73,10 +87,4 @@ Source: the desktop Home on dev (prod data, 0.50.0) and its Book Details screen.
 - Daily Brief and Daily Chronicle: not in the app; you plan to retire them on the desktop.
 - Cards are information only in 0.1.0.
 - Suppression follows the desktop; the app has none of its own.
-
-## Added after the first review on the simulators (28 October)
-
-- [ ] F1. Book details and Synopsis are collapsible cards (closed until tapped).
-- [ ] F2. The shelf's groups and the status cards can be dragged into the author's own order; the order is kept on the device only.
-- [ ] F3. Status cards span the full width and resize with the screen and its orientation.
-- [ ] F4. Short shelf groups share a row when there is room (e.g. In plan beside Released on a landscape iPad).
+- Today is in 0.1.0, read-only (your call after the first simulator review).

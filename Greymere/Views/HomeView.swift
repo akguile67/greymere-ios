@@ -56,6 +56,8 @@ private struct HomeContent: View {
     @State private var width: CGFloat = 0
     @State private var cardOrder = OrderStore(key: "cards")
     @State private var groupOrder = OrderStore(key: "shelfGroups")
+    @State private var targetedGroup: String?
+    @State private var today = TodayModel()
 
     private var cardWidth: CGFloat { sizeClass == .regular ? 124 : 104 }
 
@@ -65,6 +67,7 @@ private struct HomeContent: View {
                 if let summary = home.summary {
                     cards(cardOrder.sorted(summary.cards))
                     shelf
+                    TodayCard(model: today, client: client)
                 } else if home.failed {
                     Text("Home couldn't be loaded. Pull down to try again.").foregroundStyle(connection.theme.muted)
                 } else {
@@ -75,9 +78,9 @@ private struct HomeContent: View {
             .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         }
         .background(connection.theme.background.ignoresSafeArea())
-        .refreshable { await home.load(using: client) }
+        .refreshable { await home.load(using: client); await today.load(client: client) }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await home.load(using: client) } }
+            if phase == .active { Task { await home.load(using: client); await today.load(client: client) } }
         }
     }
 
@@ -124,10 +127,12 @@ private struct HomeContent: View {
 
     private var shelf: some View {
         let all = groups
-        let ids = all.map(\.id)
+        let laidOut = rows(all)
+        // The order on screen (short groups may have moved up beside others), so a drop lands where it looks like it will.
+        let ids = laidOut.flatMap { $0 }.map(\.id)
         return VStack(alignment: .leading, spacing: 18) {
             Text("The shelf").font(.serif(26))
-            ForEach(Array(rows(all).enumerated()), id: \.offset) { _, row in
+            ForEach(Array(laidOut.enumerated()), id: \.offset) { _, row in
                 HStack(alignment: .top, spacing: 28) {
                     ForEach(row) { g in groupView(g, alone: row.count == 1, ids: ids) }
                 }
@@ -172,10 +177,20 @@ private struct HomeContent: View {
         }
         .frame(width: alone ? nil : naturalWidth(g), alignment: .leading)
         .frame(maxWidth: alone ? .infinity : nil, alignment: .leading)
+        .contentShape(Rectangle())
+        .overlay(alignment: .topLeading) {
+            if targetedGroup == g.id {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(connection.theme.accent, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                    .padding(-6).allowsHitTesting(false)
+            }
+        }
         .dropDestination(for: String.self) { dropped, _ in
             guard let id = dropped.first else { return false }
             groupOrder.move(id, onto: g.id, among: ids)
             return true
+        } isTargeted: { inside in
+            if inside { targetedGroup = g.id } else if targetedGroup == g.id { targetedGroup = nil }
         }
     }
 

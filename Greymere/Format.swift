@@ -68,4 +68,36 @@ enum Fmt {
         default: return "DEV"
         }
     }
+
+    /// 6 → "6", 2.5 → "2.5"
+    static func hours(_ h: Double?) -> String {
+        guard let h else { return "—" }
+        return h == h.rounded() ? String(Int(h)) : String(format: "%.1f", h)
+    }
+
+    /// "Draft A1", "Edit C2·P1", "Produce: Final adjustments", as the desktop words a planned step.
+    static func activity(_ i: DayItem) -> String {
+        let names = ["ideation": "Ideate", "drafting": "Draft", "editing": "Edit", "proofreading": "Proofread",
+                     "production": "Produce", "marketing": "Market", "published": "Publish", "review": "Review", "planning": "Plan"]
+        let base = names[i.phase] ?? i.phase
+        var suffix = ""
+        if let act = i.actLabel, !act.isEmpty {
+            if let m = act.range(of: #"^Act\s*(\d+)"#, options: [.regularExpression, .caseInsensitive]) {
+                suffix = " A" + act[m].filter(\.isNumber)
+            } else if act.lowercased().hasPrefix("prologue") { suffix = " Pro" }
+            else if act.lowercased().hasPrefix("epilogue") { suffix = " Epi" }
+            else { suffix = " " + act }
+        } else if let c = i.cycleNumber, let step = i.cycleStep {
+            suffix = " C\(c)·" + (step == "pass1" ? "P1" : step == "pass2" ? "P2" : step)
+        }
+        let label = base + suffix
+        if i.isOverride == true || i.stepName == nil || (i.actLabel ?? "") != "" || (i.cycleNumber != nil && i.cycleStep != nil) { return label }
+        return "\(label): \(i.stepName!)"
+    }
+
+    static func amount(_ i: DayItem) -> String {
+        let n = i.allocated.map { Fmt.hours($0) } ?? "—"
+        if i.unit == "phase-day" { return "1 day" }
+        return "\(n) " + (i.unit == "issues" ? "issues" : "ch")
+    }
 }
