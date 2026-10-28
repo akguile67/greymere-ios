@@ -47,11 +47,17 @@ struct CoverView: View {
 struct SectionLabel: View {
     let title: String
     let count: Int?
+    var grip = false
     @Environment(ConnectionModel.self) private var connection
     var body: some View {
         HStack(spacing: 6) {
             Text(title.uppercased()).font(.caption.weight(.semibold)).tracking(0.8)
             if let count { Text("\(count)").font(.caption).foregroundStyle(connection.theme.faint) }
+            if grip {
+                Image(systemName: "line.3.horizontal").font(.caption.weight(.semibold))
+                    .foregroundStyle(connection.theme.faint).padding(.leading, 4)
+                    .accessibilityHidden(true)
+            }
         }
         .foregroundStyle(connection.theme.muted)
     }

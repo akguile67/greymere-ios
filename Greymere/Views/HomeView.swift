@@ -158,7 +158,8 @@ private struct HomeContent: View {
 
     private func groupView(_ g: ShelfGroup, alone: Bool, ids: [String]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionLabel(title: g.title, count: g.items.count)
+            SectionLabel(title: g.title, count: g.items.count, grip: true)
+                .padding(.vertical, 6).padding(.trailing, 24)
                 .contentShape(Rectangle())
                 .draggable(g.id)
             ScrollView(.horizontal, showsIndicators: false) {
