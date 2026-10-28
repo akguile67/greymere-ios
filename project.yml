@@ -33,6 +33,7 @@ targets:
     info:
       path: Greymere/Info-Prod.plist
       properties:
+        UIAppFonts: [EBGaramond-Regular.ttf, EBGaramond-SemiBold.ttf]
         GreymereDefaultServerURL: http://100.75.100.51:3000
         NSAppTransportSecurity:
           NSExceptionDomains:
@@ -47,6 +48,7 @@ targets:
     info:
       path: Greymere/Info-PreProd.plist
       properties:
+        UIAppFonts: [EBGaramond-Regular.ttf, EBGaramond-SemiBold.ttf]
         GreymereDefaultServerURL: http://100.75.100.51:3100
         NSAppTransportSecurity:
           NSExceptionDomains:
