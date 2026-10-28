@@ -83,6 +83,9 @@ Reads the three calls the desktop Today card reads (`/api/schedule/daily-list`, 
 - [ ] I5. Beside Home, the details have an expand button (arrows) that gives them the whole screen, and the same button brings Home back.
 - [ ] I6. Nothing is wider than its column: rotating, collapsing, going back from details or dragging the divider never pushes content off the screen.
 
+### J. Added after the fourth review (28 October)
+- [ ] J1. Shelf rows are laid out explicitly: an open group always gets the width it needs (its books stay side by side), collapsed groups share what is left without stretching beside an open one, and a row of only collapsed groups fills the width evenly.
+
 ## On the desktop Home, **not** in 0.1.0 (parity items for later cards)
 
 | Desktop element | Why not now | Where it goes |

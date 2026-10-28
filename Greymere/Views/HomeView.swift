@@ -186,8 +186,11 @@ private struct HomeContent: View {
         return VStack(alignment: .leading, spacing: 18) {
             Text("The shelf").font(.serif(26))
             ForEach(Array(laidOut.enumerated()), id: \.offset) { _, row in
-                HStack(alignment: .top, spacing: 16) {
-                    ForEach(row) { g in groupView(g, alone: row.count == 1, ids: ids) }
+                ShelfRowLayout {
+                    ForEach(row) { g in
+                        groupView(g, alone: row.count == 1, ids: ids)
+                            .rowWidth((row.count == 1 || isCollapsed(g.id)) ? nil : naturalWidth(g))
+                    }
                 }
             }
             if all.isEmpty { Text("Nothing on the shelf yet.").foregroundStyle(connection.theme.muted) }
@@ -251,9 +254,7 @@ private struct HomeContent: View {
         }
         .padding(cardPadding)
         // A collapsed group, or one alone on its row, stretches to share the width; an open one in company keeps its size.
-        // Never wider than the room it is given: an open group in company may be up to its natural width, and
-        // its covers wrap if it is squeezed.
-        .frame(minWidth: 0, maxWidth: (alone || collapsed) ? .infinity : naturalWidth(g), alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .overlay {
             if targetedGroup == g.id {

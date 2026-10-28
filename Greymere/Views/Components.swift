@@ -87,3 +87,53 @@ struct EnvironmentBarInset: ViewModifier {
 extension View {
     func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
 }
+
+// MARK: shelf rows
+
+private struct RowWidthKey: LayoutValueKey { static let defaultValue: CGFloat? = nil }
+
+extension View {
+    /// The width a shelf group needs when it is open; nil means it takes what the row can give.
+    func rowWidth(_ width: CGFloat?) -> some View { layoutValue(key: RowWidthKey.self, value: width) }
+}
+
+/// One row of shelf groups. Open groups get the width they need; collapsed ones share what is left, and only
+/// stretch across the whole row when every group in it is collapsed. Never wider than the room it is given.
+struct ShelfRowLayout: Layout {
+    var spacing: CGFloat = 16
+    var minFlexible: CGFloat = 150
+    var maxFlexibleBesideOpen: CGFloat = 240
+
+    private func widths(_ subviews: Subviews, available: CGFloat) -> [CGFloat] {
+        let natural = subviews.map { $0[RowWidthKey.self] }
+        let n = subviews.count
+        let room = max(available - spacing * CGFloat(max(n - 1, 0)), 0)
+        let fixedTotal = natural.compactMap { $0 }.reduce(0, +)
+        let flexCount = natural.filter { $0 == nil }.count
+        if fixedTotal + CGFloat(flexCount) * minFlexible <= room {
+            var flexible = flexCount > 0 ? (room - fixedTotal) / CGFloat(flexCount) : 0
+            if fixedTotal > 0 { flexible = min(flexible, maxFlexibleBesideOpen) }
+            return natural.map { $0 ?? flexible }
+        }
+        // Too narrow: open groups give way proportionally (their covers wrap), collapsed ones keep a minimum.
+        let scale = max((room - CGFloat(flexCount) * minFlexible) / max(fixedTotal, 1), 0)
+        return natural.map { $0.map { $0 * scale } ?? minFlexible }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let available = proposal.width ?? 600
+        let w = widths(subviews, available: available)
+        let height = zip(subviews, w).map { $0.sizeThatFits(ProposedViewSize(width: $1, height: nil)).height }.max() ?? 0
+        return CGSize(width: proposal.width ?? (w.reduce(0, +) + spacing * CGFloat(max(w.count - 1, 0))), height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let w = widths(subviews, available: bounds.width)
+        var x = bounds.minX
+        for (view, width) in zip(subviews, w) {
+            view.place(at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading,
+                       proposal: ProposedViewSize(width: width, height: nil))
+            x += width + spacing
+        }
+    }
+}
