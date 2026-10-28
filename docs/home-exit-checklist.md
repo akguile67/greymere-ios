@@ -10,16 +10,16 @@ Source: the desktop Home on dev (prod data, 0.50.0) and its Book Details screen.
 ## In 0.1.0 (the four things the card names, plus what they rest on)
 
 ### A. Connection (not on the desktop Home; the app's own)
-- [ ] A. Connect screen takes the server address and remembers it.
+- [ ] A. The app remembers the server and connects by itself, going straight to Home. The address screen appears only on first run or if the server cannot be reached.
 - [ ] A. Reads `GET /api/instance`: server version and environment.
 - [ ] A. Environment banner: **PROD**, **PRE-PROD** or **DEV**, with the server version, always visible.
 - [ ] A. Theme follows the server's theme (`GET /api/theme`).
-- [ ] A. Server older than the app's minimum: a message naming both versions; Home is not loaded.
+- [ ] A. Server older than the app's minimum: a message naming both versions; Home is not loaded. A safety net, rarely seen.
 - [ ] A. Server unreachable (e.g. Tailscale off): its own message, different from the version one, with a Try again button.
 
 ### B. RAG cards (the row of cards across the top)
 - [ ] B1. Cards in this order: Portfolio, Finance, Marketing, Legal.
-- [ ] B2. A card for an area the author has switched off (Legal today) is not shown; the others share the row.
+- [ ] B2. Suppression is the desktop's own: the server sends no card for an area switched off in Configurator → Suppression (Legal today), and the app draws only what it is sent. The app has no switch of its own.
 - [ ] B3. Each card: a coloured band (blue, green, amber or red), the area's name, and one sentence.
 - [ ] B4. A card with no verdict yet reads "Awaiting first poll…", amber.
 - [ ] B5. The sentence is the server's, word for word (today: "1 active book, comfortably ahead.").
@@ -52,6 +52,7 @@ Source: the desktop Home on dev (prod data, 0.50.0) and its Book Details screen.
 ### E. Devices
 - [ ] E1. iPhone 14 Pro (real), iPad mini 7th generation, large iPad Pro (simulators and, when possible, the real iPads).
 - [ ] E2. One set of screens that adapts by size; no "if iPad" anywhere.
+- [ ] E2a. iPad: with nothing tapped, Home fills the screen as on the desktop; tapping a cover slides Book Details in on the right with Home still visible beside it.
 - [ ] E3. Light and dark follow the server's theme side.
 - [ ] E4. The app reports itself as iOS 0.1.0.
 
@@ -60,14 +61,15 @@ Source: the desktop Home on dev (prod data, 0.50.0) and its Book Details screen.
 | Desktop element | Why not now | Where it goes |
 |---|---|---|
 | Today card: day/week arrows, due work, "available to pull forward" with Add to today, task list (tick, defer, re-size), "On offer from the studio", capacity bar, flags | Mostly writes; a read-only Today is its own piece of work | Card after Godric chat, or sooner on your word |
-| The Daily Chronicle (Leah Tran's news briefing) | Not in the card's scope; shown only on days it is filed | Later |
-| Daily Brief (Godric's five paragraphs) | **Your call** (below) | 0.1.0 if you say yes, else later |
+| The Daily Chronicle (Leah Tran's news briefing) | You no longer use it and are retiring it | Not built |
+| Daily Brief (Godric's five paragraphs) | You no longer use it and are retiring it | Not built; removed from the server summary |
 | Godric panel on the right | iOS 0.2.0 | Card #305 |
 | "All series" selector in the header | Not in the card's scope | Later |
 | Left navigation rail (every other screen) | Each screen is a later card | Mobile roadmap #306 |
 | Book Details: day planner strip, version history, identifiers (ISBN, ASIN), tracked links, Republish ebook, every edit pencil | Writes, or screens of their own | Later |
 
-## Two things I need your word on
+## Decided (28 October)
 
-1. **Daily Brief.** The server already sends it and it is the story behind the coloured cards. I propose including it, read-only, under the cards. It is a small addition; say no and it waits.
-2. **Tapping a card** (Portfolio, Finance…): I propose showing it as information only in 0.1.0, as above. The alternative is Portfolio opening the book list.
+- Daily Brief and Daily Chronicle: not in the app; you plan to retire them on the desktop.
+- Cards are information only in 0.1.0.
+- Suppression follows the desktop; the app has none of its own.

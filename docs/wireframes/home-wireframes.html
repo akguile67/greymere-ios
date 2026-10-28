@@ -31,20 +31,19 @@ h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:36px 0 4px}p.n{color:v
 <p class="n">Drawn against the desktop Home as captured on 28 October 2026 (see <code>home-exit-checklist.md</code>). Boxes are placeholders, not final styling. One set of screens: it adapts by screen size (compact on iPhone, regular on iPad), with no separate iPad code.</p>
 
 <h2>1 · Connecting</h2>
-<p class="n">Three states of the first screen. The server address is remembered after the first time; the app goes straight on to Home when the server is reachable and new enough.</p>
+<p class="n">These screens appear only when something is wrong. Normally the app remembers the server, connects by itself and opens straight on Home; you never see them. The address screen shows once, on first run (or if you choose Change address).</p>
 <div class="row">
- <div><div class="dev phone"><div class="msg" style="padding-top:90px"><b>Greymere</b>Connect to your server<div class="field">http://100.75.100.51:3100</div><div class="btn">Connect</div><p class="brief" style="margin-top:20px">Use the Tailscale address of the server.</p></div></div><div class="cap">First run</div></div>
- <div><div class="dev phone"><div class="msg" style="padding-top:110px"><b>Server is too old</b>This app needs server 0.50.0 or newer.<br>This server is 0.49.1.<br><br>Update the server, then try again.<div class="btn">Try again</div></div></div><div class="cap">Version refusal — Home is not loaded</div></div>
- <div><div class="dev phone"><div class="msg" style="padding-top:110px"><b>Can't reach the server</b>Check that Tailscale is on and the address is right.<br><br>http://100.75.100.51:3100<div class="btn">Try again</div><div class="btn">Change address</div></div></div><div class="cap">Unreachable — a different message</div></div>
+ <div><div class="dev phone"><div class="msg" style="padding-top:90px"><b>Greymere</b>Connect to your server<div class="field">http://100.75.100.51:3100</div><div class="btn">Connect</div><p class="brief" style="margin-top:20px">Use the Tailscale address of the server.</p></div></div><div class="cap">First run only</div></div>
+ <div><div class="dev phone"><div class="msg" style="padding-top:110px"><b>Server is too old</b>This app needs server 0.50.0 or newer.<br>This server is 0.49.1.<br><br>Update the server, then try again.<div class="btn">Try again</div></div></div><div class="cap">Safety net, rarely seen: only if the server is older than the app needs</div></div>
+ <div><div class="dev phone"><div class="msg" style="padding-top:110px"><b>Can't reach the server</b>Check that Tailscale is on and the address is right.<br><br>http://100.75.100.51:3100<div class="btn">Try again</div><div class="btn">Change address</div></div></div><div class="cap">Shown only when the server cannot be reached</div></div>
 </div>
 
 <h2>2 · Home on iPhone (compact)</h2>
-<p class="n">Environment bar always on top. Cards in two columns, then the brief (if you say yes), then the shelf: one scrolling row per group. A cover opens Book Details.</p>
+<p class="n">Environment bar always on top. Cards in two columns, then the shelf: one scrolling row per group. A cover opens Book Details. A card for an area switched off on the desktop (Legal today) is simply not sent, so it is not drawn.</p>
 <div class="row">
  <div><div class="dev phone">
   <div class="env"><span>PRE-PROD</span><span>server 0.50.0</span></div>
   <div class="cards"><div class="card blue"><i></i><b>Portfolio</b><span>1 active book, comfortably ahead.</span></div><div class="card green"><i></i><b>Finance</b><span>2 active books tracking to forecast.</span></div><div class="card green"><i></i><b>Marketing</b><span>144 live posts, 6551 impressions.</span></div><div class="card amber"><i></i><b>Legal</b><span>(only if switched on)</span></div></div>
-  <div class="box brief"><b style="color:var(--ink);font-size:11px">Daily Brief</b><br>Five short paragraphs, as on the desktop. Hidden when none is written.</div>
   <div class="lbl">In plan · 2</div><div class="shelf"><div class="cov"><div></div><small><b>The Route</b><br><em>Act 1 drafted<br>Today</em></small></div><div class="cov"><div></div><small><b>The House</b><br><em>Book is live<br>8 days ago</em></small></div><div class="cov"><div></div><small>…</small></div></div>
   <div class="lbl">Seeds · 9</div><div class="shelf"><div class="cov"><div></div><small><b>Turning Tables</b><br><em>Seed<br>8 days ago</em></small></div><div class="cov"><div></div><small><b>The House in…</b><br><em>Seed</em></small></div><div class="cov"><div></div></div></div>
   <div class="lbl">Released · 1</div><div class="shelf"><div class="cov"><div></div><small><b>The List</b></small></div></div>
@@ -61,7 +60,15 @@ h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:36px 0 4px}p.n{color:v
 </div>
 
 <h2>3 · Home on iPad (regular width)</h2>
-<p class="n">Same content, more room: the four cards sit in one row, the shelf shows more covers, and Book Details opens beside the shelf instead of replacing it. iPad mini and the large iPad Pro use this layout; the large one simply shows more covers and gives the details side more space.</p>
+<p class="n">Same content, more room. Until you tap a cover the whole screen is Home: four cards in a row and a wide shelf. iPad mini and the large iPad Pro use this layout; the large one simply shows more covers.</p>
+<div class="row"><div><div class="dev ipad">
+ <div class="env"><span>PRE-PROD</span><span>server 0.50.0</span></div>
+ <div class="cards four"><div class="card blue"><i></i><b>Portfolio</b><span>1 active book, comfortably ahead.</span></div><div class="card green"><i></i><b>Finance</b><span>2 books tracking to forecast.</span></div><div class="card green"><i></i><b>Marketing</b><span>144 live posts.</span></div><div class="card amber"><i></i><b>Legal</b><span>(only if on)</span></div></div>
+ <div class="lbl">In plan · 2</div><div class="shelf"><div class="cov"><div></div><small><b>The Route</b><br><em>Act 1 drafted<br>Today</em></small></div><div class="cov"><div></div><small><b>The House</b><br><em>Book is live<br>8 days ago</em></small></div></div>
+ <div class="lbl">Seeds · 9</div><div class="shelf"><div class="cov"><div></div><small><b>Turning Tables</b></small></div><div class="cov"><div></div></div><div class="cov"><div></div></div><div class="cov"><div></div></div><div class="cov"><div></div></div><div class="cov"><div></div></div><div class="cov"><div></div></div></div>
+ <div class="lbl">Released · 1</div><div class="shelf"><div class="cov"><div></div><small><b>The List</b></small></div></div>
+</div><div class="cap">iPad, nothing tapped: the whole screen is Home, as on the desktop</div></div></div>
+<p class="n" style="margin-top:18px">Tap a cover and Book Details slides in on the right. Home stays visible on the left, so you can tap another cover to switch.</p>
 <div class="row"><div><div class="dev ipad">
  <div class="env"><span>PRE-PROD</span><span>server 0.50.0</span></div>
  <div class="split">
@@ -72,5 +79,5 @@ h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:36px 0 4px}p.n{color:v
   <div class="box" style="margin:0"><div class="hero"><div class="cov"><div></div></div><div><small style="color:var(--mute)">Greymere Crime Novels</small><div style="font-size:19px;font-weight:700">The Route</div><span class="badge">Drafting</span><span class="badge" style="border-color:var(--blue)">BLUE</span></div></div>
    <div class="stat" style="grid-template-columns:repeat(3,1fr)"><div class="box"><b>Manuscript</b><span>15,000</span><small>target 90,000</small></div><div class="box"><b>Editing</b><span>20%</span><small>4 / 20</small></div><div class="box"><b>Publish</b><span>27 Feb</span><small>+40d</small></div><div class="box"><b>Variance to plan</b><span>+6.5d</span><small>ahead</small></div><div class="box" style="grid-column:span 2"><b>Contingency</b><span>+8wd</span><small>Act 1 by 11 Nov</small></div></div>
    <div class="brief" style="margin-top:8px">Book details · Synopsis · Overdue steps</div></div>
- </div></div><div class="cap">iPad — tap a cover and the details open on the right</div></div></div>
+ </div></div><div class="cap">iPad, a cover tapped: details beside Home</div></div></div>
 </body></html>
