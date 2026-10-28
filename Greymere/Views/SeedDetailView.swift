@@ -108,21 +108,12 @@ struct SeedDetailView: View {
     }
 
     private var researchCard: some View {
-        card("Research") {
+        collapsible("Research") {
             ForEach(model.papers) { p in
                 Text(p.title).font(.subheadline).foregroundStyle(connection.theme.text)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-    }
-
-    private func card<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.serif(19, relativeTo: .headline))
-            content()
-        }
-        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular, in: .rect(cornerRadius: 18))
     }
 }
 
