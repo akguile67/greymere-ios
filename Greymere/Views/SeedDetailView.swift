@@ -11,7 +11,7 @@ struct SeedDetailView: View {
     let onClose: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
     @State private var model = SeedModel()
-    @State private var briefOpen = false
+    @State private var open: Set<String> = ["Synopsis"]
 
     var body: some View {
         ScrollView {
@@ -19,8 +19,8 @@ struct SeedDetailView: View {
                 if onClose != nil || onToggleExpand != nil { controls }
                 hero
                 if let idea = model.idea {
-                    if let synopsis = clean(idea.synopsis) { card("Synopsis") { Blocks(text: synopsis) } }
-                    if let brief = clean(idea.developedBrief) { briefCard(brief) }
+                    if let synopsis = clean(idea.synopsis) { collapsible("Synopsis") { Blocks(text: synopsis) } }
+                    if let brief = clean(idea.developedBrief) { collapsible("Card brief") { Blocks(text: brief) } }
                     if !model.papers.isEmpty { researchCard }
                 } else if model.failed {
                     VStack(alignment: .leading, spacing: 10) {
@@ -83,21 +83,25 @@ struct SeedDetailView: View {
         return "Last active \(Fmt.date(ts))" + (when.isEmpty ? "" : " · \(when.lowercased())")
     }
 
-    /// The brief runs to several thousand characters, so it opens folded and fades out, as on the desktop.
-    private func briefCard(_ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Card brief").font(.serif(19, relativeTo: .headline))
-            Blocks(text: text)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxHeight: briefOpen ? nil : 150, alignment: .top)
-                .clipped()
-                .mask(alignment: .top) {
-                    if briefOpen { Rectangle() }
-                    else { LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom) }
+    /// A card that shows only its title until tapped, as in Book Details. A seed's synopsis starts open (it is short);
+    /// the card brief runs to several thousand characters, so it starts closed.
+    private func collapsible<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        let isOpen = open.contains(title)
+        return VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy) { if isOpen { open.remove(title) } else { open.insert(title) } }
+            } label: {
+                HStack {
+                    Text(title).font(.serif(19, relativeTo: .headline))
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+                        .rotationEffect(.degrees(isOpen ? 180 : 0)).foregroundStyle(connection.theme.muted)
                 }
-            Button(briefOpen ? "Show less" : "Show more") { withAnimation(.snappy) { briefOpen.toggle() } }
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(connection.theme.accent)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(isOpen ? "expanded" : "collapsed")
+            if isOpen { content() }
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
         .glassEffect(.regular, in: .rect(cornerRadius: 18))
