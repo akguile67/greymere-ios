@@ -28,6 +28,7 @@
 		8AE3CCB77E3EE14ADD5BABA0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
 		9F23D31F449E2DF8AE10E3F3 /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 		A1885D65FDC6F998E698E0AE /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CCFFA219A47C320A78B75B /* HomeModel.swift */; };
+		A4B69C56E6B20519B4848608 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
 		B17F2D5BA2A122B7D6BB9007 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
 		B36A18F192F79380D158F7F0 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		B5C094E404334BA2E476D07E /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
@@ -36,6 +37,7 @@
 		C5400965AD89424C3CE29EB5 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		C8D4DB342526D8DFCD1A9DB2 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		C98974D694DA4F765111A21F /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
+		CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
 		CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		E67F46C38727A245E699F064 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
@@ -57,6 +59,7 @@
 		901A2EB047E4FF0A1128484A /* Format.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Format.swift; sourceTree = "<group>"; };
 		A27D197DD55701F7DBFEED0B /* Greymere.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Greymere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A3CCFFA219A47C320A78B75B /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
+		A3E874CACCA6F59089D34C70 /* Reorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reorder.swift; sourceTree = "<group>"; };
 		A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "EBGaramond-SemiBold.ttf"; sourceTree = "<group>"; };
 		E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionViews.swift; sourceTree = "<group>"; };
 		EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "EBGaramond-Regular.ttf"; sourceTree = "<group>"; };
@@ -81,6 +84,7 @@
 				2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */,
 				E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */,
 				0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */,
+				A3E874CACCA6F59089D34C70 /* Reorder.swift */,
 				FD6AB11F2597837B284FD01B /* RootView.swift */,
 			);
 			path = Views;
@@ -239,6 +243,7 @@
 				6F56430A0CA1F9556CA23002 /* HomeModel.swift in Sources */,
 				8AE3CCB77E3EE14ADD5BABA0 /* HomeView.swift in Sources */,
 				5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */,
+				CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */,
 				E67F46C38727A245E699F064 /* RootView.swift in Sources */,
 				5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */,
 			);
@@ -258,6 +263,7 @@
 				A1885D65FDC6F998E698E0AE /* HomeModel.swift in Sources */,
 				4B79E3CE6A7FFE57997AB6C4 /* HomeView.swift in Sources */,
 				B17F2D5BA2A122B7D6BB9007 /* Models.swift in Sources */,
+				A4B69C56E6B20519B4848608 /* Reorder.swift in Sources */,
 				CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */,
 				7028E894AD862CE2A5E0EDEB /* Theme.swift in Sources */,
 			);

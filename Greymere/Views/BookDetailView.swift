@@ -7,6 +7,7 @@ struct BookDetailView: View {
     let client: APIClient
     let onClose: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
+    @State private var open: Set<String> = []
 
     private var f: BookFigures { figures }
 
@@ -107,7 +108,7 @@ struct BookDetailView: View {
     // MARK: cards
 
     private var detailsCard: some View {
-        card("Book details") {
+        collapsible("Book details") {
             row("Series", f.seriesName ?? "—")
             row("Template", f.template ?? "not set")
             row("Status", Fmt.phase(f.status))
@@ -130,10 +131,33 @@ struct BookDetailView: View {
     }
 
     private func synopsisCard(_ text: String) -> some View {
-        card("Synopsis") {
+        collapsible("Synopsis") {
             Text(.init(text)).font(.callout).foregroundStyle(connection.theme.text)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// A card that shows only its title until tapped, so a long synopsis doesn't push everything else away.
+    private func collapsible<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        let isOpen = open.contains(title)
+        return VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy) { if isOpen { open.remove(title) } else { open.insert(title) } }
+            } label: {
+                HStack {
+                    Text(title).font(.serif(19, relativeTo: .headline))
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+                        .rotationEffect(.degrees(isOpen ? 180 : 0)).foregroundStyle(connection.theme.muted)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(isOpen ? "expanded" : "collapsed")
+            if isOpen { content() }
+        }
+        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 18))
     }
 
     private func card<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {

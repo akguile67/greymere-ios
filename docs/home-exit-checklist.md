@@ -73,3 +73,10 @@ Source: the desktop Home on dev (prod data, 0.50.0) and its Book Details screen.
 - Daily Brief and Daily Chronicle: not in the app; you plan to retire them on the desktop.
 - Cards are information only in 0.1.0.
 - Suppression follows the desktop; the app has none of its own.
+
+## Added after the first review on the simulators (28 October)
+
+- [ ] F1. Book details and Synopsis are collapsible cards (closed until tapped).
+- [ ] F2. The shelf's groups and the status cards can be dragged into the author's own order; the order is kept on the device only.
+- [ ] F3. Status cards span the full width and resize with the screen and its orientation.
+- [ ] F4. Short shelf groups share a row when there is room (e.g. In plan beside Released on a landscape iPad).
