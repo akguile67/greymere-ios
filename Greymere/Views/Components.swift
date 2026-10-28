@@ -62,3 +62,28 @@ struct SectionLabel: View {
         .foregroundStyle(connection.theme.muted)
     }
 }
+
+/// The environment pill on a glass band across the top, with the page scrolling behind it.
+struct EnvironmentBarInset: ViewModifier {
+    var enabled = true
+    @Environment(ConnectionModel.self) private var connection
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .top, spacing: 0) {
+            if enabled, let instance = connection.instance {
+                EnvironmentBar(instance: instance)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background {
+                        Rectangle().fill(.clear)
+                            .glassEffect(.regular, in: .rect)
+                            .ignoresSafeArea(edges: .top)
+                    }
+            }
+        }
+    }
+}
+
+extension View {
+    func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
+}

@@ -10,12 +10,9 @@ struct RootView: View {
             case .connecting: ConnectingView()
             case .unreachable: CantConnectView()
             case .tooOld(let version): TooOldView(serverVersion: version)
-            case .ready(let instance):
+            case .ready:
                 if let client = connection.client {
-                    VStack(spacing: 0) {
-                        EnvironmentBar(instance: instance).padding(.vertical, 6)
-                        HomeScreen(client: client)
-                    }
+                    HomeScreen(client: client)
                 }
             }
         }

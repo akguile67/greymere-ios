@@ -26,6 +26,8 @@ final class ConnectionModel {
         address = UserDefaults.standard.string(forKey: Self.defaultsKey) ?? bundled
     }
 
+    var instance: Instance? { if case .ready(let i) = state { return i } else { return nil } }
+
     var client: APIClient? {
         guard let url = Self.normalised(address) else { return nil }
         return APIClient(baseURL: url)

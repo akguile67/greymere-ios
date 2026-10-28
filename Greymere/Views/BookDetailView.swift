@@ -5,21 +5,35 @@ struct BookDetailView: View {
     let item: ShelfItem
     let figures: BookFigures
     let client: APIClient
+    var showsBar = false
+    var isExpanded = false
+    var onToggleExpand: (() -> Void)?
     let onClose: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
     @State private var open: Set<String> = []
+    @State private var statWidth: CGFloat = 0
 
     private var f: BookFigures { figures }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                if let onClose {
-                    HStack {
+                if onClose != nil || onToggleExpand != nil {
+                    HStack(spacing: 10) {
                         Spacer()
-                        Button(action: onClose) { Image(systemName: "xmark").font(.body.weight(.semibold)).padding(6) }
+                        if let onToggleExpand {
+                            Button(action: onToggleExpand) {
+                                Image(systemName: isExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                                    .font(.body.weight(.semibold)).padding(6)
+                            }
                             .buttonStyle(.glass).buttonBorderShape(.circle)
-                            .accessibilityLabel("Close")
+                            .accessibilityLabel(isExpanded ? "Show Home beside the details" : "Use the whole screen for the details")
+                        }
+                        if let onClose {
+                            Button(action: onClose) { Image(systemName: "xmark").font(.body.weight(.semibold)).padding(6) }
+                                .buttonStyle(.glass).buttonBorderShape(.circle)
+                                .accessibilityLabel("Close")
+                        }
                     }
                 }
                 hero
@@ -31,6 +45,7 @@ struct BookDetailView: View {
             .padding(16)
         }
         .background(connection.theme.background.ignoresSafeArea())
+        .environmentBar(showsBar)
         .navigationTitle(f.title)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -74,6 +89,9 @@ struct BookDetailView: View {
 
     // MARK: the five figures
 
+    private struct StatItem: Identifiable { let label: String; let value: String; let sub: String; var id: String { label } }
+
+    /// Equal-size tiles in tidy rows: three then two on a wide panel; two, two and one on a narrow one.
     private var statGrid: some View {
         let varianceSub = f.planDriftDays == nil ? "plan not committed"
             : (f.planDriftDays! > 0 ? "ahead of plan" : f.planDriftDays! < 0 ? "behind plan" : "on plan")
@@ -84,23 +102,36 @@ struct BookDetailView: View {
         let contingencySub = f.currentStep.map { s in
             "\(s.name ?? "") by \(Fmt.date(s.date))" + (s.band.map { " · \($0)" } ?? "")
         } ?? "no current step"
-        return LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10)], spacing: 10) {
-            stat("Manuscript", Fmt.number(f.wordCount), "target \(Fmt.number(f.wordTarget))")
-            stat("Editing", editingPct, editingSub)
-            stat("Publish date", Fmt.date(f.publishDate), f.daysSlack.map { Fmt.signed($0, unit: "d") + " to publish" } ?? "")
-            stat("Variance to plan", Fmt.signed(f.planDriftDays, unit: "d"),
-                 varianceSub + (f.health.map { " · health: \($0)" } ?? ""))
-            stat("Contingency in plan", Fmt.signed(f.contingency, unit: "wd"), contingencySub)
+        let manuscript = StatItem(label: "Manuscript", value: Fmt.number(f.wordCount), sub: "target \(Fmt.number(f.wordTarget))")
+        let editing = StatItem(label: "Editing", value: editingPct, sub: editingSub)
+        let publish = StatItem(label: "Publish date", value: Fmt.date(f.publishDate), sub: f.daysSlack.map { Fmt.signed($0, unit: "d") + " to publish" } ?? "")
+        let variance = StatItem(label: "Variance to plan", value: Fmt.signed(f.planDriftDays, unit: "d"),
+                                sub: varianceSub + (f.health.map { " · health: \($0)" } ?? ""))
+        let contingency = StatItem(label: "Contingency in plan", value: Fmt.signed(f.contingency, unit: "wd"), sub: contingencySub)
+        let rows: [[StatItem]] = statWidth >= 520
+            ? [[manuscript, editing, publish], [variance, contingency]]
+            : [[manuscript, editing], [publish, variance], [contingency]]
+        return VStack(spacing: 10) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(alignment: .top, spacing: 10) {
+                    ForEach(row) { item in stat(item) }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
         }
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { statWidth = $0 }
     }
 
-    private func stat(_ label: String, _ value: String, _ sub: String) -> some View {
+    private func stat(_ item: StatItem) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(label.uppercased()).font(.caption2.weight(.semibold)).tracking(0.6).foregroundStyle(connection.theme.muted)
-            Text(value).font(.title3.weight(.semibold)).foregroundStyle(connection.theme.text)
-            if !sub.isEmpty { Text(sub).font(.caption).foregroundStyle(connection.theme.muted) }
+            Text(item.label.uppercased()).font(.caption2.weight(.semibold)).tracking(0.6).foregroundStyle(connection.theme.muted)
+            Text(item.value).font(.title3.weight(.semibold)).foregroundStyle(connection.theme.text)
+                .minimumScaleFactor(0.8)
+            if !item.sub.isEmpty { Text(item.sub).font(.caption).foregroundStyle(connection.theme.muted) }
+            Spacer(minLength: 0)
         }
-        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))
         .accessibilityElement(children: .combine)
     }

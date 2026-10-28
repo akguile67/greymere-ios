@@ -10,6 +10,7 @@ struct HomeScreen: View {
     @State private var selected: String?
     @AppStorage("greymere.detailFraction") private var detailFraction: Double = 0.46
     @State private var dragStart: Double?
+    @State private var expanded = false
 
     /// Width needed to show Home and Book Details side by side.
     private static let splitMinimum: CGFloat = 900
@@ -25,18 +26,34 @@ struct HomeScreen: View {
 
     private func split(total: CGFloat) -> some View {
         let detailWidth = min(max(total * detailFraction, 340), total - 380)
-        return HStack(spacing: 0) {
-            HomeContent(home: home, client: client, selected: $selected)
-                .frame(minWidth: 0)
-            if let item = home.item(selected), let detail = item.detail {
-                handle(total: total, current: detailWidth)
-                BookDetailView(item: item, figures: detail, client: client, onClose: { selected = nil })
-                    .frame(width: detailWidth)
-                    .layoutPriority(1)
-                    .transition(.move(edge: .trailing))
+        let chosen = home.item(selected)
+        return Group {
+            if expanded, let item = chosen, let detail = item.detail {
+                // The details take the whole screen; the arrows bring Home back.
+                BookDetailView(item: item, figures: detail, client: client, showsBar: true,
+                               isExpanded: true, onToggleExpand: { expanded = false },
+                               onClose: { selected = nil; expanded = false })
+                    .transition(.opacity)
+            } else {
+                HStack(spacing: 0) {
+                    // Home is given exactly what the details leave; left to itself it will not shrink below its widest row.
+                    HomeContent(home: home, client: client, selected: $selected, showsBar: true)
+                        .frame(width: chosen?.detail == nil ? total : total - detailWidth - 18)
+                        .clipped()
+                    if let item = chosen, let detail = item.detail {
+                        handle(total: total, current: detailWidth)
+                        BookDetailView(item: item, figures: detail, client: client, showsBar: false,
+                                       isExpanded: false, onToggleExpand: { expanded = true },
+                                       onClose: { selected = nil })
+                            .frame(width: detailWidth)
+                            .layoutPriority(1)
+                            .transition(.move(edge: .trailing))
+                    }
+                }
             }
         }
         .animation(.snappy, value: selected)
+        .animation(.snappy, value: expanded)
     }
 
     /// Drag to give Home or the details more room; the width is remembered.
@@ -60,10 +77,11 @@ struct HomeScreen: View {
 
     private var stack: some View {
         NavigationStack {
-            HomeContent(home: home, client: client, selected: $selected)
+            HomeContent(home: home, client: client, selected: $selected, showsBar: true)
                 .navigationDestination(item: $selected) { id in
                     if let item = home.item(id), let detail = item.detail {
-                        BookDetailView(item: item, figures: detail, client: client, onClose: nil)
+                        BookDetailView(item: item, figures: detail, client: client, showsBar: true,
+                                       isExpanded: false, onToggleExpand: nil, onClose: nil)
                     }
                 }
                 .toolbar(.hidden, for: .navigationBar)
@@ -81,6 +99,7 @@ private struct HomeContent: View {
     let home: HomeModel
     let client: APIClient
     @Binding var selected: String?
+    var showsBar = true
     @Environment(ConnectionModel.self) private var connection
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
@@ -99,7 +118,7 @@ private struct HomeContent: View {
                 if let summary = home.summary {
                     cards(cardOrder.sorted(summary.cards))
                     shelf
-                    TodayCard(model: today, client: client)
+                    TodayCard(model: today, client: client, collapsed: isCollapsed("today"), onToggle: { withAnimation(.snappy) { toggleCollapsed("today") } })
                 } else if home.failed {
                     Text("Home couldn't be loaded. Pull down to try again.").foregroundStyle(connection.theme.muted)
                 } else {
@@ -108,8 +127,9 @@ private struct HomeContent: View {
             }
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 40)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         }
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
+        .environmentBar(showsBar)
         .background(connection.theme.background.ignoresSafeArea())
         .refreshable { await home.load(using: client); await today.load(client: client) }
         .onChange(of: scenePhase) { _, phase in
@@ -178,7 +198,7 @@ private struct HomeContent: View {
 
     /// The width a group needs to show all its covers in one line, inside its card.
     private func naturalWidth(_ g: ShelfGroup) -> CGFloat {
-        if isCollapsed(g.id) { return 190 }
+        if isCollapsed(g.id) { return 170 }
         return CGFloat(g.items.count) * (cardWidth + 14) - 14 + cardPadding * 2
     }
 
@@ -230,8 +250,10 @@ private struct HomeContent: View {
             }
         }
         .padding(cardPadding)
-        .frame(width: alone ? nil : naturalWidth(g), alignment: .topLeading)
-        .frame(maxWidth: alone ? .infinity : nil, alignment: .topLeading)
+        // A collapsed group, or one alone on its row, stretches to share the width; an open one in company keeps its size.
+        // Never wider than the room it is given: an open group in company may be up to its natural width, and
+        // its covers wrap if it is squeezed.
+        .frame(minWidth: 0, maxWidth: (alone || collapsed) ? .infinity : naturalWidth(g), alignment: .topLeading)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .overlay {
             if targetedGroup == g.id {

@@ -75,6 +75,14 @@ Reads the three calls the desktop Today card reads (`/api/schedule/daily-list`, 
 - [ ] H4. When beside Home, the divider can be dragged to give either side more room (remembered).
 - [ ] H5. Nothing on any screen is wider than the screen (Today's header wraps on a phone).
 
+### I. Added after the third review (28 October)
+- [ ] I1. The environment pill sits on a glass band across the top; the page scrolls behind it.
+- [ ] I2. Today is a collapsible panel like the shelf groups (collapsed state remembered).
+- [ ] I3. Collapsed shelf groups share the row evenly and fill the full width.
+- [ ] I4. Book Details figures are equal-size tiles in tidy rows (three over two on a wide panel; two, two and one on a narrow one).
+- [ ] I5. Beside Home, the details have an expand button (arrows) that gives them the whole screen, and the same button brings Home back.
+- [ ] I6. Nothing is wider than its column: rotating, collapsing, going back from details or dragging the divider never pushes content off the screen.
+
 ## On the desktop Home, **not** in 0.1.0 (parity items for later cards)
 
 | Desktop element | Why not now | Where it goes |
