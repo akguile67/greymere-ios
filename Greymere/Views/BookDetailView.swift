@@ -179,29 +179,34 @@ struct BookDetailView: View {
     }
 }
 
-/// Items laid left to right, wrapping onto a new line when the row is full.
+/// Items laid left to right, wrapping onto a new line when the row is full. An item wider than the row
+/// is squeezed to the row's width (its text wraps) rather than stretching the whole layout.
 struct FlowLayout: Layout {
     var spacing: CGFloat = 6
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        arrange(subviews, width: proposal.width ?? .infinity).size
+        arrange(subviews, width: proposal.width).size
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let result = arrange(subviews, width: bounds.width)
         for (i, origin) in result.origins.enumerated() {
-            subviews[i].place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), proposal: .unspecified)
+            subviews[i].place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+                              proposal: ProposedViewSize(width: result.sizes[i].width, height: nil))
         }
     }
 
-    private func arrange(_ subviews: Subviews, width: CGFloat) -> (size: CGSize, origins: [CGPoint]) {
-        var origins: [CGPoint] = [], x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, maxX: CGFloat = 0
+    private func arrange(_ subviews: Subviews, width: CGFloat?) -> (size: CGSize, origins: [CGPoint], sizes: [CGSize]) {
+        let limit = (width?.isFinite ?? false) ? width! : CGFloat.infinity
+        var origins: [CGPoint] = [], sizes: [CGSize] = []
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, maxX: CGFloat = 0
         for v in subviews {
-            let s = v.sizeThatFits(.unspecified)
-            if x > 0 && x + s.width > width { x = 0; y += rowHeight + spacing; rowHeight = 0 }
-            origins.append(CGPoint(x: x, y: y))
+            var s = v.sizeThatFits(ProposedViewSize(width: limit.isFinite ? limit : nil, height: nil))
+            if limit.isFinite && s.width > limit { s = v.sizeThatFits(ProposedViewSize(width: limit, height: nil)); s.width = min(s.width, limit) }
+            if x > 0 && x + s.width > limit { x = 0; y += rowHeight + spacing; rowHeight = 0 }
+            origins.append(CGPoint(x: x, y: y)); sizes.append(s)
             x += s.width + spacing; rowHeight = max(rowHeight, s.height); maxX = max(maxX, x - spacing)
         }
-        return (CGSize(width: maxX, height: y + rowHeight), origins)
+        return (CGSize(width: min(maxX, limit), height: y + rowHeight), origins, sizes)
     }
 }

@@ -1,42 +1,73 @@
 import SwiftUI
 
-/// Home: the status cards and the shelf. On a wide screen it fills the screen until a cover is
-/// tapped, then Book Details slides in beside it; on a narrow one Book Details is pushed.
+/// Home: the status cards, the shelf and Today. Book Details opens beside Home only when the screen is wide
+/// enough for both (iPad on its side, a large iPad); otherwise it is a screen of its own with a back button,
+/// as on the iPhone and an iPad mini held upright.
 struct HomeScreen: View {
     let client: APIClient
-    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(ConnectionModel.self) private var connection
     @State private var home = HomeModel()
     @State private var selected: String?
+    @AppStorage("greymere.detailFraction") private var detailFraction: Double = 0.46
+    @State private var dragStart: Double?
+
+    /// Width needed to show Home and Book Details side by side.
+    private static let splitMinimum: CGFloat = 900
 
     var body: some View {
-        Group {
-            if sizeClass == .regular {
-                GeometryReader { geo in
-                    HStack(spacing: 0) {
-                        HomeContent(home: home, client: client, selected: $selected)
-                        if let item = home.item(selected), let detail = item.detail {
-                            Divider()
-                            BookDetailView(item: item, figures: detail, client: client, onClose: { selected = nil })
-                                .frame(width: max(380, geo.size.width * 0.46))
-                                .transition(.move(edge: .trailing))
-                        }
-                    }
-                    .animation(.snappy, value: selected)
-                }
-            } else {
-                NavigationStack {
-                    HomeContent(home: home, client: client, selected: $selected)
-                        .navigationDestination(item: $selected) { id in
-                            if let item = home.item(id), let detail = item.detail {
-                                BookDetailView(item: item, figures: detail, client: client, onClose: nil)
-                            }
-                        }
-                        .toolbar(.hidden, for: .navigationBar)
-                }
+        GeometryReader { geo in
+            Group {
+                if geo.size.width >= Self.splitMinimum { split(total: geo.size.width) } else { stack }
             }
         }
         .task { await home.load(using: client) }
+    }
+
+    private func split(total: CGFloat) -> some View {
+        let detailWidth = min(max(total * detailFraction, 340), total - 380)
+        return HStack(spacing: 0) {
+            HomeContent(home: home, client: client, selected: $selected)
+                .frame(minWidth: 0)
+            if let item = home.item(selected), let detail = item.detail {
+                handle(total: total, current: detailWidth)
+                BookDetailView(item: item, figures: detail, client: client, onClose: { selected = nil })
+                    .frame(width: detailWidth)
+                    .layoutPriority(1)
+                    .transition(.move(edge: .trailing))
+            }
+        }
+        .animation(.snappy, value: selected)
+    }
+
+    /// Drag to give Home or the details more room; the width is remembered.
+    private func handle(total: CGFloat, current: CGFloat) -> some View {
+        Rectangle().fill(.clear).frame(width: 18)
+            .overlay(Capsule().fill(connection.theme.faint.opacity(0.6)).frame(width: 4, height: 44))
+            .overlay(alignment: .center) { Divider() }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 1)
+                    .onChanged { v in
+                        let start = dragStart ?? current
+                        dragStart = start
+                        let w = min(max(start - v.translation.width, 340), total - 380)
+                        detailFraction = Double(w / total)
+                    }
+                    .onEnded { _ in dragStart = nil }
+            )
+            .accessibilityLabel("Resize")
+    }
+
+    private var stack: some View {
+        NavigationStack {
+            HomeContent(home: home, client: client, selected: $selected)
+                .navigationDestination(item: $selected) { id in
+                    if let item = home.item(id), let detail = item.detail {
+                        BookDetailView(item: item, figures: detail, client: client, onClose: nil)
+                    }
+                }
+                .toolbar(.hidden, for: .navigationBar)
+        }
     }
 }
 
@@ -57,9 +88,10 @@ private struct HomeContent: View {
     @State private var cardOrder = OrderStore(key: "cards")
     @State private var groupOrder = OrderStore(key: "shelfGroups")
     @State private var targetedGroup: String?
+    @AppStorage("greymere.collapsedGroups") private var collapsedRaw = ""
     @State private var today = TodayModel()
 
-    private var cardWidth: CGFloat { sizeClass == .regular ? 124 : 104 }
+    private var cardWidth: CGFloat { sizeClass == .regular ? 124 : 96 }
 
     var body: some View {
         ScrollView {
@@ -75,6 +107,7 @@ private struct HomeContent: View {
                 }
             }
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 40)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         }
         .background(connection.theme.background.ignoresSafeArea())
@@ -133,7 +166,7 @@ private struct HomeContent: View {
         return VStack(alignment: .leading, spacing: 18) {
             Text("The shelf").font(.serif(26))
             ForEach(Array(laidOut.enumerated()), id: \.offset) { _, row in
-                HStack(alignment: .top, spacing: 28) {
+                HStack(alignment: .top, spacing: 16) {
                     ForEach(row) { g in groupView(g, alone: row.count == 1, ids: ids) }
                 }
             }
@@ -141,14 +174,25 @@ private struct HomeContent: View {
         }
     }
 
+    private let cardPadding: CGFloat = 14
+
+    /// The width a group needs to show all its covers in one line, inside its card.
     private func naturalWidth(_ g: ShelfGroup) -> CGFloat {
-        CGFloat(g.items.count) * (cardWidth + 14) - 14
+        if isCollapsed(g.id) { return 190 }
+        return CGFloat(g.items.count) * (cardWidth + 14) - 14 + cardPadding * 2
     }
 
-    /// Small groups share a row when they fit side by side, and a short one moves up into the first
-    /// row with room for it. A long group keeps a row to itself and scrolls.
+    private func isCollapsed(_ id: String) -> Bool { collapsedRaw.split(separator: ",").contains(Substring(id)) }
+    private func toggleCollapsed(_ id: String) {
+        var set = Set(collapsedRaw.split(separator: ",").map(String.init))
+        if set.contains(id) { set.remove(id) } else { set.insert(id) }
+        collapsedRaw = set.sorted().joined(separator: ",")
+    }
+
+    /// Short groups share a row when they fit side by side, and a short one moves up into the first
+    /// row with room for it. A group too long for one line keeps a row to itself and its covers wrap.
     private func rows(_ groups: [ShelfGroup]) -> [[ShelfGroup]] {
-        let usable = max(width - 32, 0), gap: CGFloat = 28
+        let usable = max(width - 32, 0), gap: CGFloat = 16
         var rows: [[ShelfGroup]] = [], used: [CGFloat] = []
         for g in groups {
             let w = naturalWidth(g)
@@ -162,29 +206,41 @@ private struct HomeContent: View {
     }
 
     private func groupView(_ g: ShelfGroup, alone: Bool, ids: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionLabel(title: g.title, count: g.items.count, grip: true)
-                .padding(.vertical, 6).padding(.trailing, 24)
-                .contentShape(Rectangle())
-                .draggable(g.id)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 14) {
+        let collapsed = isCollapsed(g.id)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionLabel(title: g.title, count: g.items.count, grip: true)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                    .draggable(g.id)
+                Spacer(minLength: 8)
+                Button { withAnimation(.snappy) { toggleCollapsed(g.id) } } label: {
+                    Image(systemName: "chevron.down").font(.footnote.weight(.semibold))
+                        .rotationEffect(.degrees(collapsed ? -90 : 0))
+                        .foregroundStyle(connection.theme.muted).padding(6)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(collapsed ? "Expand \(g.title)" : "Collapse \(g.title)")
+            }
+            if !collapsed {
+                // Covers wrap onto new lines instead of scrolling sideways.
+                FlowLayout(spacing: 14) {
                     ForEach(g.items) { item in shelfCard(item) }
                 }
-                .padding(.vertical, 4)
             }
-            .scrollClipDisabled()
         }
-        .frame(width: alone ? nil : naturalWidth(g), alignment: .leading)
-        .frame(maxWidth: alone ? .infinity : nil, alignment: .leading)
-        .contentShape(Rectangle())
-        .overlay(alignment: .topLeading) {
+        .padding(cardPadding)
+        .frame(width: alone ? nil : naturalWidth(g), alignment: .topLeading)
+        .frame(maxWidth: alone ? .infinity : nil, alignment: .topLeading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+        .overlay {
             if targetedGroup == g.id {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(connection.theme.accent, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
-                    .padding(-6).allowsHitTesting(false)
+                    .allowsHitTesting(false)
             }
         }
+        .contentShape(Rectangle())
         .dropDestination(for: String.self) { dropped, _ in
             guard let id = dropped.first else { return false }
             groupOrder.move(id, onto: g.id, among: ids)

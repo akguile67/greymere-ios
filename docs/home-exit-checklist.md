@@ -68,6 +68,13 @@ Reads the three calls the desktop Today card reads (`/api/schedule/daily-list`, 
 - [ ] G8. Capacity: "Nh committed of Nh available", the bar, "Nh still free" or the over-capacity warning, and the production/tasks split.
 - [ ] G9. Refreshed by pulling down and each time the app comes back to the front.
 
+### H. Added after the second review (28 October)
+- [ ] H1. Shelf groups are floating cards, like Today and the status cards, so the whole screen looks consistent.
+- [ ] H2. A shelf group's covers wrap onto new lines instead of scrolling sideways; a group can be collapsed (remembered on the device).
+- [ ] H3. Book Details opens beside Home only when the screen is at least 900 points wide (iPad on its side, iPad Pro); on a narrower screen (iPhone, iPad mini upright) it is a screen of its own with a back button.
+- [ ] H4. When beside Home, the divider can be dragged to give either side more room (remembered).
+- [ ] H5. Nothing on any screen is wider than the screen (Today's header wraps on a phone).
+
 ## On the desktop Home, **not** in 0.1.0 (parity items for later cards)
 
 | Desktop element | Why not now | Where it goes |

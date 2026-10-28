@@ -33,16 +33,20 @@ struct TodayCard: View {
     // MARK: header with day arrows
 
     private var header: some View {
-        HStack(spacing: 8) {
-            Text((model.isToday ? "Today — " : "") + Self.title.string(from: model.date))
-                .font(.serif(22, relativeTo: .title3))
-            Spacer(minLength: 8)
+        let title = Text((model.isToday ? "Today — " : "") + Self.title.string(from: model.date))
+            .font(.serif(22, relativeTo: .title3))
+        let nav = HStack(spacing: 8) {
             Button { Task { await model.shift(by: -1, client: client) } } label: { Image(systemName: "chevron.left") }
                 .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("Previous day")
             Button("Today") { Task { await model.goToday(client: client) } }
                 .buttonStyle(.glass).disabled(model.isToday)
             Button { Task { await model.shift(by: 1, client: client) } } label: { Image(systemName: "chevron.right") }
                 .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("Next day")
+        }
+        // Title and buttons on one line when there is room; the buttons drop under the title when there is not.
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { title.lineLimit(1); Spacer(minLength: 8); nav }
+            VStack(alignment: .leading, spacing: 8) { title.fixedSize(horizontal: false, vertical: true); nav }
         }
     }
 
