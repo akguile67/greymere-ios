@@ -52,6 +52,35 @@ Apple's `SpeechAnalyzer` stack (macOS 26.6 here; en-GB model already installed, 
 - It is the fastest and needs no server, and its transcript reads well (punctuation, numerals); it is just wrong
   on the names.
 
+## Live test (added after the author's correction)
+
+The author does not record then transcribe: he speaks and expects the words to appear as he talks, and a pause
+while the tool catches up breaks creative flow. The file runs above measure accuracy, not that. So the same
+recording was replayed **as if live**: `tools/dictation-spike/live_sim.py` takes audio a second at a time,
+re-transcribes the open window with the same Whisper model and spelling prompt (through `whisper-server`),
+and fixes a segment at each pause.
+
+| Whisper large-v3-turbo, live-style windows, prompt carried | |
+|---|---|
+| Text behind the speech (this Mac) | median **0.65 s**, 95th percentile 0.76 s, worst 2.6 s (at a segment fix) |
+| Mangled, people (of 20) | **3** |
+| Mangled, places and title (of 10) | 5 |
+| Mangled, all (of 30) | **8** |
+
+- **Live-style windows were more accurate than the whole file** (8 against 13 mangled), because each short window
+  is decoded with the prompt fresh, and it did not drop paragraphs or loop.
+- **It is not a real microphone test.** It is a simulation on recorded audio, on the MacBook Pro, with my own pause
+  detection. Latency on the Mini or over Tailscale from a phone, and the feel of the text settling and revising
+  as you speak, are not measured.
+- **Apple's route is live by design** (it reports results progressively as audio arrives), so its 4-second batch
+  time understates nothing; what it lacks is accuracy on the names, not speed.
+- **A long pause is not a problem for this method:** compute stays under a second per tick however long the
+  session, so no wait while it "sorts itself out". What matters is that the text trails speech by about a second,
+  and the open question is whether that feels as good as the dictation the author has now.
+- **Not run:** the dictation built into Claude Desktop, which the author rates best. I cannot see how it works.
+  The fair comparison is for the author to read the same script into it live, paste the result, and have it counted
+  the same way.
+
 ## Other tools, for context only (not measured)
 
 - **Wispr Flow** (the author's current tool): in the author's experience it re-processes the words with AI and
@@ -61,8 +90,8 @@ Apple's `SpeechAnalyzer` stack (macOS 26.6 here; en-GB model already installed, 
 ## Direction
 
 For dictation we can embed: **a Whisper-class model with a spelling prompt built from the Codex**, run where there
-is a Mac (the laptop in seconds; the phone by sending the audio over Tailscale to the server's machine), with the
-prompt carried into every window. On this evidence Apple's on-device route, with the hints it offers, is not good
+is a Mac, fed as a live stream of short windows (text about a second behind speech on the laptop, 8 of 30 names
+mangled in the simulation); the phone would stream the audio over Tailscale to the server's machine. On this evidence Apple's on-device route, with the hints it offers, is not good
 enough for these names.
 
 Open points for ADR 0.53.0:
