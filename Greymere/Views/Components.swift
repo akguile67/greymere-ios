@@ -118,20 +118,29 @@ struct EnvironmentBarInset: ViewModifier {
 extension View {
     func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
 
-    /// The way into Godric: a big glass button floating at the bottom, always in reach.
+    /// The way into Godric: a glass pill floating at the bottom, in the manner of the Music app's mini player.
+    /// Room is left either side for round glass buttons when more panes arrive.
     func godricButton(isOpen: Bool, action: @escaping () -> Void) -> some View {
         safeAreaInset(edge: .bottom, spacing: 0) {
-            Button(action: action) {
-                Label(isOpen ? "Close Godric" : "Talk to Godric", systemImage: "sparkles")
-                    .font(.headline)
-                    .padding(.horizontal, 26).padding(.vertical, 8)
+            GlassEffectContainer(spacing: 12) {
+                HStack(spacing: 12) {
+                    Button(action: action) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "sparkles").font(.body.weight(.semibold)).foregroundStyle(.tint)
+                            Text(isOpen ? "Close Godric" : "Ask Godric").font(.body.weight(.medium))
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 18).frame(height: 48)
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.interactive(), in: .capsule)
+                    .accessibilityLabel("Talk to Godric")
+                }
+                .frame(maxWidth: 520)
             }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.capsule)
-            .controlSize(.large)
-            .padding(.top, 6).padding(.bottom, 4)
+            .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 2)
             .frame(maxWidth: .infinity)
-            .accessibilityLabel("Talk to Godric")
         }
     }
 }
