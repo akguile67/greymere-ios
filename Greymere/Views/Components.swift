@@ -97,6 +97,7 @@ struct SectionLabel: View {
 /// The environment pill on a glass band across the top, with the page scrolling behind it.
 struct EnvironmentBarInset: ViewModifier {
     var enabled = true
+    var onGodric: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
 
     func body(content: Content) -> some View {
@@ -104,6 +105,16 @@ struct EnvironmentBarInset: ViewModifier {
             if enabled, let instance = connection.instance {
                 EnvironmentBar(instance: instance)
                     .frame(maxWidth: .infinity)
+                    .overlay(alignment: .trailing) {
+                        if let onGodric {
+                            Button(action: onGodric) {
+                                Label("Godric", systemImage: "sparkles").font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                            }
+                            .buttonStyle(.glass).padding(.trailing, 16)
+                            .accessibilityLabel("Talk to Godric")
+                        }
+                    }
                     .padding(.vertical, 6)
                     .background {
                         Rectangle().fill(.clear)
@@ -116,7 +127,9 @@ struct EnvironmentBarInset: ViewModifier {
 }
 
 extension View {
-    func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
+    func environmentBar(_ enabled: Bool = true, onGodric: (() -> Void)? = nil) -> some View {
+        modifier(EnvironmentBarInset(enabled: enabled, onGodric: onGodric))
+    }
 }
 
 // MARK: shelf rows
