@@ -39,7 +39,7 @@ struct HomeScreen: View {
             } else {
                 HStack(spacing: 0) {
                     // Home is given exactly what the details leave; left to itself it will not shrink below its widest row.
-                    HomeContent(home: home, client: client, selected: $selected, showsBar: true, onGodric: toggleChat)
+                    HomeContent(home: home, client: client, selected: $selected, showsBar: true, onGodric: toggleChat, chatIsOpen: chatOpen)
                         .frame(width: showsRight ? total - detailWidth - 18 : total)
                         .clipped()
                     if showsRight {
@@ -133,6 +133,7 @@ private struct HomeContent: View {
     @Binding var selected: String?
     var showsBar = true
     var onGodric: (() -> Void)?
+    var chatIsOpen = false
     @Environment(ConnectionModel.self) private var connection
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
@@ -162,7 +163,8 @@ private struct HomeContent: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
-        .environmentBar(showsBar, onGodric: onGodric)
+        .environmentBar(showsBar)
+        .godricButton(isOpen: chatIsOpen) { onGodric?() }
         .background(connection.theme.background.ignoresSafeArea())
         .refreshable { await home.load(using: client); await today.load(client: client) }
         .onChange(of: scenePhase) { _, phase in

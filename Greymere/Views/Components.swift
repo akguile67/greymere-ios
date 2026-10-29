@@ -97,7 +97,6 @@ struct SectionLabel: View {
 /// The environment pill on a glass band across the top, with the page scrolling behind it.
 struct EnvironmentBarInset: ViewModifier {
     var enabled = true
-    var onGodric: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
 
     func body(content: Content) -> some View {
@@ -105,16 +104,6 @@ struct EnvironmentBarInset: ViewModifier {
             if enabled, let instance = connection.instance {
                 EnvironmentBar(instance: instance)
                     .frame(maxWidth: .infinity)
-                    .overlay(alignment: .trailing) {
-                        if let onGodric {
-                            Button(action: onGodric) {
-                                Label("Godric", systemImage: "sparkles").font(.caption.weight(.semibold))
-                                    .padding(.horizontal, 6).padding(.vertical, 2)
-                            }
-                            .buttonStyle(.glass).padding(.trailing, 16)
-                            .accessibilityLabel("Talk to Godric")
-                        }
-                    }
                     .padding(.vertical, 6)
                     .background {
                         Rectangle().fill(.clear)
@@ -127,8 +116,23 @@ struct EnvironmentBarInset: ViewModifier {
 }
 
 extension View {
-    func environmentBar(_ enabled: Bool = true, onGodric: (() -> Void)? = nil) -> some View {
-        modifier(EnvironmentBarInset(enabled: enabled, onGodric: onGodric))
+    func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
+
+    /// The way into Godric: a big glass button floating at the bottom, always in reach.
+    func godricButton(isOpen: Bool, action: @escaping () -> Void) -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            Button(action: action) {
+                Label(isOpen ? "Close Godric" : "Talk to Godric", systemImage: "sparkles")
+                    .font(.headline)
+                    .padding(.horizontal, 26).padding(.vertical, 8)
+            }
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+            .padding(.top, 6).padding(.bottom, 4)
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("Talk to Godric")
+        }
     }
 }
 
