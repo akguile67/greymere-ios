@@ -19,7 +19,7 @@ struct EnvironmentBar: View {
             Text("server \(instance.version)").font(.caption).foregroundStyle(connection.theme.muted)
         }
         .padding(.horizontal, 14).padding(.vertical, 7)
-        .glassEffect(.regular, in: .capsule)
+        .glassEffect(.regular.tint(connection.theme.glassTint), in: .capsule)
         .accessibilityElement(children: .combine)
     }
 }
@@ -118,29 +118,34 @@ struct EnvironmentBarInset: ViewModifier {
 extension View {
     func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
 
-    /// The way into Godric: a glass pill floating at the bottom, in the manner of the Music app's mini player.
-    /// Room is left either side for round glass buttons when more panes arrive.
+    /// The way into Godric: a small tinted glass pill floating at the bottom, in the manner of the Music app's
+    /// mini player. Room is left either side for round glass buttons when more panes arrive.
     func godricButton(isOpen: Bool, action: @escaping () -> Void) -> some View {
-        safeAreaInset(edge: .bottom, spacing: 0) {
-            GlassEffectContainer(spacing: 12) {
-                HStack(spacing: 12) {
-                    Button(action: action) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "sparkles").font(.body.weight(.semibold)).foregroundStyle(.tint)
-                            Text(isOpen ? "Close Godric" : "Ask Godric").font(.body.weight(.medium))
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 18).frame(height: 48)
-                        .contentShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .glassEffect(.regular.interactive(), in: .capsule)
-                    .accessibilityLabel("Talk to Godric")
+        modifier(GodricPill(isOpen: isOpen, action: action))
+    }
+}
+
+struct GodricPill: ViewModifier {
+    let isOpen: Bool
+    let action: () -> Void
+    @Environment(ConnectionModel.self) private var connection
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles").font(.subheadline.weight(.semibold))
+                    Text(isOpen ? "Close Godric" : "Ask Godric").font(.subheadline.weight(.semibold))
                 }
-                .frame(maxWidth: 520)
+                .foregroundStyle(connection.theme.text)
+                .padding(.horizontal, 20).frame(height: 44)
+                .contentShape(Capsule())
             }
-            .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 2)
+            .buttonStyle(.plain)
+            .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
+            .padding(.top, 4).padding(.bottom, 2)
             .frame(maxWidth: .infinity)
+            .accessibilityLabel("Talk to Godric")
         }
     }
 }

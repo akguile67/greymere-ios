@@ -22,6 +22,9 @@ final class ThemeStore {
     var accent = Color.accentColor
     var scheme: ColorScheme? = nil
 
+    /// The slight tint on the studio's own glass (the top pill and the Ask Godric pill), so it holds against the page.
+    var glassTint: Color { accent.opacity(0.28) }
+
     func apply(_ r: ThemeResponse) {
         background = Color(hex: r.theme.background)
         surface = Color(hex: r.theme.surface)
