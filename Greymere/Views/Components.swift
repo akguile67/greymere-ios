@@ -129,16 +129,20 @@ struct GodricPill: ViewModifier {
     let isOpen: Bool
     let action: () -> Void
     @Environment(ConnectionModel.self) private var connection
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    /// Bigger on an iPad, where a phone-sized pill gets lost.
+    private var regular: Bool { sizeClass == .regular }
 
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .bottom, spacing: 0) {
             Button(action: action) {
-                HStack(spacing: 8) {
-                    Image(systemName: "sparkles").font(.subheadline.weight(.semibold))
-                    Text(isOpen ? "Close Godric" : "Ask Godric").font(.subheadline.weight(.semibold))
+                HStack(spacing: regular ? 12 : 8) {
+                    Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                    Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
                 }
                 .foregroundStyle(connection.theme.text)
-                .padding(.horizontal, 20).frame(height: 44)
+                .padding(.horizontal, regular ? 32 : 20).frame(height: regular ? 60 : 44)
                 .contentShape(Capsule())
             }
             .buttonStyle(.plain)
