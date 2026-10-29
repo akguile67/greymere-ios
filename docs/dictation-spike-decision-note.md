@@ -77,15 +77,19 @@ and fixes a segment at each pause.
 - **A long pause is not a problem for this method:** compute stays under a second per tick however long the
   session, so no wait while it "sorts itself out". What matters is that the text trails speech by about a second,
   and the open question is whether that feels as good as the dictation the author has now.
-- **Not run:** the dictation built into Claude Desktop, which the author rates best. I cannot see how it works.
-  The fair comparison is for the author to read the same script into it live, paste the result, and have it counted
-  the same way.
+- **Claude Desktop's built-in dictation** (the author's favourite), read live by the author into the chat, same
+  script, no corrections: **17 of 20 people mangled, 6 of 10 places and title, 23 of 30 in all.** About the same as
+  Apple and plain Whisper on the names (Besmik Bajrakatari, Dritten Hysaj, Lindetta, Sophia, Faresca, Lewin,
+  Leotran), and clearly behind Whisper with the prompt. Its text was otherwise fluent and well punctuated, and it
+  got some places right (Tirana, Sunset View, Sarandé, the Greymere Chronicle), which fits the author's good
+  experience of it on ordinary prose. I cannot see how it works or whether it takes a vocabulary.
+  The author did not report any lag. The latency of this tool was not measured.
 
-## Other tools, for context only (not measured)
+## Other tools, for context
 
 - **Wispr Flow** (the author's current tool): in the author's experience it re-processes the words with AI and
   returns what it thinks was meant, which garbles names and plot detail. Not a candidate for embedding.
-- **Claude Desktop's built-in dictation**: the author finds it works well. Anecdotal; not run on this sample.
+- **Claude Desktop's built-in dictation**: measured above (23 of 30 mangled).
 
 ## Direction
 
