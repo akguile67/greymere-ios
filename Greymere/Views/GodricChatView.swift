@@ -10,13 +10,15 @@ struct GodricChatView: View {
     @Environment(ConnectionModel.self) private var connection
     @State private var draft = ""
     @State private var showHistory = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         VStack(spacing: 0) {
             header
             if model.viewing != nil { pastBanner }
             thread
-            if !model.quickActions.isEmpty { quickActions }
+            // The desktop's suggestion buttons are kept for the wide screens; on a phone they only take room.
+            if sizeClass == .regular, !model.quickActions.isEmpty { quickActions }
             ChatInput(text: $draft, canSend: !model.busy && model.viewing == nil,
                       placeholder: model.viewing == nil ? "Message Godric…" : "Reading only") {
                 let text = draft
