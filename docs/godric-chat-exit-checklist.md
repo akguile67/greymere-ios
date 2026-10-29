@@ -48,9 +48,9 @@ data itself, apart from the chat messages.
 
 ## C. Quick actions
 
-- [ ] C1. Under a thread with no author turn yet, the panel offers suggestion buttons for the panel (`G_QUICK_BY_CONTEXT[home]`, copied word for word at build time from the desktop source). Tapping one sends it.
-- [ ] C2. On a non-working day the Home set is the "off" set with the next working day substituted (`G_GREET_QUICK_DASHBOARD_OFF`, from `temporal`).
-- [ ] C3. They disappear once the author has sent a message.
+- [ ] C1. **Not in the app (author's decision, 29 Oct, after device review).** The desktop's three suggestion buttons
+  (`G_QUICK_BY_CONTEXT[home]`) are not shown on the phone or the iPad: a new chat opens on the greeting and the
+  input. Recorded as a deliberate difference from the desktop.
 
 ## D. Per-panel context
 

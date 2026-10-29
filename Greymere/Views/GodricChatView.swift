@@ -10,15 +10,12 @@ struct GodricChatView: View {
     @Environment(ConnectionModel.self) private var connection
     @State private var draft = ""
     @State private var showHistory = false
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         VStack(spacing: 0) {
             header
             if model.viewing != nil { pastBanner }
             thread
-            // The desktop's suggestion buttons are kept for the wide screens; on a phone they only take room.
-            if sizeClass == .regular, !model.quickActions.isEmpty { quickActions }
             ChatInput(text: $draft, canSend: !model.busy && model.viewing == nil,
                       placeholder: model.viewing == nil ? "Message Godric…" : "Reading only") {
                 let text = draft
@@ -101,20 +98,6 @@ struct GodricChatView: View {
             if model.busy { proxy.scrollTo("typing", anchor: .bottom) }
             else if let last = model.messages.last { proxy.scrollTo(last.id, anchor: .bottom) }
         }
-    }
-
-    private var quickActions: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(model.quickActions, id: \.self) { action in
-                Button { Task { await model.send(action, client: client) } } label: {
-                    Text("→ \(action)").font(.footnote).multilineTextAlignment(.leading)
-                        .padding(.horizontal, 12).padding(.vertical, 7)
-                }
-                .buttonStyle(.glass)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12).padding(.bottom, 4)
     }
 }
 

@@ -80,20 +80,10 @@ final class GodricModel {
     var temporal: Temporal?
     var history: [HistoryEntry] = []
     var viewing: HistoryEntry?
-    var showQuickActions = false
 
     private var activeMessages: [ChatMessage] = []
     private var focusedBookId: Int?
     private var generation = 0
-
-    var quickActions: [String] {
-        guard showQuickActions, viewing == nil else { return [] }
-        if temporal?.isWorkingDay == false {
-            let label = (temporal?.nextWorkingLabel ?? "next working day").split(separator: ",").first.map(String.init) ?? "next working day"
-            return ["Quick portfolio snapshot", "Anything I should know before \(label)?", "Talk through where The House is at"]
-        }
-        return ["What should I work on today?", "Show me schedule pressure across the portfolio", "Which book is most at risk?"]
-    }
 
     // MARK: lifecycle
 
@@ -136,7 +126,6 @@ final class GodricModel {
         messages = activeMessages
         temporal = r.temporal
         viewing = nil
-        showQuickActions = !r.messages.contains { $0.role == "user" }
     }
 
     func newChat(client: APIClient) async {
@@ -156,7 +145,6 @@ final class GodricModel {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !busy, viewing == nil else { return }
         busy = true
-        showQuickActions = false
         status = .thinking
         messages.append(ChatMessage(role: .user, text: text, time: Date()))
         do {
