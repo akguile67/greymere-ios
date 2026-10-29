@@ -13,6 +13,7 @@ struct HomeScreen: View {
     @State private var expanded = false
     @State private var godric = GodricModel()
     @State private var chatOpen = false
+    @State private var chatBook: ChatBook?
 
     /// Width needed to show Home and Book Details side by side.
     private static let splitMinimum: CGFloat = 900
@@ -46,7 +47,7 @@ struct HomeScreen: View {
                         handle(total: total, current: detailWidth)
                         Group {
                             if chatOpen {
-                                GodricChatView(model: godric, client: client, showsBar: false, onClose: { chatOpen = false })
+                                GodricChatView(model: godric, client: client, showsBar: false, book: chatBook, onClose: { chatOpen = false })
                             } else if let item = chosen {
                                 panel(item, showsBar: false, isExpanded: false, onToggleExpand: { expanded = true },
                                       onClose: { selected = nil })
@@ -68,6 +69,7 @@ struct HomeScreen: View {
     /// Opening Godric closes any details beside Home (the screen has room for one side panel).
     private func toggleChat() {
         withAnimation(.snappy) {
+            chatBook = nil
             chatOpen.toggle()
             if chatOpen { selected = nil; expanded = false }
         }
@@ -83,6 +85,16 @@ struct HomeScreen: View {
         } else if let detail = item.detail {
             BookDetailView(item: item, figures: detail, client: client, showsBar: showsBar,
                            isExpanded: isExpanded, onToggleExpand: onToggleExpand, onClose: onClose)
+                .godricButton(isOpen: false) { openChat(about: item) }
+        }
+    }
+
+    /// Chat opened from a book: the same Home thread, with that book in focus.
+    private func openChat(about item: ShelfItem) {
+        withAnimation(.snappy) {
+            chatBook = ChatBook(id: item.rawId, title: item.title)
+            selected = nil; expanded = false
+            chatOpen = true
         }
     }
 
@@ -109,7 +121,7 @@ struct HomeScreen: View {
         NavigationStack {
             HomeContent(home: home, client: client, selected: $selected, showsBar: true, onGodric: toggleChat)
                 .navigationDestination(isPresented: $chatOpen) {
-                    GodricChatView(model: godric, client: client, showsBar: true, onClose: { chatOpen = false })
+                    GodricChatView(model: godric, client: client, showsBar: true, book: chatBook, onClose: { chatOpen = false })
                 }
                 .navigationDestination(item: $selected) { id in
                     if let item = home.item(id), item.opensPanel {

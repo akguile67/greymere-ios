@@ -5,6 +5,7 @@ struct GodricChatView: View {
     let model: GodricModel
     let client: APIClient
     var showsBar = false
+    var book: ChatBook?
     var onClose: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
     @State private var draft = ""
@@ -30,7 +31,7 @@ struct GodricChatView: View {
         .environmentBar(showsBar)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showHistory) { HistorySheet(model: model, client: client, isPresented: $showHistory) }
-        .task { await model.open(client: client) }
+        .task(id: book?.id) { await model.open(client: client, book: book.map { ($0.id, $0.title) }) }
     }
 
     private var header: some View {
@@ -221,6 +222,9 @@ private struct HistorySheet: View {
 
 /// The chat input: one reusable piece, with a mic slot beside Send. The slot is present in the layout and the
 /// structure but inert in 0.3.0; dictation (0.4.0) fills it without reshaping the component.
+/// The book Godric is asked about when chat is opened from Book Details.
+struct ChatBook: Equatable { let id: Int; let title: String }
+
 struct ChatInput<Mic: View>: View {
     @Binding var text: String
     var canSend: Bool
@@ -240,7 +244,14 @@ struct ChatInput<Mic: View>: View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField(placeholder, text: $text, axis: .vertical)
                 .lineLimit(1...5)
+                .submitLabel(.send)
                 .padding(.vertical, 8).padding(.leading, 6)
+                // Return sends; Shift-Return keeps a new line.
+                .onKeyPress(.return, phases: .down) { press in
+                    if press.modifiers.contains(.shift) { return .ignored }
+                    if sendable { onSend() }
+                    return .handled
+                }
             mic
             Button(action: onSend) { Image(systemName: "arrow.up").font(.body.weight(.bold)).padding(8) }
                 .buttonStyle(.glassProminent).buttonBorderShape(.circle)

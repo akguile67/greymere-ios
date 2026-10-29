@@ -113,6 +113,10 @@ final class GodricModel {
             focusedBookId = book?.id
             loaded = true
             status = .ready
+            if let book {
+                _ = try? await client.post("/api/godric/book-switch",
+                    body: BookSwitchRequest(screen: Self.context, bookId: book.id, bookTitle: book.title), as: Ignored.self)
+            }
         } catch {
             guard mine == generation else { return }
             fail(error, opening: true)
