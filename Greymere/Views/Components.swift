@@ -19,7 +19,7 @@ struct EnvironmentBar: View {
             Text("server \(instance.version)").font(.caption).foregroundStyle(connection.theme.muted)
         }
         .padding(.horizontal, 14).padding(.vertical, 7)
-        .glassEffect(.regular.tint(connection.theme.glassTint), in: .capsule)
+        .glassEffect(.regular, in: .capsule)
         .accessibilityElement(children: .combine)
     }
 }
@@ -107,7 +107,7 @@ struct EnvironmentBarInset: ViewModifier {
                     .padding(.vertical, 6)
                     .background {
                         Rectangle().fill(.clear)
-                            .glassEffect(.regular, in: .rect)
+                            .glassEffect(.regular.tint(connection.theme.glassTint), in: .rect)
                             .ignoresSafeArea(edges: .top)
                     }
             }
