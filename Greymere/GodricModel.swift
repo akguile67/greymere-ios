@@ -48,8 +48,9 @@ struct HistoryContinue: Decodable, Sendable {
     let messages: [ServerMessage]?
 }
 
-private struct ConversationRequest: Encodable { let context: String; let bookId: Int? }
-private struct ChatRequest: Encodable { let context: String; let message: String; let bookId: Int? }
+/// The server reads these keys as written (camelCase). `quickOpen` asks for the fixed greeting instead of a model-written brief.
+private struct ConversationRequest: Encodable { let context: String; let bookId: Int?; var quickOpen = true }
+private struct ChatRequest: Encodable { let context: String; let message: String; let bookId: Int?; var quickOpen = true }
 private struct ContinueRequest: Encodable { let key: String; let context: String; let bookId: Int? }
 private struct BookSwitchRequest: Encodable { let screen: String; let bookId: Int; let bookTitle: String }
 private struct Ignored: Decodable, Sendable {}

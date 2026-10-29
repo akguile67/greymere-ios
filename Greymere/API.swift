@@ -51,7 +51,6 @@ struct APIClient: Sendable {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
         request.httpBody = try? encoder.encode(body)
         let data: Data, response: URLResponse
         do { (data, response) = try await Self.chatSession.data(for: request) }
