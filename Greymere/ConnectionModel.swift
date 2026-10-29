@@ -12,8 +12,8 @@ final class ConnectionModel {
         case ready(Instance)
     }
 
-    /// The lowest server this app will talk to (it needs /api/home/summary).
-    static let minimumServerVersion = "0.50.0"
+    /// The lowest server this app will talk to (0.52.0 added the quiet chat opening; before that, /api/home/summary).
+    static let minimumServerVersion = "0.52.0"
 
     var state: State = .connecting
     var address: String

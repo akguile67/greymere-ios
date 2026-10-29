@@ -11,6 +11,9 @@ struct HomeScreen: View {
     @AppStorage("greymere.detailFraction") private var detailFraction: Double = 0.46
     @State private var dragStart: Double?
     @State private var expanded = false
+    @State private var godric = GodricModel()
+    @State private var chatOpen = false
+    @State private var chatBook: ChatBook?
 
     /// Width needed to show Home and Book Details side by side.
     private static let splitMinimum: CGFloat = 900
@@ -27,8 +30,9 @@ struct HomeScreen: View {
     private func split(total: CGFloat) -> some View {
         let detailWidth = min(max(total * detailFraction, 340), total - 380)
         let chosen = home.item(selected)
+        let showsRight = chatOpen || chosen?.opensPanel == true
         return Group {
-            if expanded, let item = chosen, item.opensPanel {
+            if expanded, !chatOpen, let item = chosen, item.opensPanel {
                 // The details take the whole screen; the arrows bring Home back.
                 panel(item, showsBar: true, isExpanded: true, onToggleExpand: { expanded = false },
                       onClose: { selected = nil; expanded = false })
@@ -36,22 +40,39 @@ struct HomeScreen: View {
             } else {
                 HStack(spacing: 0) {
                     // Home is given exactly what the details leave; left to itself it will not shrink below its widest row.
-                    HomeContent(home: home, client: client, selected: $selected, showsBar: true)
-                        .frame(width: chosen?.opensPanel == true ? total - detailWidth - 18 : total)
+                    HomeContent(home: home, client: client, selected: $selected, showsBar: true, onGodric: toggleChat, chatIsOpen: chatOpen)
+                        .frame(width: showsRight ? total - detailWidth - 18 : total)
                         .clipped()
-                    if let item = chosen, item.opensPanel {
+                    if showsRight {
                         handle(total: total, current: detailWidth)
-                        panel(item, showsBar: false, isExpanded: false, onToggleExpand: { expanded = true },
-                              onClose: { selected = nil })
-                            .frame(width: detailWidth)
-                            .layoutPriority(1)
-                            .transition(.move(edge: .trailing))
+                        Group {
+                            if chatOpen {
+                                GodricChatView(model: godric, client: client, showsBar: false, book: chatBook, onClose: { chatOpen = false })
+                            } else if let item = chosen {
+                                panel(item, showsBar: false, isExpanded: false, onToggleExpand: { expanded = true },
+                                      onClose: { selected = nil })
+                            }
+                        }
+                        .frame(width: detailWidth)
+                        .layoutPriority(1)
+                        .transition(.move(edge: .trailing))
                     }
                 }
             }
         }
         .animation(.snappy, value: selected)
         .animation(.snappy, value: expanded)
+        .animation(.snappy, value: chatOpen)
+        .onChange(of: selected) { _, new in if new != nil { chatOpen = false } }
+    }
+
+    /// Opening Godric closes any details beside Home (the screen has room for one side panel).
+    private func toggleChat() {
+        withAnimation(.snappy) {
+            chatBook = nil
+            chatOpen.toggle()
+            if chatOpen { selected = nil; expanded = false }
+        }
     }
 
     /// Book Details for a book, the seed screen for a seed.
@@ -64,6 +85,16 @@ struct HomeScreen: View {
         } else if let detail = item.detail {
             BookDetailView(item: item, figures: detail, client: client, showsBar: showsBar,
                            isExpanded: isExpanded, onToggleExpand: onToggleExpand, onClose: onClose)
+                .godricButton(isOpen: false) { openChat(about: item) }
+        }
+    }
+
+    /// Chat opened from a book: the same Home thread, with that book in focus.
+    private func openChat(about item: ShelfItem) {
+        withAnimation(.snappy) {
+            chatBook = ChatBook(id: item.rawId, title: item.title)
+            selected = nil; expanded = false
+            chatOpen = true
         }
     }
 
@@ -88,7 +119,10 @@ struct HomeScreen: View {
 
     private var stack: some View {
         NavigationStack {
-            HomeContent(home: home, client: client, selected: $selected, showsBar: true)
+            HomeContent(home: home, client: client, selected: $selected, showsBar: true, onGodric: toggleChat)
+                .navigationDestination(isPresented: $chatOpen) {
+                    GodricChatView(model: godric, client: client, showsBar: true, book: chatBook, onClose: { chatOpen = false })
+                }
                 .navigationDestination(item: $selected) { id in
                     if let item = home.item(id), item.opensPanel {
                         panel(item, showsBar: true, isExpanded: false, onToggleExpand: nil, onClose: nil)
@@ -110,6 +144,8 @@ private struct HomeContent: View {
     let client: APIClient
     @Binding var selected: String?
     var showsBar = true
+    var onGodric: (() -> Void)?
+    var chatIsOpen = false
     @Environment(ConnectionModel.self) private var connection
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
@@ -140,6 +176,7 @@ private struct HomeContent: View {
         }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         .environmentBar(showsBar)
+        .godricButton(isOpen: chatIsOpen) { onGodric?() }
         .background(connection.theme.background.ignoresSafeArea())
         .refreshable { await home.load(using: client); await today.load(client: client) }
         .onChange(of: scenePhase) { _, phase in

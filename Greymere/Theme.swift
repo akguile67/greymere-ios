@@ -22,6 +22,10 @@ final class ThemeStore {
     var accent = Color.accentColor
     var scheme: ColorScheme? = nil
 
+    /// The one place the studio's glass tint lives (the top band and the Ask Godric pill), so a theme selector can
+    /// change it later without touching a view. For now a light smoky grey, kept well transparent.
+    var glassTint: Color { Color(.systemGray).opacity(0.16) }
+
     func apply(_ r: ThemeResponse) {
         background = Color(hex: r.theme.background)
         surface = Color(hex: r.theme.surface)

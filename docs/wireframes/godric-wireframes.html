@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Greymere iOS 0.3.0 — Godric chat wireframes</title>
+<style>
+:root{--bg:#f4f4f6;--ink:#222;--mute:#777;--line:#bbb;--box:#fff;--blue:#6b9ae8;--amber:#e6b34a;--red:#d9675d;--green:#7bbf7b;--env:#4b2a73}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1c1f;--ink:#eee;--mute:#999;--line:#555;--box:#2a2a2e}}
+*{box-sizing:border-box}body{margin:0;padding:24px 16px 60px;background:var(--bg);color:var(--ink);font:14px/1.4 -apple-system,system-ui,sans-serif}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:36px 0 4px}p.n{color:var(--mute);margin:0 0 14px;max-width:760px}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.dev{border:2px solid var(--line);border-radius:28px;background:var(--bg);padding:10px;overflow:hidden;display:flex;flex-direction:column}
+.phone{width:290px;height:600px}.ipad{width:700px;height:520px;border-radius:22px}
+.cap{font-size:12px;color:var(--mute);text-align:center;margin-top:6px;max-width:290px}.ipad+.cap{max-width:700px}
+.env{background:var(--env);color:#fff;border-radius:8px;padding:5px 9px;font-size:11px;display:flex;justify-content:space-between;margin-bottom:6px;flex:none}
+.bar{display:flex;align-items:center;gap:8px;font-size:12px;padding:2px 2px 6px;border-bottom:1px solid var(--line);flex:none}
+.bar b{font-size:14px}.bar .sp{flex:1}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px}.dot.t{background:var(--amber)}.dot.o{background:var(--red)}
+.ic{border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:11px}
+.thread{flex:1;overflow:hidden;padding:8px 0;display:flex;flex-direction:column;gap:7px}
+.m{max-width:82%;border:1px solid var(--line);border-radius:12px;padding:7px 9px;font-size:12px;background:var(--box)}
+.m small{display:block;color:var(--mute);font-size:9.5px;margin-top:3px}
+.m.me{align-self:flex-end;background:var(--blue);color:#fff;border-color:var(--blue)}.m.me small{color:#e8eefc}
+.m.err{border-color:var(--red);color:var(--red)}.m.note{align-self:center;border-style:dashed;color:var(--mute);font-size:10.5px;max-width:92%;text-align:center}
+.dots{align-self:flex-start;letter-spacing:3px;color:var(--mute)}
+.qa{display:flex;flex-direction:column;gap:5px;flex:none;margin-bottom:6px}.qa span{border:1px solid var(--line);border-radius:14px;padding:5px 10px;font-size:11px;background:var(--box)}
+.input{flex:none;display:flex;align-items:flex-end;gap:6px;border:1px solid var(--line);border-radius:20px;padding:6px 8px;background:var(--box)}
+.input .f{flex:1;font-size:12px;color:var(--mute);padding:3px 4px}
+.mic{width:28px;height:28px;border-radius:50%;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);opacity:.55}
+.send{width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}.send.off{background:var(--line)}
+.banner{flex:none;border:1px solid var(--amber);border-radius:8px;padding:5px 8px;font-size:11px;margin:6px 0;display:flex;justify-content:space-between}
+.hi{padding:7px 4px;border-bottom:1px solid var(--line);font-size:12px}.hi small{display:block;color:var(--mute);font-size:10px}
+.sheet{flex:1;overflow:hidden}
+.box{background:var(--box);border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;font-size:12px}
+.lbl{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:6px 0 4px}
+.split{display:grid;grid-template-columns:300px 1fr;gap:10px;flex:1;min-height:0}.split>div{overflow:hidden;display:flex;flex-direction:column}
+.ph{border:1px dashed var(--line);border-radius:8px;height:70px;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:11px;margin-bottom:8px}
+</style></head><body>
+<h1>Greymere iOS 0.3.0 — Godric chat wireframes</h1>
+<p class="n">Drawn against the desktop Godric panel as captured on 29 October 2026 (see <code>godric-chat-exit-checklist.md</code>). Boxes are placeholders, not final styling. As in 0.1.0, one set of screens adapts by size: a full screen on iPhone, a side panel beside Home on iPad. <b>No token streaming and no cost line</b>: the desktop has neither, so the reply appears whole after "Thinking…" (checklist findings 1 and 2).</p>
+
+<h2>1 · Where chat lives</h2>
+<p class="n">A Godric button on Home's top bar (and on Book Details, which opens the same Home thread with that book in focus). The desktop's Godric panel is always at the side; on iPhone it is a full screen you go into and come back from. On iPad it docks to the right of Home, so you can read the shelf while you talk.</p>
+<div class="row">
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><b>Home</b><span class="sp"></span><span class="ic">Godric ✦</span></div>
+  <div class="box" style="margin-top:8px">RAG cards, shelf… (unchanged)</div>
+  <div class="box">The shelf…</div>
+ </div><div class="cap">Home gains one button. Nothing else on Home changes.</div></div>
+</div>
+
+<h2>2 · Chat on iPhone</h2>
+<div class="row">
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ Home</span><span class="sp"></span><span><i class="dot"></i>Ready</span><span class="ic">History</span><span class="ic">New</span></div>
+  <div class="thread">
+   <div class="m">Morning. Two things before the day starts: The Route's Act 1 is a day ahead, and Friday's invoice is due.<small>08:12</small></div>
+   <div class="m me">What did we decide about the Act 2 pacing?<small>08:14</small></div>
+   <div class="m">You settled on moving the midpoint reveal earlier… (remembered from the laptop)<small>08:14</small></div>
+  </div>
+  <div class="input"><div class="f">Message Godric…</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+ </div><div class="cap">A thread with history. The mic slot sits beside Send: present, dimmed, does nothing in 0.3.0.</div></div>
+
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ Home</span><span class="sp"></span><span><i class="dot"></i>Ready</span><span class="ic">History</span><span class="ic">New</span></div>
+  <div class="thread">
+   <div class="m">Morning. Two things before the day starts…<small>08:12</small></div>
+  </div>
+  <div class="qa"><span>→ What's on today?</span><span>→ Anything slipping?</span><span>→ Anything before Monday?</span></div>
+  <div class="input"><div class="f">Message Godric…</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+ </div><div class="cap">Fresh thread: suggestion buttons from the server's list (word for word from the desktop). They vanish after your first message.</div></div>
+
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ Home</span><span class="sp"></span><span><i class="dot t"></i>Thinking…</span><span class="ic">History</span><span class="ic">New</span></div>
+  <div class="thread">
+   <div class="m me">Draft a note to Sofia about the cover.<small>08:20</small></div>
+   <div class="m dots">• • •</div>
+  </div>
+  <div class="input"><div class="f" style="opacity:.5">Message Godric…</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+ </div><div class="cap">While a turn runs: your message shows at once, three dots, input locked. The whole reply lands in one go.</div></div>
+</div>
+<div class="row" style="margin-top:24px">
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ Home</span><span class="sp"></span><span><i class="dot"></i>Ready</span><span class="ic">History</span><span class="ic">New</span></div>
+  <div class="thread">
+   <div class="m me">Update Leah Tran's codex entry with the new alias.<small>08:31</small></div>
+   <div class="m">I've drafted the change to Leah Tran's entry.<small>08:31</small></div>
+   <div class="m note">Godric drafted a change. Review and apply it on the desktop.</div>
+  </div>
+  <div class="input"><div class="f">Message Godric…</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+ </div><div class="cap">A reply that carries a proposal: the text shows, a plain note says to apply it on the desktop. No Apply or Discard on the device in 0.3.0.</div></div>
+
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ Home</span><span class="sp"></span><span><i class="dot o"></i>Offline</span><span class="ic">History</span><span class="ic">New</span></div>
+  <div class="thread">
+   <div class="m me">Anything slipping?<small>08:40</small></div>
+   <div class="m err">Could not reach Godric — The Internet connection appears to be offline.</div>
+  </div>
+  <div class="input"><div class="f">Message Godric…</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+ </div><div class="cap">Errors appear as a red bubble in the thread; status goes Offline. Your message is kept (the server saves it first). A 409 "still working on your last message" shows the same way.</div></div>
+
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ Chat</span><b>History</b></div>
+  <div class="sheet">
+   <div class="hi"><b>Act 2 pacing</b><small>Today 08:14 · Home · 12 messages</small></div>
+   <div class="hi"><b>Cover brief for The Route</b><small>Yesterday · Production</small></div>
+   <div class="hi"><b>Seed ideas: Turning Tables</b><small>Mon · Ideation</small></div>
+   <div class="hi"><b>Invoice reminders</b><small>26 Oct · Finance</small></div>
+  </div>
+ </div><div class="cap">History: one list across all panels and Ideation, newest first (from the server).</div></div>
+
+ <div><div class="dev phone">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="bar"><span>‹ History</span><span class="sp"></span><b style="font-size:12px">Act 2 pacing</b></div>
+  <div class="banner"><span>Viewing a past conversation</span><span class="ic">Continue</span></div>
+  <div class="thread">
+   <div class="m me">What did we decide about the Act 2 pacing?<small>Today 08:14</small></div>
+   <div class="m">You settled on moving the midpoint reveal earlier…<small>08:14</small></div>
+  </div>
+  <div class="input" style="opacity:.45"><div class="f">Reading only</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+ </div><div class="cap">A past conversation is read-only; input disabled. Continue reopens it (same panel) or carries it into this panel's thread.</div></div>
+</div>
+
+<h2>3 · Chat on iPad (regular width)</h2>
+<p class="n">Home keeps the left of the screen; Godric docks on the right, like the desktop. The Godric button toggles it. History opens as a list in the panel. Mini and Pro use the same layout; the divider follows the Home split already built. In portrait on the mini the panel may overlay Home instead of docking.</p>
+<div class="row">
+ <div><div class="dev ipad">
+  <div class="env"><span>PROD</span><span>server 0.51.0</span></div>
+  <div class="split">
+   <div><div class="bar"><b>Home</b><span class="sp"></span><span class="ic">Godric ✦</span></div><div class="ph">RAG cards</div><div class="ph" style="height:160px">The shelf</div></div>
+   <div>
+    <div class="bar"><b>Godric</b><span class="sp"></span><span><i class="dot"></i>Ready</span><span class="ic">History</span><span class="ic">New</span></div>
+    <div class="thread">
+     <div class="m">Morning. Two things before the day starts…<small>08:12</small></div>
+     <div class="m me">What did we decide about the Act 2 pacing?<small>08:14</small></div>
+     <div class="m">You settled on moving the midpoint reveal earlier…<small>08:14</small></div>
+    </div>
+    <div class="input"><div class="f">Message Godric…</div><div class="mic">🎙</div><div class="send off">↑</div></div>
+   </div>
+  </div>
+ </div><div class="cap">iPad: chat docked beside Home.</div></div>
+</div>
+
+<h2>4 · From Book Details</h2>
+<p class="n">A Godric button on Book Details opens the same Home thread with that book in focus (<code>bookId</code> sent, and a book-switch note added if it changes). To confirm at the wireframe: the desktop has no Home-with-a-book panel, so this is the closest match for "per-panel context" with the panels the app has. If you would rather keep chat on Home only for 0.3.0, this entry point is dropped.</p>
+</body></html>
