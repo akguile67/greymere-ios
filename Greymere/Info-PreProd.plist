@@ -20,23 +20,11 @@
 	<string>1</string>
 	<key>GreymereDefaultServerURL</key>
 	<string>http://100.75.100.51:3100</string>
-	<key>GreymereDevServerURL</key>
-	<string>$(GREYMERE_DEV_SERVER_URL)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>100.75.100.51</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-			<key>100.87.110.63</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-			<key>localhost</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<true/>

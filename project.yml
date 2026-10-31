@@ -48,23 +48,31 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.greymere.ios.preprod
         INFOPLIST_KEY_CFBundleDisplayName: Greymere Pre-prod
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIconPreProd
-      configs:
-        Debug:
-          # Dev trial: a debug build talks to the laptop's dev server (over Tailscale), whatever address was saved.
-          GREYMERE_DEV_SERVER_URL: "http://100.87.110.63:3005"
     info:
       path: Greymere/Info-PreProd.plist
       properties:
         UIAppFonts: [EBGaramond-Regular.ttf, EBGaramond-SemiBold.ttf]
         NSMicrophoneUsageDescription: Greymere listens while you dictate. Audio is sent to your own Greymere server and is not stored.
         GreymereDefaultServerURL: http://100.75.100.51:3100
-        GreymereDevServerURL: $(GREYMERE_DEV_SERVER_URL)
         NSAppTransportSecurity:
           NSExceptionDomains:
             100.75.100.51:
               NSExceptionAllowsInsecureHTTPLoads: true
-            # Dev trial only (dictation against the laptop's dev server); remove before the release build.
+  GreymereDev:
+    templates: [App]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.greymere.ios.dev
+        INFOPLIST_KEY_CFBundleDisplayName: Greymere Dev
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIconDev
+    info:
+      path: Greymere/Info-Dev.plist
+      properties:
+        UIAppFonts: [EBGaramond-Regular.ttf, EBGaramond-SemiBold.ttf]
+        NSMicrophoneUsageDescription: Greymere listens while you dictate. Audio is sent to your own Greymere server and is not stored.
+        # The dev server runs on the MacBook Pro (npm start, port 3005), reached over Tailscale.
+        GreymereDefaultServerURL: http://100.87.110.63:3005
+        NSAppTransportSecurity:
+          NSExceptionDomains:
             100.87.110.63:
-              NSExceptionAllowsInsecureHTTPLoads: true
-            localhost:
               NSExceptionAllowsInsecureHTTPLoads: true

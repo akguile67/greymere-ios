@@ -8,7 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
+		0894BC020E6A67E0754DB455 /* Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */; };
+		08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		0FDF9BB418484A16173C0C96 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
+		1341AE30BDFCE6CFA01F5639 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		14BD7AD964370B5F6FE59792 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		15E5807B72DD17267E6F8373 /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 		160B684EC2EB933F1DE35AC6 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
@@ -18,17 +21,33 @@
 		25B4E21275325FFFC7F7045C /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B0C488211E5B4F6280E3E7 /* Dictation.swift */; };
 		2717208BBD8DFA33BC4CC0C4 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
 		2749F8E57ED064078EA8D38F /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
+		291F2F116A8BDB74B3B7FD4B /* Info-Prod.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6F44E434245611A6300096AB /* Info-Prod.plist */; };
 		29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
+		2A081C10A104DB0CD42C079D /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CCFFA219A47C320A78B75B /* HomeModel.swift */; };
+		2A134F0A3D620187AC16525D /* GodricModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */; };
+		2C1EEDDE224878798597C940 /* Info-PreProd.plist in Resources */ = {isa = PBXBuildFile; fileRef = 42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */; };
 		2E2DACA08D458FA873B8B3B1 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 81C04A5556A704F3558717E4 /* OFL.txt */; };
+		2F6235C324E03A1CE0E56CD5 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
 		31D9376D53BF60F6E7789016 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
+		352F80F11D4AF6134B2B98B8 /* Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */; };
+		4356C399F4A98CEFC40F81A5 /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
+		46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
+		49BDD97D039466AB7E85D0A9 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
+		4A2DCB2784E2F378ADB467B1 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		4B79E3CE6A7FFE57997AB6C4 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
+		4D0C18C05169E900737E29C5 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
+		4DB3199C3961F6ABB4DC14C9 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		4E91DF172BB3B7D2AAEA8677 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
 		51220948C6BED549CE35985A /* Info-PreProd.plist in Resources */ = {isa = PBXBuildFile; fileRef = 42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */; };
 		520F9F94B3E088B20399C764 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		525361C9125FE5D8A153037E /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
+		52E3F4F03F40C570B4ADD9C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DC597154FB476C5247EE5 /* Assets.xcassets */; };
+		534CA086806BC2F948ADA178 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
 		5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
+		5D1B0057D5E9B13B4CA10EF7 /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B0C488211E5B4F6280E3E7 /* Dictation.swift */; };
 		5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
 		6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
+		651888C670EDE5A6C7E463B3 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
 		6B91A7BE07C9EEDD808515A5 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
 		6E8CA23976C112AB624CE05C /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
 		6F56430A0CA1F9556CA23002 /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CCFFA219A47C320A78B75B /* HomeModel.swift */; };
@@ -37,28 +56,38 @@
 		7328F9CD76F69CE2097AE67D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DC597154FB476C5247EE5 /* Assets.xcassets */; };
 		7399F36A0C551E0CCD2FF405 /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
 		837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
+		83AC58A95882242F736BFCC0 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 81C04A5556A704F3558717E4 /* OFL.txt */; };
 		8AE3CCB77E3EE14ADD5BABA0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
+		8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
 		926CC6BE90BE03BD91AC57A2 /* GodricModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */; };
+		981D79A2CB1D2A664C7F2526 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
 		98B3A6AA14E6BABEDF40A102 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DC597154FB476C5247EE5 /* Assets.xcassets */; };
 		9C94B8E4A02E1EADE636FDF6 /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B0C488211E5B4F6280E3E7 /* Dictation.swift */; };
 		9F23D31F449E2DF8AE10E3F3 /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 		A1885D65FDC6F998E698E0AE /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CCFFA219A47C320A78B75B /* HomeModel.swift */; };
 		A3EB8E36F70D3BD6FB823647 /* GodricChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FDFE72D51DD4458C46567C /* GodricChatView.swift */; };
 		A4B69C56E6B20519B4848608 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
+		A6096346C200249B1D43A0BE /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
 		ADF1CEA98BE1660230275641 /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
 		B17F2D5BA2A122B7D6BB9007 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
 		B36A18F192F79380D158F7F0 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		B5C094E404334BA2E476D07E /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		BAB4DB81E33A31B3FCD496AA /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		BCD5A5AA53BD56C527BDEDE8 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
+		BD36A4B4DD2648D8787E2A02 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
 		C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
 		C5400965AD89424C3CE29EB5 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		C8D4DB342526D8DFCD1A9DB2 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		C98974D694DA4F765111A21F /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
+		C9BFEDE241B071C7C6F3F3A8 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
 		CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
+		D0635CF02071F017F64B4DD6 /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
+		D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
+		E138CC54ECC8248A951F203D /* GodricChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FDFE72D51DD4458C46567C /* GodricChatView.swift */; };
 		E67F46C38727A245E699F064 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
+		F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,11 +101,13 @@
 		42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-PreProd.plist"; sourceTree = "<group>"; };
 		4BF8E1132B247929CB788E3D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		54AC0B957DEE150ACDE31400 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Dev.plist"; sourceTree = "<group>"; };
 		5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GodricModel.swift; sourceTree = "<group>"; };
 		65FDFE72D51DD4458C46567C /* GodricChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GodricChatView.swift; sourceTree = "<group>"; };
 		6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 		6F44E434245611A6300096AB /* Info-Prod.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Prod.plist"; sourceTree = "<group>"; };
 		81C04A5556A704F3558717E4 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
+		85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymereDev.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		88B0C488211E5B4F6280E3E7 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
 		896912D29762DABD9EE49720 /* GreymerePreProd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymerePreProd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		901A2EB047E4FF0A1128484A /* Format.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Format.swift; sourceTree = "<group>"; };
@@ -139,6 +170,7 @@
 				5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */,
 				3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */,
 				A3CCFFA219A47C320A78B75B /* HomeModel.swift */,
+				5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */,
 				42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */,
 				6F44E434245611A6300096AB /* Info-Prod.plist */,
 				54AC0B957DEE150ACDE31400 /* Models.swift */,
@@ -156,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				A27D197DD55701F7DBFEED0B /* Greymere.app */,
+				85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */,
 				896912D29762DABD9EE49720 /* GreymerePreProd.app */,
 			);
 			name = Products;
@@ -164,6 +197,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3BA09B1EF4489D5341388650 /* GreymereDev */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 669D908C0CD7DFA4EE62BCF0 /* Build configuration list for PBXNativeTarget "GreymereDev" */;
+			buildPhases = (
+				A80541633A98EEA424096486 /* Sources */,
+				B0EB6461228E997C0800EBCB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GreymereDev;
+			packageProductDependencies = (
+			);
+			productName = GreymereDev;
+			productReference = 85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */;
+			productType = "com.apple.product-type.application";
+		};
 		9E13916082E0FB1F34A697CE /* Greymere */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7C80426B34942349AF8CD741 /* Build configuration list for PBXNativeTarget "Greymere" */;
@@ -209,6 +260,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					3BA09B1EF4489D5341388650 = {
+						DevelopmentTeam = D25P46655T;
+						ProvisioningStyle = Automatic;
+					};
 					9E13916082E0FB1F34A697CE = {
 						DevelopmentTeam = D25P46655T;
 						ProvisioningStyle = Automatic;
@@ -235,6 +290,7 @@
 			targets = (
 				9E13916082E0FB1F34A697CE /* Greymere */,
 				AC7A5A988DB1812E63141DEE /* GreymerePreProd */,
+				3BA09B1EF4489D5341388650 /* GreymereDev */,
 			);
 		};
 /* End PBXProject section */
@@ -247,8 +303,22 @@
 				98B3A6AA14E6BABEDF40A102 /* Assets.xcassets in Resources */,
 				B36A18F192F79380D158F7F0 /* EBGaramond-Regular.ttf in Resources */,
 				0FDF9BB418484A16173C0C96 /* EBGaramond-SemiBold.ttf in Resources */,
+				352F80F11D4AF6134B2B98B8 /* Info-Dev.plist in Resources */,
 				21B795185266C5188F9EC109 /* Info-Prod.plist in Resources */,
 				2E2DACA08D458FA873B8B3B1 /* OFL.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B0EB6461228E997C0800EBCB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				52E3F4F03F40C570B4ADD9C6 /* Assets.xcassets in Resources */,
+				4A2DCB2784E2F378ADB467B1 /* EBGaramond-Regular.ttf in Resources */,
+				49BDD97D039466AB7E85D0A9 /* EBGaramond-SemiBold.ttf in Resources */,
+				2C1EEDDE224878798597C940 /* Info-PreProd.plist in Resources */,
+				291F2F116A8BDB74B3B7FD4B /* Info-Prod.plist in Resources */,
+				83AC58A95882242F736BFCC0 /* OFL.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,6 +329,7 @@
 				7328F9CD76F69CE2097AE67D /* Assets.xcassets in Resources */,
 				F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */,
 				160B684EC2EB933F1DE35AC6 /* EBGaramond-SemiBold.ttf in Resources */,
+				0894BC020E6A67E0754DB455 /* Info-Dev.plist in Resources */,
 				51220948C6BED549CE35985A /* Info-PreProd.plist in Resources */,
 				24818EC1637E964B90E6615D /* OFL.txt in Resources */,
 			);
@@ -320,6 +391,34 @@
 				C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */,
 				837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */,
 				2749F8E57ED064078EA8D38F /* TodayModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A80541633A98EEA424096486 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9BFEDE241B071C7C6F3F3A8 /* API.swift in Sources */,
+				4DB3199C3961F6ABB4DC14C9 /* BookDetailView.swift in Sources */,
+				46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */,
+				534CA086806BC2F948ADA178 /* ConnectionModel.swift in Sources */,
+				F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */,
+				5D1B0057D5E9B13B4CA10EF7 /* Dictation.swift in Sources */,
+				D0635CF02071F017F64B4DD6 /* Format.swift in Sources */,
+				E138CC54ECC8248A951F203D /* GodricChatView.swift in Sources */,
+				2A134F0A3D620187AC16525D /* GodricModel.swift in Sources */,
+				1341AE30BDFCE6CFA01F5639 /* GreymereApp.swift in Sources */,
+				2A081C10A104DB0CD42C079D /* HomeModel.swift in Sources */,
+				981D79A2CB1D2A664C7F2526 /* HomeView.swift in Sources */,
+				BD36A4B4DD2648D8787E2A02 /* Models.swift in Sources */,
+				651888C670EDE5A6C7E463B3 /* Reorder.swift in Sources */,
+				08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */,
+				8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */,
+				4D0C18C05169E900737E29C5 /* SeedModel.swift in Sources */,
+				D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */,
+				2F6235C324E03A1CE0E56CD5 /* TodayCard.swift in Sources */,
+				A6096346C200249B1D43A0BE /* TodayModel.swift in Sources */,
+				4356C399F4A98CEFC40F81A5 /* TodayModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -482,7 +581,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconPreProd;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
-				GREYMERE_DEV_SERVER_URL = "http://100.87.110.63:3005";
 				INFOPLIST_FILE = "Greymere/Info-PreProd.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Greymere Pre-prod";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -519,6 +617,27 @@
 			};
 			name = Release;
 		};
+		835CCD5A879B70835DA70786 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Greymere/Info-Dev.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Greymere Dev";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greymere.ios.dev;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		AC5FC1747C6D679E8EFA9234 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -540,6 +659,27 @@
 			};
 			name = Release;
 		};
+		BCBA16F1D71DAEE4E9AC3A8E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Greymere/Info-Dev.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Greymere Dev";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greymere.ios.dev;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -548,6 +688,15 @@
 			buildConfigurations = (
 				55FA648FF2DCC48F6BCDB693 /* Debug */,
 				5BC4417BC9AE38708580718D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		669D908C0CD7DFA4EE62BCF0 /* Build configuration list for PBXNativeTarget "GreymereDev" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				835CCD5A879B70835DA70786 /* Debug */,
+				BCBA16F1D71DAEE4E9AC3A8E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
