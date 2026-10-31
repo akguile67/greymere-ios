@@ -24,6 +24,10 @@ final class ConnectionModel {
     init() {
         let bundled = Bundle.main.object(forInfoDictionaryKey: "GreymereDefaultServerURL") as? String ?? ""
         address = UserDefaults.standard.string(forKey: Self.defaultsKey) ?? bundled
+        #if DEBUG
+        // A debug build can be pointed at a dev server by the project (project.yml); it wins over the saved address.
+        if let dev = Bundle.main.object(forInfoDictionaryKey: "GreymereDevServerURL") as? String, !dev.isEmpty { address = dev }
+        #endif
     }
 
     var instance: Instance? { if case .ready(let i) = state { return i } else { return nil } }

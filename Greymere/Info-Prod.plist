@@ -31,6 +31,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Greymere listens while you dictate. Audio is sent to your own Greymere server and is not stored.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>EBGaramond-Regular.ttf</string>

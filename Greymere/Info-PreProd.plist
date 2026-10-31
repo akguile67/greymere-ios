@@ -20,6 +20,8 @@
 	<string>1</string>
 	<key>GreymereDefaultServerURL</key>
 	<string>http://100.75.100.51:3100</string>
+	<key>GreymereDevServerURL</key>
+	<string>$(GREYMERE_DEV_SERVER_URL)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
@@ -29,8 +31,20 @@
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<true/>
 			</dict>
+			<key>100.87.110.63</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
 		</dict>
 	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Greymere listens while you dictate. Audio is sent to your own Greymere server and is not stored.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>EBGaramond-Regular.ttf</string>
