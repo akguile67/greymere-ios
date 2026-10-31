@@ -25,10 +25,12 @@ struct GodricChatView: View {
                     .onTapGesture { dictation.notice = nil }
                     .accessibilityHint("Tap to dismiss")
             }
+            if !dictation.chips.isEmpty { chipStrip }
             ChatInput(text: $draft, selection: $selection, canSend: !model.busy && model.viewing == nil,
                       placeholder: model.viewing == nil ? "Message Godric…" : "Reading only",
                       mic: { micButton }) {
                 let text = draft
+                dictation.settle()                           // an edit not yet learned is reported before the draft clears
                 dictation.end()                              // sending a message ends dictation; starting it again is a decision
                 draft = ""
                 Task { await model.send(text, client: client) }
@@ -44,9 +46,29 @@ struct GodricChatView: View {
         .task(id: book?.id) { await model.open(client: client, book: book.map { ($0.id, $0.title) }) }
         .task(id: connection.address) { await dictation.check(client: client) }
         .onChange(of: draft) { _, new in dictation.textChanged(to: new) }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.end() } }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.settle(); dictation.end() } }
         .onChange(of: model.busy) { _, busy in if busy { dictation.end() } }
-        .onDisappear { dictation.end() }
+        .onDisappear { dictation.settle(); dictation.end() }
+    }
+
+    /// What dictation changed or learned, each a tap away from being undone: the phone's version of the desktop strip.
+    private var chipStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(dictation.chips) { chip in
+                    Button { dictation.act(on: chip) } label: {
+                        Text(chip.label).font(.footnote).lineLimit(1)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .foregroundStyle(connection.theme.muted)
+                            .background(.thinMaterial, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint(chip.kind == .applied ? "Puts the heard word back" : chip.kind == .suggested ? "Uses the suggested spelling" : "Forgets this correction")
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+        .padding(.bottom, 2)
     }
 
     /// The thumb button: tap to start, tap to stop. Unavailable (greyed) when the server cannot dictate; a tap says why.
