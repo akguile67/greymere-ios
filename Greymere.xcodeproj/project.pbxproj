@@ -10,7 +10,9 @@
 		05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
 		0894BC020E6A67E0754DB455 /* Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */; };
 		08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
+		0F5305787184101F81C49939 /* ChatTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2098A157E6F1C67602BDC88B /* ChatTextView.swift */; };
 		0FDF9BB418484A16173C0C96 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
+		1336BC8215523E18B5508656 /* ChatTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2098A157E6F1C67602BDC88B /* ChatTextView.swift */; };
 		1341AE30BDFCE6CFA01F5639 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		14BD7AD964370B5F6FE59792 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		15E5807B72DD17267E6F8373 /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
@@ -53,6 +55,7 @@
 		6F56430A0CA1F9556CA23002 /* HomeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CCFFA219A47C320A78B75B /* HomeModel.swift */; };
 		6F7CF5BC70537D1E2558EAD7 /* GodricChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FDFE72D51DD4458C46567C /* GodricChatView.swift */; };
 		7028E894AD862CE2A5E0EDEB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
+		705B429F229DA11ED19DD282 /* ChatTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2098A157E6F1C67602BDC88B /* ChatTextView.swift */; };
 		7328F9CD76F69CE2097AE67D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DC597154FB476C5247EE5 /* Assets.xcassets */; };
 		7399F36A0C551E0CCD2FF405 /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
 		837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
@@ -93,6 +96,7 @@
 /* Begin PBXFileReference section */
 		0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		18A7175A3DB8CCEF791ACBCB /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		2098A157E6F1C67602BDC88B /* ChatTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTextView.swift; sourceTree = "<group>"; };
 		276D4C7BBC5996DA6E25D15C /* TodayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModel.swift; sourceTree = "<group>"; };
 		2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayCard.swift; sourceTree = "<group>"; };
@@ -139,6 +143,7 @@
 			isa = PBXGroup;
 			children = (
 				6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */,
+				2098A157E6F1C67602BDC88B /* ChatTextView.swift */,
 				2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */,
 				E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */,
 				65FDFE72D51DD4458C46567C /* GodricChatView.swift */,
@@ -344,6 +349,7 @@
 			files = (
 				14BD7AD964370B5F6FE59792 /* API.swift in Sources */,
 				B5C094E404334BA2E476D07E /* BookDetailView.swift in Sources */,
+				705B429F229DA11ED19DD282 /* ChatTextView.swift in Sources */,
 				31D9376D53BF60F6E7789016 /* Components.swift in Sources */,
 				4E91DF172BB3B7D2AAEA8677 /* ConnectionModel.swift in Sources */,
 				15E5807B72DD17267E6F8373 /* ConnectionViews.swift in Sources */,
@@ -372,6 +378,7 @@
 			files = (
 				C5400965AD89424C3CE29EB5 /* API.swift in Sources */,
 				BAB4DB81E33A31B3FCD496AA /* BookDetailView.swift in Sources */,
+				0F5305787184101F81C49939 /* ChatTextView.swift in Sources */,
 				6E8CA23976C112AB624CE05C /* Components.swift in Sources */,
 				BCD5A5AA53BD56C527BDEDE8 /* ConnectionModel.swift in Sources */,
 				9F23D31F449E2DF8AE10E3F3 /* ConnectionViews.swift in Sources */,
@@ -400,6 +407,7 @@
 			files = (
 				C9BFEDE241B071C7C6F3F3A8 /* API.swift in Sources */,
 				4DB3199C3961F6ABB4DC14C9 /* BookDetailView.swift in Sources */,
+				1336BC8215523E18B5508656 /* ChatTextView.swift in Sources */,
 				46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */,
 				534CA086806BC2F948ADA178 /* ConnectionModel.swift in Sources */,
 				F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */,

@@ -264,16 +264,14 @@ struct ChatInput<Mic: View>: View {
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField(placeholder, text: $text, selection: $selection, axis: .vertical)
-                .lineLimit(1...5)
-                .submitLabel(.send)
-                .padding(.vertical, 8).padding(.leading, 6)
-                // Return sends; Shift-Return keeps a new line.
-                .onKeyPress(.return, phases: .down) { press in
-                    if press.modifiers.contains(.shift) { return .ignored }
-                    if sendable { onSend() }
-                    return .handled
+            ZStack(alignment: .topLeading) {
+                if text.isEmpty {
+                    Text(placeholder).font(.body).foregroundStyle(.tertiary)
+                        .padding(.top, 8).padding(.leading, 6).allowsHitTesting(false)
                 }
+                // Return sends; Shift-Return keeps a new line (hardware keyboard).
+                ChatTextView(text: $text, selection: $selection) { if sendable { onSend() } }
+            }
             mic
             Button(action: onSend) { Image(systemName: "arrow.up").font(.body.weight(.bold)).padding(8) }
                 .buttonStyle(.glassProminent).buttonBorderShape(.circle)
