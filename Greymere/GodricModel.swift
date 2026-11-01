@@ -77,10 +77,13 @@ struct SynopsisProposal: Decodable, Sendable, Identifiable, Equatable {
         let after: String
         var id: String { "\(before.hashValue)-\(after.hashValue)" }
     }
+    /// Set when the draft removes more than a tenth of the synopsis.
+    struct Shrinks: Decodable, Sendable, Equatable { let wordsRemoved: Int; let percent: Int }
     let id: Int
     let source: String?
     let baseVersion: Int
     let stale: Bool?
+    let shrinks: Shrinks?
     let changes: [Change]
     let proposedText: String?
 }

@@ -137,6 +137,12 @@ struct IdeationScreen: View {
             Text(stale ? "The synopsis has changed since this was drafted. Discard it and ask Godric to draft it again."
                        : "Read it through. The synopsis stays as it is until you press Apply, here or in the bar at the bottom.")
                 .font(.footnote).foregroundStyle(connection.theme.muted)
+            if let s = p.shrinks {
+                Label("This draft removes \(s.wordsRemoved.formatted()) words (\(s.percent)% of the synopsis). Check what goes before you press Apply.", systemImage: "exclamationmark.triangle.fill")
+                    .font(.footnote.weight(.semibold)).foregroundStyle(.red)
+                    .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
             ForEach(p.changes) { change in
                 VStack(alignment: .leading, spacing: 6) {
                     if change.before.isEmpty {
