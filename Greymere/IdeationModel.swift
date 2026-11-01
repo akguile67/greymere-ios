@@ -16,9 +16,12 @@ struct IdeationConversation: Decodable, Sendable {
     let bookTitle: String?
     let hasSavedSynopsis: Bool?
     let synopsisVersion: Int?
+    let synopsisProposal: SynopsisProposal?
 }
 
-private struct RefreshResult: Decodable, Sendable { let synopsis: String?; let version: Int?; let costUsd: Double?; let discarded: Bool? }
+private struct RefreshResult: Decodable, Sendable { let synopsis: String?; let version: Int?; let costUsd: Double?; let discarded: Bool?; let note: String?; let synopsisProposal: SynopsisProposal? }
+private struct ProposalBody: Encodable, Sendable { let proposal_id: Int; let base_version: Int? }
+private struct AppliedResult: Decodable, Sendable { struct Syn: Decodable, Sendable { let text: String?; let version: Int? }; let synopsis: Syn? }
 private struct LockResult: Decodable, Sendable { let already: Bool? }
 private struct SaveResult: Decodable, Sendable { let ok: Bool?; let version: Int? }
 private struct CodexName: Decodable, Sendable { let name: String }
@@ -79,6 +82,8 @@ final class IdeationModel {
     private var theirsVersion: Int?
     /// The book's one working synopsis has a version; every write raises it.
     var synopsisVersion: Int?
+    /// What Godric (or Refresh) has drafted and the author has not yet applied. Only Apply writes it.
+    var proposal: SynopsisProposal?
     private var editVersion: Int?
     var working: Work?
     var banner: Banner?
@@ -101,6 +106,7 @@ final class IdeationModel {
         self.client = client
         godric.onRefreshCommand = { [weak self] in await self?.refresh() }
         godric.onContinued = { [weak self] in await self?.reload() }
+        godric.onProposal = { [weak self] p in self?.proposal = p }
         godric.onNewConversation = { [weak self] in await self?.newConversation() }
         if loadedBook != bookId {
             if editing { cancelEdit() }                  // an edit never carries over to another book
@@ -129,6 +135,7 @@ final class IdeationModel {
 
     private func apply(_ r: IdeationConversation, client: APIClient) async {
         if !editing { synopsis = r.conversation.synopsisDraft ?? ""; synopsisVersion = r.synopsisVersion }
+        proposal = r.synopsisProposal
         hasSaved = r.hasSavedSynopsis ?? false
         turns = r.messages.filter { $0.kind == "chat" }.count
         lastActive = r.conversation.lastActiveAt.map { String($0.prefix(16)) }
@@ -219,6 +226,7 @@ final class IdeationModel {
 
     // MARK: refresh and lock
 
+    /// Refresh drafts a synopsis from the conversation so far. It is a draft: nothing changes until the author applies it.
     func refresh() async {
         guard let bookId, let client, working == nil, !editing else { return }
         working = .refreshing; banner = nil
@@ -226,17 +234,49 @@ final class IdeationModel {
         do {
             let r: RefreshResult = try await client.post("/api/ideation/books/\(bookId)/refresh-synopsis", body: EmptyBody())
             if r.discarded == true {
-                banner = Banner(text: "Refresh dropped: the synopsis changed while it ran, so it was left as it is. Refresh again if you still want it.")
-                if let s = r.synopsis { synopsis = s }
-                synopsisVersion = r.version ?? synopsisVersion
+                banner = Banner(text: "Refresh dropped: the synopsis changed while it ran, so no draft was made. Refresh again if you still want it.")
+            } else if let p = r.synopsisProposal {
+                proposal = p
+                banner = Banner(text: "Draft ready" + (r.costUsd.map { String(format: " · cost $%.2f", $0) } ?? "") + ". Review it below and press Apply.")
+                godric.appendNote("Drafted a change from the conversation. Close this and review it; nothing changes until you press Apply.")
             } else {
-                if let s = r.synopsis { synopsis = s }
-                synopsisVersion = r.version ?? synopsisVersion
-                changedByGodric = false
-                banner = Banner(text: "Refreshed" + (r.costUsd.map { String(format: " · cost $%.2f", $0) } ?? ""))
+                banner = Banner(text: r.note ?? "Nothing to draft from the conversation yet.")
             }
         } catch {
             banner = Banner(text: "Refresh failed: \((error as? APIError)?.message ?? "could not reach the server")", isError: true)
+        }
+    }
+
+    /// The one button that writes a draft. The server refuses it if the synopsis has moved on since the draft was made.
+    func applyProposal() async {
+        guard let proposal, let bookId, let client, working == nil else { return }
+        working = .saving
+        defer { working = nil }
+        do {
+            let r: AppliedResult = try await client.post("/api/ideation/books/\(bookId)/synopsis-proposal/apply",
+                body: ProposalBody(proposal_id: proposal.id, base_version: proposal.baseVersion))
+            if let t = r.synopsis?.text { synopsis = t }
+            synopsisVersion = r.synopsis?.version ?? synopsisVersion
+            self.proposal = nil
+            changedByGodric = false
+            banner = Banner(text: "Applied. The synopsis is now version \(synopsisVersion.map(String.init) ?? "?").")
+        } catch APIError.http(409, _) {
+            await reload()
+            banner = Banner(text: "The synopsis changed since this was drafted, so it was not applied. Ask Godric to draft it again.", isError: true)
+        } catch {
+            banner = Banner(text: "Apply failed: \((error as? APIError)?.message ?? "could not reach the server")", isError: true)
+        }
+    }
+
+    func discardProposal() async {
+        guard let proposal, let bookId, let client, working == nil else { return }
+        do {
+            struct Discarded: Decodable { let ok: Bool? }
+            let _: Discarded = try await client.post("/api/ideation/books/\(bookId)/synopsis-proposal/discard", body: ProposalBody(proposal_id: proposal.id, base_version: nil))
+            self.proposal = nil
+            banner = Banner(text: "Draft discarded. The synopsis is unchanged.")
+        } catch {
+            banner = Banner(text: "Discard failed: \((error as? APIError)?.message ?? "could not reach the server")", isError: true)
         }
     }
 

@@ -65,6 +65,24 @@ struct IdeationMessage: Decodable, Sendable {
 struct IdeationReply: Decodable, Sendable {
     let text: String
     let synopsisUpdated: Bool?
+    /// Godric drafted a change to the synopsis this turn. It is only a draft: the author applies it.
+    let synopsisProposed: Bool?
+    let synopsisProposal: SynopsisProposal?
+}
+
+/// A change to the book's synopsis that Godric (or Refresh) has drafted and the author has not yet applied.
+struct SynopsisProposal: Decodable, Sendable, Identifiable, Equatable {
+    struct Change: Decodable, Sendable, Equatable, Identifiable {
+        let before: String
+        let after: String
+        var id: String { "\(before.hashValue)-\(after.hashValue)" }
+    }
+    let id: Int
+    let source: String?
+    let baseVersion: Int
+    let stale: Bool?
+    let changes: [Change]
+    let proposedText: String?
 }
 
 private struct IdeationSend: Encodable { let text: String; let source_pane = "right_panel" }
@@ -121,6 +139,8 @@ final class GodricModel {
     var synopsisTick = 0
     /// Ideation only: a message that is wholly a refresh command (the desktop's phrases) runs this instead of chat.
     var onRefreshCommand: (() async -> Void)?
+    /// Ideation only: Godric drafted a synopsis change in this turn.
+    var onProposal: ((SynopsisProposal?) -> Void)?
     /// Ideation only: reload the book's thread and synopsis after a Continue.
     var onContinued: (() async -> Void)?
 
@@ -203,6 +223,11 @@ final class GodricModel {
         status = .ready
     }
 
+    func appendNote(_ text: String) {
+        messages.append(ChatMessage(role: .note, text: text, time: nil))
+        activeMessages = messages
+    }
+
     func resetIdeation() {
         activeMessages = []; messages = []; viewing = nil; loaded = false
     }
@@ -227,6 +252,10 @@ final class GodricModel {
                 let r: IdeationReply = try await client.post("/api/ideation/books/\(bookId)/messages", body: IdeationSend(text: text))
                 messages.append(ChatMessage(role: .godric, text: r.text, time: Date()))
                 if r.synopsisUpdated == true { synopsisTick += 1 }
+                if r.synopsisProposed == true, let p = r.synopsisProposal {
+                    onProposal?(p)
+                    messages.append(ChatMessage(role: .note, text: "Godric drafted a change to the synopsis. Close this and review it; nothing changes until you press Apply.", time: nil))
+                }
                 status = .ready
             } catch {
                 fail(error, opening: false)

@@ -70,6 +70,7 @@ struct IdeationScreen: View {
                 VStack(alignment: .leading, spacing: 12) {
                     header
                     if let banner = model.banner { bannerView(banner) }
+                    if let proposal = model.proposal { proposalCard(proposal) }
                     if books.isEmpty {
                         Text(home.summary == nil ? "Loading…" : "No books in work.").foregroundStyle(connection.theme.muted)
                     } else if let error = model.loadError {
@@ -125,6 +126,47 @@ struct IdeationScreen: View {
         .padding(10)
         .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(banner.isError ? Color.red : connection.theme.faint.opacity(0.5)))
+    }
+
+    /// What Godric (or Refresh) has drafted. The synopsis itself is untouched until the author presses Apply.
+    private func proposalCard(_ p: SynopsisProposal) -> some View {
+        let stale = p.stale == true
+        return VStack(alignment: .leading, spacing: 10) {
+            Label(stale ? "A drafted change is out of date" : "Drafted change: not applied yet", systemImage: "square.and.pencil")
+                .font(.subheadline.weight(.semibold))
+            Text(stale ? "The synopsis has changed since this was drafted. Discard it and ask Godric to draft it again."
+                       : "Read it through. The synopsis stays as it is until you press Apply.")
+                .font(.footnote).foregroundStyle(connection.theme.muted)
+            ForEach(p.changes) { change in
+                VStack(alignment: .leading, spacing: 6) {
+                    if change.before.isEmpty {
+                        Text("NEW PARAGRAPH").font(.caption2.weight(.semibold)).foregroundStyle(.green)
+                    } else if change.after.isEmpty {
+                        Text("REMOVED").font(.caption2.weight(.semibold)).foregroundStyle(.red)
+                    } else {
+                        Text("CHANGED").font(.caption2.weight(.semibold)).foregroundStyle(.orange)
+                    }
+                    if !change.before.isEmpty {
+                        Text(change.before).font(.footnote).foregroundStyle(connection.theme.muted)
+                            .strikethrough(true, color: .red.opacity(0.6))
+                    }
+                    if !change.after.isEmpty {
+                        Text(change.after).font(.footnote).foregroundStyle(connection.theme.text)
+                    }
+                }
+                .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                .background(connection.theme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            HStack(spacing: 10) {
+                Button { Task { await model.applyProposal() } } label: { Label("Apply", systemImage: "checkmark") }
+                    .buttonStyle(.glassProminent).disabled(stale || model.working != nil)
+                Button("Discard") { Task { await model.discardProposal() } }
+                    .buttonStyle(.glass).disabled(model.working != nil)
+            }
+        }
+        .padding(12)
+        .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.orange.opacity(0.6)))
     }
 
     private var synopsisBody: some View {
