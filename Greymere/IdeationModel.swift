@@ -238,7 +238,7 @@ final class IdeationModel {
             } else if let p = r.synopsisProposal {
                 proposal = p
                 banner = Banner(text: "Draft ready" + (r.costUsd.map { String(format: " · cost $%.2f", $0) } ?? "") + ". Review it below and press Apply.")
-                godric.appendNote("Drafted a change from the conversation. Close this and review it; nothing changes until you press Apply.")
+                godric.appendNote("Drafted a change from the conversation. Close this to review it. Apply and Discard are in the bar at the bottom; nothing changes until you press Apply.")
             } else {
                 banner = Banner(text: r.note ?? "Nothing to draft from the conversation yet.")
             }

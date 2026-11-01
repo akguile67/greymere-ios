@@ -254,7 +254,7 @@ final class GodricModel {
                 if r.synopsisUpdated == true { synopsisTick += 1 }
                 if r.synopsisProposed == true, let p = r.synopsisProposal {
                     onProposal?(p)
-                    messages.append(ChatMessage(role: .note, text: "Godric drafted a change to the synopsis. Close this and review it; nothing changes until you press Apply.", time: nil))
+                    messages.append(ChatMessage(role: .note, text: "Godric drafted a change to the synopsis. Close this to review it. Apply and Discard are in the bar at the bottom; nothing changes until you press Apply.", time: nil))
                 }
                 status = .ready
             } catch {

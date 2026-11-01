@@ -135,7 +135,7 @@ struct IdeationScreen: View {
             Label(stale ? "A drafted change is out of date" : "Drafted change: not applied yet", systemImage: "square.and.pencil")
                 .font(.subheadline.weight(.semibold))
             Text(stale ? "The synopsis has changed since this was drafted. Discard it and ask Godric to draft it again."
-                       : "Read it through. The synopsis stays as it is until you press Apply.")
+                       : "Read it through. The synopsis stays as it is until you press Apply, here or in the bar at the bottom.")
                 .font(.footnote).foregroundStyle(connection.theme.muted)
             ForEach(p.changes) { change in
                 VStack(alignment: .leading, spacing: 6) {
@@ -146,11 +146,13 @@ struct IdeationScreen: View {
                     } else {
                         Text("CHANGED").font(.caption2.weight(.semibold)).foregroundStyle(.orange)
                     }
-                    if !change.before.isEmpty {
-                        Text(change.before).font(.footnote).foregroundStyle(connection.theme.muted)
-                            .strikethrough(true, color: .red.opacity(0.6))
-                    }
-                    if !change.after.isEmpty {
+                    if !change.before.isEmpty, !change.after.isEmpty {
+                        Text(DiffText.marked(before: change.before, after: change.after, theme: connection.theme))
+                            .font(.footnote).foregroundStyle(connection.theme.text)
+                    } else if !change.before.isEmpty {
+                        Text(change.before).font(.footnote).strikethrough(true, color: .red.opacity(0.6))
+                            .foregroundStyle(connection.theme.muted)
+                    } else {
                         Text(change.after).font(.footnote).foregroundStyle(connection.theme.text)
                     }
                 }
@@ -211,6 +213,12 @@ struct IdeationScreen: View {
                 Button { Task { await model.saveEdit() } } label: { Label("Done editing", systemImage: "checkmark") }
                     .buttonStyle(.glassProminent).disabled(model.working != nil)
                 Button("Cancel") { model.cancelEdit() }.buttonStyle(.glass)
+            } else if let proposal = model.proposal {
+                // A drafted change is waiting: the only choices are to apply it or throw it away.
+                Button { Task { await model.applyProposal() } } label: { Label("Apply drafted change", systemImage: "checkmark") }
+                    .buttonStyle(.glassProminent).disabled(proposal.stale == true || model.working != nil)
+                Button("Discard") { Task { await model.discardProposal() } }
+                    .buttonStyle(.glass).disabled(model.working != nil)
             } else {
                 Button { Task { await model.requestLock() } } label: { Label("Lock synopsis", systemImage: "lock") }
                     .buttonStyle(.glassProminent).disabled(!model.hasSynopsis || model.working != nil)
