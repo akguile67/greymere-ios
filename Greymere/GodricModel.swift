@@ -137,8 +137,6 @@ final class GodricModel {
     var continueError: String?
     /// Counts replies in which Godric edited the synopsis, so the Ideation screen knows to repaint.
     var synopsisTick = 0
-    /// Ideation only: a message that is wholly a refresh command (the desktop's phrases) runs this instead of chat.
-    var onRefreshCommand: (() async -> Void)?
     /// Ideation only: Godric drafted a synopsis change in this turn.
     var onProposal: ((SynopsisProposal?) -> Void)?
     /// Ideation only: reload the book's thread and synopsis after a Continue.
@@ -237,13 +235,6 @@ final class GodricModel {
     func send(_ raw: String, client: APIClient) async {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !busy, viewing == nil else { return }
-        if thread == .ideation, RefreshPhrase.isCommand(text) {
-            // As on the desktop: a message that is only a refresh phrase refreshes the synopsis instead of going to Godric.
-            if let onRefreshCommand { Task { await onRefreshCommand() } }
-            messages.append(ChatMessage(role: .note, text: "Refreshing the synopsis from the conversation…", time: nil))
-            activeMessages = messages
-            return
-        }
         busy = true
         status = .thinking
         messages.append(ChatMessage(role: .user, text: text, time: Date()))

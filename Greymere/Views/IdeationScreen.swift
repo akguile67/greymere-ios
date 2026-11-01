@@ -197,7 +197,7 @@ struct IdeationScreen: View {
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("The synopsis builds here as you and Godric reach decisions.")
-                    Text("When a section of thinking is settled, tell Godric “capture what we now know”, or tap Refresh, and this pane rewrites from the conversation so far.")
+                    Text("When you are ready, ask Godric to propose a draft. He drafts it here for you to read, and nothing is written until you press Apply.")
                     Text("When the synopsis is usable, tap Lock synopsis. It becomes the synopsis Godric reads everywhere, and the book moves on to the Codex update.")
                 }
                 .font(.subheadline).foregroundStyle(connection.theme.muted)
@@ -222,8 +222,6 @@ struct IdeationScreen: View {
             } else {
                 Button { Task { await model.requestLock() } } label: { Label("Lock synopsis", systemImage: "lock") }
                     .buttonStyle(.glassProminent).disabled(!model.hasSynopsis || model.working != nil)
-                Button { Task { await model.refresh() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }
-                    .buttonStyle(.glass).disabled(model.working != nil)
                 Button { model.beginEdit() } label: { Label("Edit", systemImage: "pencil") }
                     .buttonStyle(.glass).disabled(!model.hasSynopsis || model.working != nil)
             }

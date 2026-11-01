@@ -47,14 +47,14 @@ logged to Bug Hotel rather than built.
 - [ ] C5. The 0.4.0 input and dictation work in this thread unchanged.
 - [ ] C6. Suggestion buttons are not shown (as in 0.3.0).
 
-## D. Refresh phrases and Refresh
+## D. Drafting changes (replaces the desktop's Refresh, decided 1 Nov 2026)
 
-- [ ] D1. A message that is *wholly* one of these phrases (plus filler words `please now again just ok okay thanks thank you go ahead and then so right`) fires the refresh instead of a chat turn: "capture what we now know", "capture that", "capture this", "capture what we know", "refresh the synopsis", "update the synopsis", "rewrite the synopsis", "write that down", "write this down". The same list and the same whole-instruction rule as the desktop.
-- [ ] D2. A phrase inside a longer sentence ("Godric, update the synopsis with the new ending") is sent to Godric as a normal message.
-- [ ] D3. The desktop also sends what is left of the message (only filler such as "please") to Godric as a chat turn. The app does not: a pure command only refreshes, and the thread shows a note "Refreshing the synopsis from the conversation…" (the sheet may cover the pane).
-- [ ] D4. The Refresh action calls `POST …/refresh-synopsis`, shows "Refreshing…", repaints with `synopsis`, and shows the returned `cost_usd` once it finishes (the ADR adds this to the desktop's behaviour).
-- [ ] D5. `discarded: true` shows "Refresh dropped: the synopsis changed while it ran, so it was left as it is. Refresh again if you still want it." and leaves the pane as it was.
-- [ ] D6. A failed refresh shows "Refresh failed: {status} …" and leaves the pane as it was.
+- [ ] D1. There is no Refresh button on the phone or iPad. The author talks to Godric and asks him to draft ("update the synopsis please", "propose a draft"); a message that is wholly one of the desktop's old refresh phrases is sent to Godric like any other message. (Reason: a full rewrite from the conversation was cut off at the model's output limit and produced a draft that deleted 1,758 words; targeted drafts do not.)
+- [ ] D2. When Godric drafts a change, the synopsis does not change. A "Drafted change: not applied yet" card shows each changed paragraph marked up word by word (red struck-through words go, green words arrive, long unchanged stretches folded to "…").
+- [ ] D3. While a draft waits the bottom bar shows only **Apply drafted change** and **Discard**. Apply is disabled for a stale draft. Apply calls the server with the draft's `base_version`; a 409 reloads the synopsis and says it changed.
+- [ ] D4. The thread tells the author Godric has drafted a change and where Apply and Discard are.
+- [ ] D5. A new book with no synopsis: the author asks Godric to propose a draft, reviews it, and presses Apply. (Server-side check in 0.54.0.)
+- [ ] D6. A draft that removes more than 10% of the synopsis shows a plain warning above Apply (server field `shrinks`; app display follows once the server reports its shape).
 
 ## E. Editing by hand
 

@@ -28,33 +28,6 @@ private struct CodexName: Decodable, Sendable { let name: String }
 /// `base_version` is the version the text was edited from; the server refuses a stale one with 409.
 private struct DraftBody: Encodable, Sendable { let text: String; let base_version: Int? }
 
-/// The desktop's refresh phrases. A message that is wholly one of them (with only filler words beside it) is a
-/// command to refresh the synopsis; inside a longer sentence it is a request to Godric, who edits the synopsis himself.
-enum RefreshPhrase {
-    static let phrases = [
-        "capture what we now know", "capture that", "capture this", "capture what we know",
-        "refresh the synopsis", "update the synopsis", "rewrite the synopsis", "write that down", "write this down",
-    ]
-    private static let filler: Set<String> = ["please", "now", "again", "just", "ok", "okay", "thanks", "thank", "you", "go", "ahead", "and", "then", "so", "right"]
-
-    static func isCommand(_ text: String) -> Bool {
-        let t = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !t.isEmpty else { return false }
-        for phrase in phrases {
-            let pattern = "(^|[\\s.,;!?])" + NSRegularExpression.escapedPattern(for: phrase) + "([\\s.,;!?]|$)"
-            guard let re = try? NSRegularExpression(pattern: pattern),
-                  let m = re.firstMatch(in: t, range: NSRange(t.startIndex..., in: t)),
-                  let r = Range(m.range, in: t) else { continue }
-            var rest = t
-            rest.replaceSubrange(r, with: " ")
-            let words = rest.replacingOccurrences(of: "[.,;!?]", with: " ", options: .regularExpression)
-                .split(separator: " ").map(String.init)
-            if words.allSatisfy({ filler.contains($0) }) { return true }
-        }
-        return false
-    }
-}
-
 /// The Ideation panel for one book at a time: its synopsis (read, edit, refresh, lock) and its Godric thread.
 /// The server holds everything; this keeps what is on screen and an edit in progress.
 @MainActor @Observable
@@ -104,7 +77,6 @@ final class IdeationModel {
     /// is none and puts the "Idea development" plan step back in progress, as on the desktop.
     func load(bookId: Int, title: String, client: APIClient) async {
         self.client = client
-        godric.onRefreshCommand = { [weak self] in await self?.refresh() }
         godric.onContinued = { [weak self] in await self?.reload() }
         godric.onProposal = { [weak self] p in self?.proposal = p }
         godric.onNewConversation = { [weak self] in await self?.newConversation() }
@@ -226,7 +198,8 @@ final class IdeationModel {
 
     // MARK: refresh and lock
 
-    /// Refresh drafts a synopsis from the conversation so far. It is a draft: nothing changes until the author applies it.
+    /// Refresh drafts a synopsis from the conversation so far. Hidden in 0.5.0 (the button is gone; the author asks Godric to draft
+    /// instead): a full rewrite can be cut off at the model's output limit. Kept so it can come back.
     func refresh() async {
         guard let bookId, let client, working == nil, !editing else { return }
         working = .refreshing; banner = nil
