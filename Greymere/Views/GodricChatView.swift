@@ -8,7 +8,10 @@ struct GodricChatView: View {
     var book: ChatBook?
     var onClose: (() -> Void)?
     @Environment(ConnectionModel.self) private var connection
+    @Environment(\.scenePhase) private var scenePhase
     @State private var draft = ""
+    @State private var selection: TextSelection?
+    @State private var dictation = DictationModel()
     @State private var showHistory = false
 
     var body: some View {
@@ -16,9 +19,19 @@ struct GodricChatView: View {
             header
             if model.viewing != nil { pastBanner }
             thread
-            ChatInput(text: $draft, canSend: !model.busy && model.viewing == nil,
-                      placeholder: model.viewing == nil ? "Message Godric…" : "Reading only") {
+            if let notice = dictation.notice {
+                Text(notice).font(.caption).foregroundStyle(connection.theme.muted)
+                    .padding(.horizontal, 20).padding(.bottom, 2).frame(maxWidth: .infinity, alignment: .leading)
+                    .onTapGesture { dictation.notice = nil }
+                    .accessibilityHint("Tap to dismiss")
+            }
+            if !dictation.chips.isEmpty { chipStrip }
+            ChatInput(text: $draft, selection: $selection, canSend: !model.busy && model.viewing == nil,
+                      placeholder: model.viewing == nil ? "Message Godric…" : "Reading only",
+                      mic: { micButton }) {
                 let text = draft
+                dictation.settle()                           // an edit not yet learned is reported before the draft clears
+                dictation.end()                              // sending a message ends dictation; starting it again is a decision
                 draft = ""
                 Task { await model.send(text, client: client) }
             }
@@ -31,6 +44,52 @@ struct GodricChatView: View {
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showHistory) { HistorySheet(model: model, client: client, isPresented: $showHistory) }
         .task(id: book?.id) { await model.open(client: client, book: book.map { ($0.id, $0.title) }) }
+        .task(id: connection.address) { await dictation.check(client: client) }
+        .onChange(of: draft) { _, new in dictation.textChanged(to: new) }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.settle(); dictation.end() } }
+        .onChange(of: model.busy) { _, busy in if busy { dictation.end() } }
+        .onDisappear { dictation.settle(); dictation.end() }
+    }
+
+    /// What dictation changed or learned, each a tap away from being undone: the phone's version of the desktop strip.
+    private var chipStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(dictation.chips) { chip in
+                    Button { dictation.act(on: chip) } label: {
+                        Text(chip.label).font(.footnote).lineLimit(1)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .foregroundStyle(connection.theme.muted)
+                            .background(.thinMaterial, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint(chip.kind == .applied ? "Puts the heard word back" : chip.kind == .suggested ? "Uses the suggested spelling" : "Forgets this correction")
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+        .padding(.bottom, 2)
+    }
+
+    /// The thumb button: tap to start, tap to stop. Unavailable (greyed) when the server cannot dictate; a tap says why.
+    private var micButton: some View {
+        let listening = dictation.state == .listening
+        let working = dictation.state == .starting || dictation.state == .stopping
+        let icon = dictation.available == false ? "mic.slash" : (listening ? "mic.fill" : "mic")
+        return Button {
+            Task {
+                await dictation.toggle(client: client, bookId: book?.id, field: DictationField(text: $draft, selection: $selection))
+            }
+        } label: {
+            Image(systemName: icon)
+                .font(listening ? .title3 : .body)
+                .symbolEffect(.pulse, isActive: listening)
+                .padding(8)
+                .foregroundStyle(listening ? AnyShapeStyle(Color.red) : (dictation.available == false ? AnyShapeStyle(.tertiary) : AnyShapeStyle(connection.theme.muted)))
+        }
+        .buttonStyle(.plain)
+        .disabled(working || model.busy || model.viewing != nil)
+        .accessibilityLabel(listening ? "Stop dictation" : "Dictate")
     }
 
     private var header: some View {
@@ -205,38 +264,36 @@ private struct HistorySheet: View {
     }
 }
 
-/// The chat input: one reusable piece, with a mic slot beside Send. The slot is present in the layout and the
-/// structure but inert in 0.3.0; dictation (0.4.0) fills it without reshaping the component.
+/// The chat input: one reusable piece, with a mic slot beside Send. Dictation (0.4.0) fills the slot.
 /// The book Godric is asked about when chat is opened from Book Details.
 struct ChatBook: Equatable { let id: Int; let title: String }
 
 struct ChatInput<Mic: View>: View {
     @Binding var text: String
+    @Binding var selection: TextSelection?
     var canSend: Bool
     var placeholder: String
     var mic: Mic
     let onSend: () -> Void
     @Environment(ConnectionModel.self) private var connection
 
-    init(text: Binding<String>, canSend: Bool, placeholder: String,
+    init(text: Binding<String>, selection: Binding<TextSelection?>, canSend: Bool, placeholder: String,
          @ViewBuilder mic: () -> Mic, onSend: @escaping () -> Void) {
-        _text = text; self.canSend = canSend; self.placeholder = placeholder; self.mic = mic(); self.onSend = onSend
+        _text = text; _selection = selection; self.canSend = canSend; self.placeholder = placeholder; self.mic = mic(); self.onSend = onSend
     }
 
     private var sendable: Bool { canSend && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField(placeholder, text: $text, axis: .vertical)
-                .lineLimit(1...5)
-                .submitLabel(.send)
-                .padding(.vertical, 8).padding(.leading, 6)
-                // Return sends; Shift-Return keeps a new line.
-                .onKeyPress(.return, phases: .down) { press in
-                    if press.modifiers.contains(.shift) { return .ignored }
-                    if sendable { onSend() }
-                    return .handled
+            ZStack(alignment: .topLeading) {
+                if text.isEmpty {
+                    Text(placeholder).font(.body).foregroundStyle(.tertiary)
+                        .padding(.top, 8).padding(.leading, 6).allowsHitTesting(false)
                 }
+                // Return sends; Shift-Return keeps a new line (hardware keyboard).
+                ChatTextView(text: $text, selection: $selection) { if sendable { onSend() } }
+            }
             mic
             Button(action: onSend) { Image(systemName: "arrow.up").font(.body.weight(.bold)).padding(8) }
                 .buttonStyle(.glassProminent).buttonBorderShape(.circle)
@@ -245,22 +302,5 @@ struct ChatInput<Mic: View>: View {
         }
         .padding(.horizontal, 10).padding(.vertical, 6)
         .glassEffect(.regular, in: .rect(cornerRadius: 24))
-    }
-}
-
-extension ChatInput where Mic == InertMicSlot {
-    init(text: Binding<String>, canSend: Bool, placeholder: String, onSend: @escaping () -> Void) {
-        self.init(text: text, canSend: canSend, placeholder: placeholder, mic: { InertMicSlot() }, onSend: onSend)
-    }
-}
-
-/// The reserved microphone control. Visibly disabled; nothing sits behind it.
-struct InertMicSlot: View {
-    var body: some View {
-        Image(systemName: "mic").font(.body).padding(8)
-            .foregroundStyle(.tertiary)
-            .accessibilityLabel("Dictation, coming later")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityHint("Not available yet")
     }
 }
