@@ -12,8 +12,8 @@ final class ConnectionModel {
         case ready(Instance)
     }
 
-    /// The lowest server this app will talk to (0.53.0 added dictation; 0.52.0 the quiet chat opening; before that, /api/home/summary).
-    static let minimumServerVersion = "0.53.0"
+    /// The lowest server this app will talk to (0.54.0: one versioned synopsis per book, Continue that reopens, History without unused conversations; 0.53.0 added dictation; 0.52.0 the quiet chat opening; before that, /api/home/summary).
+    static let minimumServerVersion = "0.54.0"
 
     var state: State = .connecting
     var address: String

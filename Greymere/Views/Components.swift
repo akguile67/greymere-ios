@@ -1,29 +1,5 @@
 import SwiftUI
 
-struct EnvironmentBar: View {
-    let instance: Instance
-    @Environment(ConnectionModel.self) private var connection
-
-    private var tint: Color {
-        switch instance.environment {
-        case "production": return connection.theme.accent
-        case "pre-production": return .orange
-        default: return .teal
-        }
-    }
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Circle().fill(tint).frame(width: 8, height: 8)
-            Text(Fmt.environmentName(instance.environment)).font(.caption.weight(.semibold))
-            Text("server \(instance.version)").font(.caption).foregroundStyle(connection.theme.muted)
-        }
-        .padding(.horizontal, 14).padding(.vertical, 7)
-        .glassEffect(.regular, in: .capsule)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 /// Covers are fetched once and kept: in memory for this run, and on disk between runs. A cover's address carries its
 /// own version (?v=), so a replaced cover has a new address and is fetched again; nothing stale is ever shown.
 @MainActor
@@ -94,62 +70,113 @@ struct SectionLabel: View {
     }
 }
 
-/// The environment pill on a glass band across the top, with the page scrolling behind it.
-struct EnvironmentBarInset: ViewModifier {
+/// A slim glass band across the top with the page scrolling behind it: a small tag on a pre-production or dev
+/// build (the production app shows none), the panel's title if it has one, and the settings gear at the right.
+struct TopBand: ViewModifier {
     var enabled = true
+    var title: String?
     @Environment(ConnectionModel.self) private var connection
+
+    private var tag: String? {
+        guard let env = connection.instance?.environment, env != "production" else { return nil }
+        return Fmt.environmentName(env)
+    }
+
+    private var appVersion: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?" }
 
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .top, spacing: 0) {
-            if enabled, let instance = connection.instance {
-                EnvironmentBar(instance: instance)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background {
-                        Rectangle().fill(.clear)
-                            .glassEffect(.regular.tint(connection.theme.glassTint), in: .rect)
-                            .ignoresSafeArea(edges: .top)
+            if enabled {
+                HStack(spacing: 10) {
+                    if let title { Text(title).font(.serif(22)) }
+                    if let tag {
+                        Text(tag).font(.caption2.weight(.bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(tag == "PRE-PROD" ? Color.orange : Color.teal, in: Capsule())
                     }
+                    Spacer()
+                    Menu {
+                        Section("About Greymere") {
+                            Label("iOS \(appVersion)", systemImage: "iphone")
+                            if let instance = connection.instance {
+                                Label("Server \(instance.version)", systemImage: "server.rack")
+                                Label(Fmt.environmentName(instance.environment), systemImage: "leaf")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "gearshape").font(.body.weight(.semibold)).padding(7)
+                            .foregroundStyle(connection.theme.text)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .accessibilityLabel("Settings")
+                }
+                .padding(.horizontal, 16).padding(.vertical, 5)
+                .frame(maxWidth: .infinity)
+                .background {
+                    Rectangle().fill(.clear)
+                        .glassEffect(.regular.tint(connection.theme.glassTint), in: .rect)
+                        .ignoresSafeArea(edges: .top)
+                }
             }
         }
     }
 }
 
 extension View {
-    func environmentBar(_ enabled: Bool = true) -> some View { modifier(EnvironmentBarInset(enabled: enabled)) }
+    func topBand(_ enabled: Bool = true, title: String? = nil) -> some View { modifier(TopBand(enabled: enabled, title: title)) }
 
-    /// The way into Godric: a small tinted glass pill floating at the bottom, in the manner of the Music app's
-    /// mini player. Room is left either side for round glass buttons when more panes arrive.
-    func godricButton(isOpen: Bool, action: @escaping () -> Void) -> some View {
-        modifier(GodricPill(isOpen: isOpen, action: action))
+    /// The floating glass bar at the bottom of every screen, in the manner of the Music app: Home, the Ask Godric
+    /// pill, and Panels (which raises the tray of workflow stages).
+    func glassBar(isOpen: Bool, action: @escaping () -> Void) -> some View {
+        modifier(GlassBar(isOpen: isOpen, action: action))
     }
 }
 
-struct GodricPill: ViewModifier {
+struct GlassBar: ViewModifier {
     let isOpen: Bool
     let action: () -> Void
     @Environment(ConnectionModel.self) private var connection
+    @Environment(ShellModel.self) private var shell
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    /// Bigger on an iPad, where a phone-sized pill gets lost.
+    /// Bigger on an iPad, where a phone-sized bar gets lost.
     private var regular: Bool { sizeClass == .regular }
+    private var size: CGFloat { regular ? 60 : 44 }
+
+    private func round(_ symbol: String, label: String, active: Bool, _ tap: @escaping () -> Void) -> some View {
+        Button(action: tap) {
+            Image(systemName: symbol).font((regular ? Font.title3 : .body).weight(.semibold))
+                .foregroundStyle(active ? connection.theme.accent : connection.theme.text)
+                .frame(width: size, height: size).contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .circle)
+        .accessibilityLabel(label)
+    }
 
     func body(content: Content) -> some View {
         content.safeAreaInset(edge: .bottom, spacing: 0) {
-            Button(action: action) {
-                HStack(spacing: regular ? 12 : 8) {
-                    Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
-                    Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+            GlassEffectContainer(spacing: 12) {
+                HStack(spacing: 12) {
+                    round("house", label: "Home", active: shell.destination == .home && !shell.trayOpen) { shell.goHome() }
+                    Button(action: action) {
+                        HStack(spacing: regular ? 12 : 8) {
+                            Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                            Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                        }
+                        .foregroundStyle(connection.theme.text)
+                        .padding(.horizontal, regular ? 32 : 20).frame(height: size)
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
+                    .accessibilityLabel("Talk to Godric")
+                    round("square.grid.2x2", label: "Panels", active: shell.trayOpen || shell.destination != .home) { shell.trayOpen.toggle() }
                 }
-                .foregroundStyle(connection.theme.text)
-                .padding(.horizontal, regular ? 32 : 20).frame(height: regular ? 60 : 44)
-                .contentShape(Capsule())
             }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
             .padding(.top, 4).padding(.bottom, 2)
             .frame(maxWidth: .infinity)
-            .accessibilityLabel("Talk to Godric")
         }
     }
 }

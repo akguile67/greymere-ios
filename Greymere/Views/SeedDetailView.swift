@@ -35,7 +35,7 @@ struct SeedDetailView: View {
             .padding(16)
         }
         .background(connection.theme.background.ignoresSafeArea())
-        .environmentBar(showsBar)
+        .topBand(showsBar)
         .navigationTitle(item.title)
         .navigationBarTitleDisplayMode(.inline)
         .task(id: item.rawId) { await model.load(id: item.rawId, using: client) }
@@ -118,7 +118,7 @@ struct SeedDetailView: View {
 }
 
 /// The few Markdown shapes a seed's text uses: headings, bullets and paragraphs (bold and italics inside them).
-private struct Blocks: View {
+struct Blocks: View {
     let text: String
     @Environment(ConnectionModel.self) private var connection
 

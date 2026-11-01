@@ -4,9 +4,9 @@ import SwiftUI
 /// enough for both (iPad on its side, a large iPad); otherwise it is a screen of its own with a back button,
 /// as on the iPhone and an iPad mini held upright.
 struct HomeScreen: View {
+    let home: HomeModel
     let client: APIClient
     @Environment(ConnectionModel.self) private var connection
-    @State private var home = HomeModel()
     @State private var selected: String?
     @AppStorage("greymere.detailFraction") private var detailFraction: Double = 0.46
     @State private var dragStart: Double?
@@ -25,6 +25,7 @@ struct HomeScreen: View {
             }
         }
         .task { await home.load(using: client) }
+        .onChange(of: chatOpen) { _, open in if !open { godric.leaveHistory() } }
     }
 
     private func split(total: CGFloat) -> some View {
@@ -85,7 +86,7 @@ struct HomeScreen: View {
         } else if let detail = item.detail {
             BookDetailView(item: item, figures: detail, client: client, showsBar: showsBar,
                            isExpanded: isExpanded, onToggleExpand: onToggleExpand, onClose: onClose)
-                .godricButton(isOpen: false) { openChat(about: item) }
+                .glassBar(isOpen: false) { openChat(about: item) }
         }
     }
 
@@ -175,8 +176,8 @@ private struct HomeContent: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
-        .environmentBar(showsBar)
-        .godricButton(isOpen: chatIsOpen) { onGodric?() }
+        .topBand(showsBar)
+        .glassBar(isOpen: chatIsOpen) { onGodric?() }
         .background(connection.theme.background.ignoresSafeArea())
         .refreshable { await home.load(using: client); await today.load(client: client) }
         .onChange(of: scenePhase) { _, phase in

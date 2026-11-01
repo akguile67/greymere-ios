@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Godric chat: the Home thread, as the desktop's Godric panel shows it. Full screen on iPhone, docked on iPad.
+/// Godric chat: a panel's thread (Home, or a book's Ideation), as the desktop's Godric panel shows it. Full screen on
+/// iPhone, docked on iPad; in Ideation a sheet over the synopsis.
 struct GodricChatView: View {
     let model: GodricModel
     let client: APIClient
@@ -40,8 +41,15 @@ struct GodricChatView: View {
             .padding(.horizontal, 12).padding(.bottom, 8).padding(.top, 4)
         }
         .background(connection.theme.background.ignoresSafeArea())
-        .environmentBar(showsBar)
+        .topBand(showsBar)
         .toolbar(.hidden, for: .navigationBar)
+        .confirmationDialog("This conversation is from somewhere else", isPresented: Bindable(model).askContinueChoice, titleVisibility: .visible) {
+            Button("Start a new conversation from it") { Task { await model.continueViewing(client: client, intoNew: true) } }
+            Button("Add it to the current conversation") { Task { await model.continueViewing(client: client, intoNew: false) } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The conversation you are in stays in History.")
+        }
         .sheet(isPresented: $showHistory) { HistorySheet(model: model, client: client, isPresented: $showHistory) }
         .task(id: book?.id) { await model.open(client: client, book: book.map { ($0.id, $0.title) }) }
         .task(id: connection.address) { await dictation.check(client: client) }
@@ -125,13 +133,19 @@ struct GodricChatView: View {
     }
 
     private var pastBanner: some View {
-        HStack {
-            Text("Viewing a past conversation").font(.footnote)
-            Spacer()
-            Button("Continue") { Task { await model.continueViewing(client: client) } }
-            Button("Back") { model.backToActive() }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Viewing a past conversation").font(.footnote)
+                Spacer()
+                Button("Continue") { Task { await model.pressContinue(client: client) } }
+                Button("Back to current") { model.backToActive() }
+                    .accessibilityLabel("Back to the conversation you were in")
+            }
+            .buttonStyle(.glass)
+            if let error = model.continueError {
+                Text(error).font(.footnote).foregroundStyle(.red).accessibilityLabel("Continue failed: \(error)")
+            }
         }
-        .buttonStyle(.glass)
         .padding(.horizontal, 12).padding(.vertical, 6)
     }
 
@@ -246,7 +260,7 @@ private struct HistorySheet: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(entry.title ?? "Untitled conversation").font(.body.weight(.medium)).foregroundStyle(connection.theme.text)
-                        Text(subtitle(entry)).font(.caption).foregroundStyle(connection.theme.muted)
+                        Text(subtitle(entry) + (entry.key == model.activeKey ? " · current" : "")).font(.caption).foregroundStyle(connection.theme.muted)
                     }
                 }
             }

@@ -12,7 +12,7 @@ struct RootView: View {
             case .tooOld(let version): TooOldView(serverVersion: version)
             case .ready:
                 if let client = connection.client {
-                    HomeScreen(client: client)
+                    AppShell(client: client)
                 }
             }
         }

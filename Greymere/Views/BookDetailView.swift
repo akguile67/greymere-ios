@@ -45,7 +45,7 @@ struct BookDetailView: View {
             .padding(16)
         }
         .background(connection.theme.background.ignoresSafeArea())
-        .environmentBar(showsBar)
+        .topBand(showsBar)
         .navigationTitle(f.title)
         .navigationBarTitleDisplayMode(.inline)
     }
