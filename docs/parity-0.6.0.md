@@ -6,7 +6,7 @@ Baseline: the desktop Creation pane at server 0.54.0 behaviour (`public/index.ht
 
 Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upgraded only on what was seen in the simulator, never on the code.
 
-**Counts: 71 rows. Run 28 · Built, not run 30 · Not built 2 · Different 11.**
+**Counts: 75 rows. Run 31 · Built, not run 31 · Not built 2 · Different 11.**
 
 | # | Feature | Desktop behaviour | Status | Evidence | Gap or note |
 |---|---|---|---|---|---|
@@ -55,7 +55,7 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 | 43 | Save refused: chapter changed (CHAPTER_CHANGED) | Other text kept as a version if you overwrite | Built, not run | — | — |
 | 44 | Save refused: beats changed (BEATS_CHANGED) | Not a desktop case | Built, not run | — | — |
 | 45 | Save refused: empty chapter (400) | Refused | Built, not run | — | — |
-| 46 | Locked chapter: read-only with bar (423) | Read-only with a bar | Built, not run | No locked book on dev | — |
+| 46 | Locked chapter: read-only with bar | Read-only with a bar | Run | Me on iPhone 14 Pro: The House (published) chapter 1 on dev. Prose read-only, bar shown | Not seen on iPad mini |
 | 47 | Drafting note: add on a selected passage | Select, press Note, write | Run | Andy on iPhone | — |
 | 48 | Drafting notes: view the list | Margin list | Run | Andy on iPhone | — |
 | 49 | Drafting note: delete | Yes | Run | Andy on iPhone | — |
@@ -81,6 +81,10 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 | 69 | iPhone on its side | n/a | Run | Andy | — |
 | 70 | Dismissed references come back when Generate re-infers them | Same on the desktop (server behaviour) | Different | Seen by Andy on iPad mini | Known and deliberately unchanged here. A server question for the author; not changed in the iPad app |
 | 71 | App 0.6.0, minimum server 0.55.0 | n/a | Run | Me: the app connects to server 0.55.0 | — |
+| 72 | Locked chapter: beats read-only | Desktop hides "Add a beat at the end" and "Undo last draft" | Run | Me on iPhone 14 Pro, The House chapter 1 with a test beat added on dev | Add beat pill, move arrows, beat menu, Add reference and Propose references are hidden; Generate is greyed; each beat says "Chapter is locked. Unlock to change." |
+| 73 | Locked chapter: other entry points | Same | Built, not run | Gated in the model (`requireUnlocked`) and the views, but no locked chapter had a draft, an Undo or a pending Godric change | Accept, Regenerate, Discard draft, Undo, Lock as draft one, Apply, reference chip menu |
+| 74 | Unlock to change… / Lock again | Confirm with the server's warning, PUT proofread-lock {locked:false, accept:true}; "Lock again" the reverse | Run | Me on iPhone 14 Pro: warning shown, unlocked (server confirmed locked false), controls came back, Lock again re-locked | Not run on iPad mini. Locking again with unsaved edits is refused with "Save or discard your edits first." |
+| 75 | 423 PROSE_LOCKED in words | Toast "This chapter is locked, so nothing was saved." | Built, not run | Server confirmed to answer 423 on prose-with-beats; the app text was not triggered | Prose save keeps its own message; every other beat or reference failure says "Chapter is locked. Unlock to change." and re-reads the chapter |
 
 ## Rows still not run
 
@@ -103,7 +107,6 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 - 43. Save refused: chapter changed (CHAPTER_CHANGED)
 - 44. Save refused: beats changed (BEATS_CHANGED)
 - 45. Save refused: empty chapter (400)
-- 46. Locked chapter: read-only with bar (423)
 - 50. Drafting note: clear and reopen
 - 51. Drafting note: highlight in the text
 - 52. Drafting note: "can't place"
@@ -114,6 +117,8 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 - 60. Return from the background re-reads the chapter
 - 61. Pull to refresh
 - 63. The other pills: Save and Discard, Apply and Discard, Undo arrow
+- 73. Locked chapter: Accept, Undo, Lock as draft one, Apply a Godric beat change, reference chips
+- 75. 423 PROSE_LOCKED shown in words on beat and reference calls
 
 ## Bug Hotel candidates
 
@@ -124,3 +129,5 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 - A note cannot span two passages.
 - Lock uses one dialog; the desktop uses two.
 - Dismissed references return when Generate re-infers them: a server question, deliberately unchanged.
+- Server, not client: on a locked chapter the dev server accepts insert-beat, beat delete and lock-draft (all returned 200). Only prose saves answer 423. The app now stops these client side, as the desktop does, but the routes themselves are unguarded.
+- Opening a locked chapter flips a briefed chapter to Drafting (server side effect of GET chapter); the desktop does the same.

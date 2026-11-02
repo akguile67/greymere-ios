@@ -261,6 +261,7 @@ final class CreationModel {
     var notes: [DraftingNote] = []
     var noteQuote: String?
     var locking = false
+    var unlocking = false
     /// The add/edit beat sheet, held here so the bottom actions can open it from the glass bar.
     var beatSheet: BeatSheetTarget?
 
@@ -394,6 +395,11 @@ final class CreationModel {
     }
 
     private func fail(_ what: String, _ error: Error) {
+        if case APIError.http(423, _) = error {
+            banner = Banner(text: "\(what): \(Self.lockedWords)", isError: true)
+            Task { await reloadChapter() }
+            return
+        }
         banner = Banner(text: "\(what): \((error as? APIError)?.message ?? "could not reach the server")", isError: true)
     }
 
@@ -457,7 +463,7 @@ final class CreationModel {
     }
 
     func updateBeat(_ beat: CreationBeat, text: String, target: Int?) async -> Bool {
-        guard let client, !working else { return false }
+        guard let client, !working, requireUnlocked() else { return false }
         working = true; defer { working = false }
         do {
             let _: Ignored = try await client.patch("/api/creation/beats/\(beat.id)", body: BeatPatch(what_happens: text, target_words: target))
@@ -496,7 +502,7 @@ final class CreationModel {
     // MARK: references
 
     func proposeRefs(_ beat: CreationBeat) async {
-        guard let client, !busyBeats.contains(beat.id) else { return }
+        guard let client, !busyBeats.contains(beat.id), requireUnlocked() else { return }
         busyBeats.insert(beat.id); defer { busyBeats.remove(beat.id) }
         struct Proposed: Decodable { let proposed: [BeatRef]? }
         do {
@@ -512,7 +518,7 @@ final class CreationModel {
 
     /// Replaces the beat's reference list with exactly this one.
     func setRefs(_ beat: CreationBeat, _ refs: [BeatRef]) async {
-        guard let client, !working else { return }
+        guard let client, !working, requireUnlocked() else { return }
         working = true; defer { working = false }
         do {
             let _: Ignored = try await client.put("/api/creation/beats/\(beat.id)/refs",
@@ -522,7 +528,7 @@ final class CreationModel {
     }
 
     func dismissRef(_ beat: CreationBeat, name: String, restore: Bool) async {
-        guard let client, !working else { return }
+        guard let client, !working, requireUnlocked() else { return }
         working = true; defer { working = false }
         do {
             let _: Ignored = try await client.post("/api/creation/beats/\(beat.id)/\(restore ? "undismiss-ref" : "dismiss-ref")", body: NameBody(name: name))
@@ -531,7 +537,7 @@ final class CreationModel {
     }
 
     func acceptContinuity(_ beat: CreationBeat) async {
-        guard let client, !working else { return }
+        guard let client, !working, requireUnlocked() else { return }
         working = true; defer { working = false }
         do {
             let _: Ignored = try await client.post("/api/creation/beats/\(beat.id)/continuity/accept", body: EmptyBody())
@@ -542,7 +548,7 @@ final class CreationModel {
     // MARK: Godric's beat change
 
     func applyProposal() async {
-        guard let proposal, let client, !working else { return }
+        guard let proposal, let client, !working, requireUnlocked() else { return }
         working = true; defer { working = false }
         do {
             let _: Ignored = try await client.post("/api/creation/beat-proposal/apply",
@@ -686,6 +692,38 @@ extension CreationModel {
 
     /// Structural actions need the text saved first: they change what the segments are.
     func requireSaved() -> Bool {
+        if !requireUnlocked() { return false }
+        if dirty { banner = Banner(text: "Save or discard your edits first.", isError: true); return false }
+        return true
+    }
+
+    static let lockedWords = "Chapter is locked. Unlock to change."
+
+    /// A locked chapter of a book past editing is read-only for beats as well as prose (the desktop hides these controls).
+    func requireUnlocked() -> Bool {
+        if isLocked { banner = Banner(text: Self.lockedWords, isError: true); return false }
+        return true
+    }
+
+    /// The server's own warning, shown before an unlock.
+    var unlockWarning: String {
+        doc?.chapter.proseLock?.warning ?? "This book is past editing. Changing this chapter can leave its uploaded files out of step."
+    }
+    var lockApplies: Bool { doc?.chapter.proseLock?.applies == true }
+
+    /// Unlock (after the author has read the warning) or lock again: PUT /api/chapters/:id/proofread-lock.
+    func setChapterLock(_ locked: Bool) async {
+        guard let client, let id = chapterId, !unlocking else { return }
+        if locked, !requireSavedOnly() { return }
+        unlocking = true; defer { unlocking = false }
+        do {
+            let _: Ignored = try await client.put("/api/chapters/\(id)/proofread-lock", body: LockBody(locked: locked, accept: locked ? nil : true))
+            await reloadChapter()
+            banner = Banner(text: locked ? "Chapter is locked again." : "Chapter is unlocked. Its files may need regenerating and re-uploading afterwards.")
+        } catch { fail(locked ? "The chapter wasn't locked" : "The chapter wasn't unlocked", error) }
+    }
+
+    private func requireSavedOnly() -> Bool {
         if dirty { banner = Banner(text: "Save or discard your edits first.", isError: true); return false }
         return true
     }
@@ -781,7 +819,7 @@ extension CreationModel {
     }
 
     func discardDraft(_ beat: CreationBeat) async {
-        guard let client, !working else { return }
+        guard let client, !working, requireUnlocked() else { return }
         working = true; defer { working = false }
         do {
             let _: CreationBeat = try await client.post("/api/creation/beats/\(beat.id)/discard-proposal", body: EmptyBody())
@@ -856,3 +894,5 @@ extension CreationModel {
         } catch { fail("The chapter wasn't locked", error) }
     }
 }
+
+private struct LockBody: Encodable, Sendable { let locked: Bool; let accept: Bool? }

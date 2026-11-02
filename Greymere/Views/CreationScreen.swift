@@ -232,6 +232,7 @@ private struct CreationChapterView: View {
     @State private var composingQuote: String?
     @State private var showNotes = false
     @State private var confirmLock = false
+    @State private var confirmUnlock = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -415,7 +416,7 @@ private struct CreationChapterView: View {
             HStack(spacing: 8) {
                 Text("CHAPTER").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(connection.theme.muted)
             }
-            if model.isLocked { lockBar }
+            if model.lockApplies { lockBar }
             if let notice = dictation.notice {
                 Text(notice).font(.caption).foregroundStyle(connection.theme.muted).onTapGesture { dictation.notice = nil }
             }
@@ -440,10 +441,28 @@ private struct CreationChapterView: View {
     }
 
     private var lockBar: some View {
-        Label(model.doc?.chapter.proseLock?.warning ?? "This chapter is locked and can't be edited here.", systemImage: "lock.fill")
-            .font(.footnote).foregroundStyle(connection.theme.text)
-            .padding(10).frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        let number = "This chapter"
+        return VStack(alignment: .leading, spacing: 8) {
+            if model.isLocked {
+                Label("\(number) is locked. The book is past editing, so its text is kept in step with the assembled files.", systemImage: "lock.fill")
+                    .font(.footnote).foregroundStyle(connection.theme.text)
+                Button { confirmUnlock = true } label: { Label(model.unlocking ? "Unlocking…" : "Unlock to change…", systemImage: "lock.open").font(.footnote) }
+                    .buttonStyle(.glass).disabled(model.unlocking || model.working)
+            } else {
+                Label("\(number) is unlocked for changes. Its files may need regenerating and re-uploading afterwards.", systemImage: "lock.open.fill")
+                    .font(.footnote).foregroundStyle(connection.theme.text)
+                Button { Task { dismissKeyboard(); await model.setChapterLock(true) } } label: { Label(model.unlocking ? "Locking…" : "Lock again", systemImage: "lock").font(.footnote) }
+                    .buttonStyle(.glass).disabled(model.unlocking || model.working || model.savingProse)
+            }
+        }
+        .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .confirmationDialog("Unlock this chapter for changes?", isPresented: $confirmUnlock, titleVisibility: .visible) {
+            Button("Unlock chapter", role: .destructive) { Task { await model.setChapterLock(false) } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(model.unlockWarning + "\n\nUnlock it only if the text really has to change.")
+        }
     }
 
     private var textTools: some View {
@@ -556,9 +575,10 @@ private struct CreationChapterView: View {
             .background(connection.theme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             HStack(spacing: 10) {
                 Button { Task { await model.applyProposal() } } label: { Label("Apply", systemImage: "checkmark") }
-                    .buttonStyle(.glassProminent).disabled(model.working)
+                    .buttonStyle(.glassProminent).disabled(model.working || model.isLocked)
                 Button("Discard") { Task { await model.discardProposal() } }.buttonStyle(.glass).disabled(model.working)
             }
+            if model.isLocked { Text(CreationModel.lockedWords).font(.caption).foregroundStyle(connection.theme.muted) }
         }
         .padding(12)
         .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -587,7 +607,7 @@ struct ChapterActions: View {
                 GlassPill(title: tight ? "Apply" : "Apply change", systemImage: "checkmark", prominent: true, label: "Apply drafted change") {
                     Task { await model.applyProposal() }
                 }
-                .disabled(model.working)
+                .disabled(model.working || model.isLocked)
                 GlassPill(title: "Discard", label: "Discard drafted change") { Task { await model.discardProposal() } }
                     .disabled(model.working)
             } else if model.dirty {
@@ -598,9 +618,11 @@ struct ChapterActions: View {
                 .disabled(model.savingProse)
                 GlassPill(title: "Discard", label: "Discard edits") { model.discardEdits() }.disabled(model.savingProse)
             } else {
-                GlassPill(title: "Add beat", systemImage: "plus", prominent: true) { model.beatSheet = .add }
-                    .disabled(model.doc == nil || model.working)
-                if model.lastAccept != nil {
+                if !model.isLocked {
+                    GlassPill(title: "Add beat", systemImage: "plus", prominent: true) { model.beatSheet = .add }
+                        .disabled(model.doc == nil || model.working)
+                }
+                if model.lastAccept != nil, !model.isLocked {
                     GlassPill(systemImage: "arrow.uturn.backward", label: "Undo last draft") { Task { await model.undoLastDraft() } }
                         .disabled(model.working)
                 }

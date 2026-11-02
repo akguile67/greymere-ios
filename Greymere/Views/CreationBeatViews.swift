@@ -20,6 +20,7 @@ struct BeatCard: View {
                 Text(beat.number.map { "BEAT \($0)" } ?? "BEAT").font(.caption.weight(.semibold)).tracking(0.6).foregroundStyle(connection.theme.muted)
                 Text(model.placeLabel(beat)).font(.caption).foregroundStyle(connection.theme.faint).lineLimit(2)
                 Spacer(minLength: 4)
+                if !model.isLocked {
                 HStack(spacing: 2) {
                     Button { Task { await model.move(beat, by: -1) } } label: { Image(systemName: "arrow.up").padding(6) }
                         .disabled(!model.canMove(beat, by: -1) || model.working).accessibilityLabel("Move beat up")
@@ -38,6 +39,7 @@ struct BeatCard: View {
                     Image(systemName: "ellipsis.circle").font(.title3).foregroundStyle(connection.theme.muted).padding(4)
                 }
                 .accessibilityLabel("Beat actions")
+                }
             }
             Button(action: edit) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -51,13 +53,17 @@ struct BeatCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Edits the beat")
+            .disabled(model.isLocked)
+            .accessibilityHint(model.isLocked ? "Chapter is locked" : "Edits the beat")
 
             continuityBlock
             referencesBlock
 
             stopBlock
             if let draft = beat.proposal, !draft.isEmpty { draftBlock(draft) } else { generateRow }
+            if model.isLocked {
+                Label(CreationModel.lockedWords, systemImage: "lock.fill").font(.caption).foregroundStyle(connection.theme.muted)
+            }
         }
         .padding(12)
         .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -101,18 +107,22 @@ struct BeatCard: View {
                 }
                 ForEach(beat.activeRefs) { ref in chip(ref) }
                 ForEach(beat.dismissed, id: \.self) { name in dismissedChip(name) }
+                if !model.isLocked {
                 Button { refs(nil) } label: {
                     Label("Add reference", systemImage: "plus").font(.caption)
                         .padding(.horizontal, 9).padding(.vertical, 5).foregroundStyle(connection.theme.muted)
                         .overlay(Capsule().strokeBorder(connection.theme.faint, style: StrokeStyle(lineWidth: 1, dash: [3])))
                 }
                 .buttonStyle(.plain)
+                }
             }
+            if !model.isLocked {
             Button { Task { await model.proposeRefs(beat) } } label: {
                 Label(busy ? "Resolving…" : "Propose references", systemImage: "magnifyingglass").font(.footnote)
             }
             .buttonStyle(.glass)
             .disabled(busy || beat.whatHappens.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
         }
     }
 
@@ -134,6 +144,7 @@ struct BeatCard: View {
                 .padding(.horizontal, 9).padding(.vertical, 5).foregroundStyle(color)
                 .background(color.opacity(0.13), in: Capsule())
         }
+        .disabled(model.isLocked)
         .accessibilityHint(gap ? "No codex entry under this name" : needsDev ? "Still needs development" : "Resolved")
     }
 
@@ -219,7 +230,7 @@ struct BeatCard: View {
                     Button { Task { await model.generate(beat) } } label: { Label(generating ? "Drafting…" : "Regenerate", systemImage: "arrow.clockwise") }
                         .buttonStyle(.glass).disabled(!canGenerate)
                     Button("Discard") { Task { await model.discardDraft(beat) } }
-                        .buttonStyle(.glass).disabled(model.working || generating)
+                        .buttonStyle(.glass).disabled(model.working || generating || model.isLocked)
                 }
                 .font(.footnote)
                 if generating { HStack { ProgressView().controlSize(.small); Text("This can take about a minute.").font(.caption).foregroundStyle(connection.theme.muted) } }
