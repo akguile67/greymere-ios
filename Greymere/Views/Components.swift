@@ -236,3 +236,33 @@ struct ShelfRowLayout: Layout {
         }
     }
 }
+
+/// The divider between a panel and the Godric chat docked beside it on an iPad: drag it to give Godric more or less room.
+/// Dragging left widens Godric; the panel keeps at least `minPanel` points.
+struct DockHandle: View {
+    @Binding var width: Double
+    var available: CGFloat
+    var minPanel: CGFloat = 300
+    @State private var start: Double?
+    @Environment(ConnectionModel.self) private var connection
+
+    var body: some View {
+        ZStack {
+            Rectangle().fill(connection.theme.faint.opacity(0.35)).frame(width: 1)
+            Capsule().fill(connection.theme.muted.opacity(0.55)).frame(width: 4, height: 44)
+        }
+        .frame(width: 22)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { v in
+                    if start == nil { start = width }
+                    let limit = max(240, Double(available - minPanel))
+                    width = min(max((start ?? width) - Double(v.translation.width), 220), limit)
+                }
+                .onEnded { _ in start = nil }
+        )
+        .accessibilityLabel("Resize Godric")
+        .accessibilityHint("Drag to change how much room Godric has")
+    }
+}

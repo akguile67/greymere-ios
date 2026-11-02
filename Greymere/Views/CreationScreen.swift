@@ -12,6 +12,7 @@ struct CreationScreen: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("greymere.activeBookId") private var activeBookId = 0
     @State private var chatOpen = false
+    @AppStorage("greymere.godricWidth") private var godricWidth = 400.0
 
     private var docked: Bool { sizeClass == .regular }
     private var chatBook: ChatBook? {
@@ -20,16 +21,18 @@ struct CreationScreen: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            Group {
-                if model.chapterId == nil { CreationPicker(model: model, client: client) }
-                else { CreationChapterView(model: model, client: client) }
-            }
-            if docked && chatOpen, let chatBook {
-                Divider()
-                GodricChatView(model: model.godric, client: client, showsBar: false, book: chatBook, onClose: { chatOpen = false })
-                    .frame(width: 400)
-                    .transition(.move(edge: .trailing))
+        GeometryReader { geo in
+            HStack(spacing: 0) {
+                Group {
+                    if model.chapterId == nil { CreationPicker(model: model, client: client) }
+                    else { CreationChapterView(model: model, client: client) }
+                }
+                if docked && chatOpen, let chatBook {
+                    DockHandle(width: $godricWidth, available: geo.size.width)
+                    GodricChatView(model: model.godric, client: client, showsBar: false, book: chatBook, onClose: { chatOpen = false })
+                        .frame(width: min(max(godricWidth, 220), max(240, geo.size.width - 300)))
+                        .transition(.move(edge: .trailing))
+                }
             }
         }
         .animation(.snappy, value: chatOpen)
@@ -207,7 +210,7 @@ private struct CreationChapterView: View {
     let client: APIClient
     @Environment(ConnectionModel.self) private var connection
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @State private var briefOpen = true
+    @State private var briefOpen = false
     @State private var sheet: BeatSheetTarget?
     @State private var refsFor: RefsTarget?
     @State private var confirmLeave = false
@@ -256,7 +259,6 @@ private struct CreationChapterView: View {
             .refreshable { await model.refreshOnForeground() }
             actions
         }
-        .onAppear { briefOpen = sizeClass == .regular }
         .confirmationDialog("Discard your changes to the brief?", isPresented: $confirmLeave, titleVisibility: .visible) {
             Button("Discard and leave", role: .destructive) { Task { await model.close() } }
             Button("Keep editing", role: .cancel) {}
