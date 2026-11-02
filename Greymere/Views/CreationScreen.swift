@@ -649,26 +649,39 @@ struct ProseConflictSheet: View {
         }
     }
 
+    private func caption(_ text: String) -> some View {
+        Text(text).font(.caption).foregroundStyle(connection.theme.muted).frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     Text(conflict.kind == .changed
-                         ? "This chapter changed somewhere else since you opened it, so your typing was not saved. Nothing has been overwritten."
-                         : "The beats on this chapter changed since you opened it, so nothing was saved. Copy what you typed, then use the chapter as it is now.")
+                         ? "This chapter was saved from somewhere else after you opened it, so what you typed on this device has not been saved. Nothing has been overwritten."
+                         : "The beats on this chapter were changed from somewhere else, so nothing was saved from this device.")
                         .font(.subheadline)
-                    block("What you typed", conflict.mine)
-                    if conflict.kind == .changed { block("The chapter now", conflict.theirs) }
-                    VStack(spacing: 10) {
+                    block("This device (not saved)", conflict.mine)
+                    if conflict.kind == .changed { block("The saved chapter", conflict.theirs) }
+                    VStack(alignment: .leading, spacing: 14) {
                         if conflict.kind == .changed {
-                            Button { Task { await model.keepMine(); dismiss() } } label: { Text("Keep what I typed").frame(maxWidth: .infinity) }
-                                .buttonStyle(.glassProminent)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Button { Task { await model.keepMine(); dismiss() } } label: { Text("Keep this device's version").frame(maxWidth: .infinity) }
+                                    .buttonStyle(.glassProminent)
+                                caption("Replaces the saved chapter with this device's text. The saved version is kept in Version history.")
+                            }
                         }
-                        Button { UIPasteboard.general.string = conflict.mine } label: { Text("Copy what I typed").frame(maxWidth: .infinity) }.buttonStyle(.glass)
-                        Button { Task { await model.useCurrent(); dismiss() } } label: { Text("Use the current text").frame(maxWidth: .infinity) }.buttonStyle(.glass)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Button {
+                                UIPasteboard.general.string = conflict.mine
+                                Task { await model.useCurrent(); dismiss() }
+                            } label: { Text(conflict.kind == .changed ? "Take the saved version" : "Take the saved chapter").frame(maxWidth: .infinity) }
+                                .buttonStyle(.glass)
+                            caption(conflict.kind == .changed
+                                    ? "Discards what you typed on this device and loads the saved chapter. Your typing is copied to the clipboard first."
+                                    : "Loads the saved chapter. What you typed on this device is copied to the clipboard first.")
+                        }
                     }
-                    Text(conflict.kind == .changed ? "Keeping yours first keeps the other text as a version, so it can be brought back." : "")
-                        .font(.caption).foregroundStyle(connection.theme.muted)
                 }
                 .padding(16)
             }

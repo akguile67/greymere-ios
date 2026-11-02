@@ -6,7 +6,7 @@ Baseline: the desktop Creation pane at server 0.54.0 behaviour (`public/index.ht
 
 Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upgraded only on what was seen in the simulator, never on the code.
 
-**Counts: 75 rows. Run 31 · Built, not run 31 · Not built 2 · Different 11.**
+**Counts: 75 rows. Run 32 · Built, not run 30 · Not built 2 · Different 11.**
 
 | # | Feature | Desktop behaviour | Status | Evidence | Gap or note |
 |---|---|---|---|---|---|
@@ -52,8 +52,8 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 | 40 | Unsaved indicator and explicit Save | Desktop autosaves | Different | Run by me on iPad mini | Different by design: nothing is kept on the device |
 | 41 | Add, delete, move, accept, undo, lock, generate refused while text is unsaved | n/a | Built, not run | — | Needed because the segments change |
 | 42 | First save of a session sends begin_session | "Before editing" version | Built, not run | Version not checked | — |
-| 43 | Save refused: chapter changed (CHAPTER_CHANGED) | Other text kept as a version if you overwrite | Built, not run | — | — |
-| 44 | Save refused: beats changed (BEATS_CHANGED) | Not a desktop case | Built, not run | — | — |
+| 43 | Save refused: chapter changed (CHAPTER_CHANGED) | Other text kept as a version if you overwrite | Run | Me on iPhone 14 Pro: typed on the phone, saved from a second writer (a PUT to the server) first, pressed Save. Sheet shown with the device wording; "Take the saved version" loaded the saved chapter and put the phone text on the clipboard | "Keep this device's version" (the overwrite and the Version history copy) was not run in this pass. No Merge, by design. Not seen on iPad mini |
+| 44 | Save refused: beats changed (BEATS_CHANGED) | Not a desktop case | Built, not run | Reworded ("Take the saved chapter", copies this device's text first); the sheet was not triggered | — |
 | 45 | Save refused: empty chapter (400) | Refused | Built, not run | — | — |
 | 46 | Locked chapter: read-only with bar | Read-only with a bar | Run | Me on iPhone 14 Pro: The House (published) chapter 1 on dev. Prose read-only, bar shown | Not seen on iPad mini |
 | 47 | Drafting note: add on a selected passage | Select, press Note, write | Run | Andy on iPhone | — |
@@ -104,7 +104,6 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 - 37. Undo last draft
 - 41. Add, delete, move, accept, undo, lock, generate refused while text is unsaved
 - 42. First save of a session sends begin_session
-- 43. Save refused: chapter changed (CHAPTER_CHANGED)
 - 44. Save refused: beats changed (BEATS_CHANGED)
 - 45. Save refused: empty chapter (400)
 - 50. Drafting note: clear and reopen
