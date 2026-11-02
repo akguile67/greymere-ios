@@ -21,9 +21,12 @@ struct CreationScreen: View {
         return ChatBook(id: book.id, title: book.title)
     }
 
+    /// The bar has room for the chapter's actions on an iPad and on a phone on its side; a phone upright gets a row above it.
+    private var inlineBar: Bool { verticalSizeClass == .compact || sizeClass == .regular }
+
     /// On a phone on its side the chapter's actions go into the glass bar's own row.
     private var inlineActions: AnyView? {
-        guard verticalSizeClass == .compact, model.chapterId != nil, model.doc != nil else { return nil }
+        guard inlineBar, model.chapterId != nil, model.doc != nil else { return nil }
         return AnyView(ChapterActions(model: model))
     }
 
@@ -556,7 +559,9 @@ private struct CreationChapterView: View {
     // MARK: bottom bar
 
     @ViewBuilder private var actions: some View {
-        if verticalSizeClass != .compact { ChapterActions(model: model) }
+        if !(verticalSizeClass == .compact || sizeClass == .regular) {
+            ChapterActions(model: model).frame(maxWidth: .infinity).padding(.vertical, 4)
+        }
     }
 }
 
@@ -565,31 +570,34 @@ private struct CreationChapterView: View {
 struct ChapterActions: View {
     @Bindable var model: CreationModel
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var tight: Bool { verticalSizeClass == .compact }
 
     var body: some View {
-        HStack(spacing: verticalSizeClass == .compact ? 8 : 10) {
+        HStack(spacing: 12) {
             if let p = model.proposal, p.pending {
-                Button { Task { await model.applyProposal() } } label: { Label(verticalSizeClass == .compact ? "Apply" : "Apply drafted change", systemImage: "checkmark") }
-                    .buttonStyle(.glassProminent).disabled(model.working)
-                Button("Discard") { Task { await model.discardProposal() } }.buttonStyle(.glass).disabled(model.working)
+                GlassPill(title: tight ? "Apply" : "Apply change", systemImage: "checkmark", prominent: true, label: "Apply drafted change") {
+                    Task { await model.applyProposal() }
+                }
+                .disabled(model.working)
+                GlassPill(title: "Discard", label: "Discard drafted change") { Task { await model.discardProposal() } }
+                    .disabled(model.working)
             } else if model.dirty {
-                Button { Task { await model.saveProse() } } label: { Label(model.savingProse ? "Saving…" : "Save", systemImage: "checkmark") }
-                    .buttonStyle(.glassProminent).disabled(model.savingProse)
-                Button(verticalSizeClass == .compact ? "Discard" : "Discard edits") { model.discardEdits() }.buttonStyle(.glass).disabled(model.savingProse)
+                GlassPill(title: model.savingProse ? "Saving…" : "Save", systemImage: "checkmark", prominent: true) {
+                    Task { await model.saveProse() }
+                }
+                .disabled(model.savingProse)
+                GlassPill(title: "Discard", label: "Discard edits") { model.discardEdits() }.disabled(model.savingProse)
             } else {
-                Button { model.beatSheet = .add } label: { Label("Add beat", systemImage: "plus") }
-                    .buttonStyle(.glassProminent).disabled(model.doc == nil || model.working)
+                GlassPill(title: "Add beat", systemImage: "plus", prominent: true) { model.beatSheet = .add }
+                    .disabled(model.doc == nil || model.working)
                 if model.lastAccept != nil {
-                    Button { Task { await model.undoLastDraft() } } label: {
-                        if verticalSizeClass == .compact { Image(systemName: "arrow.uturn.backward") } else { Label("Undo last draft", systemImage: "arrow.uturn.backward") }
-                    }
-                    .buttonStyle(.glass).disabled(model.working).accessibilityLabel("Undo last draft")
+                    GlassPill(systemImage: "arrow.uturn.backward", label: "Undo last draft") { Task { await model.undoLastDraft() } }
+                        .disabled(model.working)
                 }
             }
         }
-        .labelStyle(.titleAndIcon).font(.subheadline).lineLimit(1).minimumScaleFactor(0.75)
-        .frame(maxWidth: verticalSizeClass == .compact ? nil : .infinity)
-        .padding(.horizontal, verticalSizeClass == .compact ? 0 : 12).padding(.vertical, verticalSizeClass == .compact ? 0 : 6)
     }
 }
 

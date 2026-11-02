@@ -269,3 +269,37 @@ struct DockHandle: View {
         .accessibilityHint("Drag to change how much room Godric has")
     }
 }
+
+/// An action that belongs to the screen, set in the bottom glass bar: the same height, glass and type as the Ask Godric
+/// pill (a design rule for the app: what the author can do here appears in that bar, in glass, when it is needed).
+/// `prominent` tints it with the accent for the main action. With no title it is a round button.
+struct GlassPill: View {
+    var title: String?
+    var systemImage: String?
+    var prominent = false
+    var label: String?
+    let action: () -> Void
+    @Environment(ConnectionModel.self) private var connection
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.isEnabled) private var enabled
+
+    private var regular: Bool { sizeClass == .regular }
+    private var size: CGFloat { regular ? 60 : 44 }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: regular ? 12 : 8) {
+                if let systemImage { Image(systemName: systemImage).font((regular ? Font.title3 : .subheadline).weight(.semibold)) }
+                if let title { Text(title).font((regular ? Font.title3 : .subheadline).weight(.semibold)).lineLimit(1) }
+            }
+            .foregroundStyle(prominent ? connection.theme.accent : connection.theme.text)
+            .padding(.horizontal, title == nil ? 0 : (regular ? 32 : 20))
+            .frame(width: title == nil ? size : nil, height: size)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.tint(prominent ? connection.theme.accent.opacity(0.28) : connection.theme.glassTint).interactive(), in: .capsule)
+        .opacity(enabled ? 1 : 0.45)
+        .accessibilityLabel(label ?? title ?? "")
+    }
+}
