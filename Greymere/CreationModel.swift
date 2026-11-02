@@ -261,6 +261,8 @@ final class CreationModel {
     var notes: [DraftingNote] = []
     var noteQuote: String?
     var locking = false
+    /// The add/edit beat sheet, held here so the bottom actions can open it from the glass bar.
+    var beatSheet: BeatSheetTarget?
 
     var client: APIClient?
 

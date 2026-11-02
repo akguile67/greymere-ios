@@ -128,13 +128,15 @@ extension View {
 
     /// The floating glass bar at the bottom of every screen, in the manner of the Music app: Home, the Ask Godric
     /// pill, and Panels (which raises the tray of workflow stages).
-    func glassBar(isOpen: Bool, action: @escaping () -> Void) -> some View {
-        modifier(GlassBar(isOpen: isOpen, action: action))
+    func glassBar(isOpen: Bool, inline: AnyView? = nil, action: @escaping () -> Void) -> some View {
+        modifier(GlassBar(isOpen: isOpen, inline: inline, action: action))
     }
 }
 
 struct GlassBar: ViewModifier {
     let isOpen: Bool
+    /// A screen's own actions, set into the bar's row instead of a row of their own (a phone on its side has no room to spare).
+    var inline: AnyView?
     let action: () -> Void
     @Environment(ConnectionModel.self) private var connection
     @Environment(ShellModel.self) private var shell
@@ -160,6 +162,7 @@ struct GlassBar: ViewModifier {
             GlassEffectContainer(spacing: 12) {
                 HStack(spacing: 12) {
                     round("house", label: "Home", active: shell.destination == .home && !shell.trayOpen) { shell.goHome() }
+                    if let inline { inline }
                     Button(action: action) {
                         HStack(spacing: regular ? 12 : 8) {
                             Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))

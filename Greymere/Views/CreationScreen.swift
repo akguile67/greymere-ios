@@ -10,6 +10,7 @@ struct CreationScreen: View {
     @Environment(ConnectionModel.self) private var connection
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @AppStorage("greymere.activeBookId") private var activeBookId = 0
     @State private var chatOpen = false
     @AppStorage("greymere.godricWidth") private var godricWidth = 400.0
@@ -18,6 +19,12 @@ struct CreationScreen: View {
     private var chatBook: ChatBook? {
         guard model.chapterId != nil, let doc = model.doc, let book = doc.book else { return nil }
         return ChatBook(id: book.id, title: book.title)
+    }
+
+    /// On a phone on its side the chapter's actions go into the glass bar's own row.
+    private var inlineActions: AnyView? {
+        guard verticalSizeClass == .compact, model.chapterId != nil, model.doc != nil else { return nil }
+        return AnyView(ChapterActions(model: model))
     }
 
     var body: some View {
@@ -38,7 +45,7 @@ struct CreationScreen: View {
         .animation(.snappy, value: chatOpen)
         .background(connection.theme.background.ignoresSafeArea())
         .topBand(true, title: "Creation")
-        .glassBar(isOpen: chatOpen) {
+        .glassBar(isOpen: chatOpen, inline: inlineActions) {
             if model.chapterId != nil { chatOpen.toggle() }
             else { model.banner = .init(text: "Open a chapter to talk to Godric about its beats.") }
         }
@@ -211,7 +218,7 @@ private struct CreationChapterView: View {
     @Environment(ConnectionModel.self) private var connection
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var briefOpen = false
-    @State private var sheet: BeatSheetTarget?
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var refsFor: RefsTarget?
     @State private var confirmLeave = false
     @State private var dictation = DictationModel()
@@ -268,7 +275,7 @@ private struct CreationChapterView: View {
         .onChange(of: activeSeg) { dictation.settle(); dictation.end() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.settle(); dictation.end() } }
         .onDisappear { dictation.settle(); dictation.end() }
-        .sheet(item: $sheet) { target in BeatSheet(model: model, target: target) }
+        .sheet(item: $model.beatSheet) { target in BeatSheet(model: model, target: target) }
         .sheet(item: $model.conflict) { c in ProseConflictSheet(model: model, conflict: c) }
         .sheet(isPresented: Binding(get: { composingQuote != nil }, set: { if !$0 { composingQuote = nil } })) {
             NoteComposer(model: model, quote: composingQuote ?? "") { composingQuote = nil }
@@ -415,7 +422,7 @@ private struct CreationChapterView: View {
                     segmentView(i, of: segs)
                     if i < beats.count {
                         BeatCard(model: model, beat: beats[i],
-                                 edit: { sheet = .edit(beats[i]) },
+                                 edit: { model.beatSheet = .edit(beats[i]) },
                                  refs: { linking in refsFor = RefsTarget(beatId: beats[i].id, linking: linking) },
                                  fixBrief: { briefOpen = true; model.beginBriefEdit() })
                     }
@@ -549,26 +556,40 @@ private struct CreationChapterView: View {
     // MARK: bottom bar
 
     @ViewBuilder private var actions: some View {
-        HStack(spacing: 10) {
+        if verticalSizeClass != .compact { ChapterActions(model: model) }
+    }
+}
+
+/// The chapter's bottom actions: Apply or Discard a drafted beat change, Save or Discard edits, Add beat and Undo.
+/// On a phone on its side they are set into the glass bar instead of a row of their own.
+struct ChapterActions: View {
+    @Bindable var model: CreationModel
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    var body: some View {
+        HStack(spacing: verticalSizeClass == .compact ? 8 : 10) {
             if let p = model.proposal, p.pending {
-                Button { Task { await model.applyProposal() } } label: { Label("Apply drafted change", systemImage: "checkmark") }
+                Button { Task { await model.applyProposal() } } label: { Label(verticalSizeClass == .compact ? "Apply" : "Apply drafted change", systemImage: "checkmark") }
                     .buttonStyle(.glassProminent).disabled(model.working)
                 Button("Discard") { Task { await model.discardProposal() } }.buttonStyle(.glass).disabled(model.working)
             } else if model.dirty {
                 Button { Task { await model.saveProse() } } label: { Label(model.savingProse ? "Saving…" : "Save", systemImage: "checkmark") }
                     .buttonStyle(.glassProminent).disabled(model.savingProse)
-                Button("Discard edits") { model.discardEdits() }.buttonStyle(.glass).disabled(model.savingProse)
+                Button(verticalSizeClass == .compact ? "Discard" : "Discard edits") { model.discardEdits() }.buttonStyle(.glass).disabled(model.savingProse)
             } else {
-                Button { sheet = .add } label: { Label("Add beat", systemImage: "plus") }
+                Button { model.beatSheet = .add } label: { Label("Add beat", systemImage: "plus") }
                     .buttonStyle(.glassProminent).disabled(model.doc == nil || model.working)
                 if model.lastAccept != nil {
-                    Button { Task { await model.undoLastDraft() } } label: { Label("Undo last draft", systemImage: "arrow.uturn.backward") }
-                        .buttonStyle(.glass).disabled(model.working)
+                    Button { Task { await model.undoLastDraft() } } label: {
+                        if verticalSizeClass == .compact { Image(systemName: "arrow.uturn.backward") } else { Label("Undo last draft", systemImage: "arrow.uturn.backward") }
+                    }
+                    .buttonStyle(.glass).disabled(model.working).accessibilityLabel("Undo last draft")
                 }
             }
         }
         .labelStyle(.titleAndIcon).font(.subheadline).lineLimit(1).minimumScaleFactor(0.75)
-        .frame(maxWidth: .infinity).padding(.horizontal, 12).padding(.vertical, 6)
+        .frame(maxWidth: verticalSizeClass == .compact ? nil : .infinity)
+        .padding(.horizontal, verticalSizeClass == .compact ? 0 : 12).padding(.vertical, verticalSizeClass == .compact ? 0 : 6)
     }
 }
 
