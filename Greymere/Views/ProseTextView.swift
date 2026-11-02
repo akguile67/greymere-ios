@@ -58,23 +58,34 @@ struct ProseTextView: UIViewRepresentable {
             view.inputView = hideKeyboard ? UIView(frame: .zero) : nil
             if view.isFirstResponder { view.reloadInputViews() }
         }
-        restyle(view)
+        c.revealed = restyle(view)
     }
 
     /// Draws the manuscript's Markdown: bold and italic between balanced markers (the markers dimmed, not hidden), a
     /// `* * *` paragraph centred and spaced, and the passages that carry open notes. Attributes only: the string, the
     /// caret and undo are not touched.
-    func restyle(_ view: UITextView) {
-        guard view.markedTextRange == nil else { return }
+    @discardableResult
+    func restyle(_ view: UITextView) -> Set<Int> {
+        guard view.markedTextRange == nil else { return [] }
         let base = UIFont.preferredFont(forTextStyle: .body)
         let storage = view.textStorage
         let ns = storage.string as NSString
         let all = NSRange(location: 0, length: ns.length)
+        let sel = view.selectedRange
+        var revealed = Set<Int>()
         storage.beginEditing()
         storage.setAttributes([.font: base, .foregroundColor: UIColor.label], range: all)
         for run in ProseMarkdown.runs(in: ns) {
             switch run.kind {
-            case .marker: storage.addAttribute(.foregroundColor, value: UIColor.tertiaryLabel, range: run.range)
+            case .marker(let outer):
+                // Live preview: a span's markers are hidden (attributes only, the characters stay) unless the caret or
+                // selection touches the span, where they show dimmed so they can be seen and edited.
+                if ProseMarkdown.touches(outer, sel) {
+                    revealed.insert(outer.location)
+                    storage.addAttribute(.foregroundColor, value: UIColor.tertiaryLabel, range: run.range)
+                } else {
+                    storage.addAttributes([.foregroundColor: UIColor.clear, .font: UIFont.systemFont(ofSize: 0.01)], range: run.range)
+                }
             case .styled(let bold, let italic):
                 var traits: UIFontDescriptor.SymbolicTraits = []
                 if bold { traits.insert(.traitBold) }
@@ -95,6 +106,7 @@ struct ProseTextView: UIViewRepresentable {
         storage.endEditing()
         // What is typed next is plain, whatever it was typed beside.
         view.typingAttributes = [.font: base, .foregroundColor: UIColor.label]
+        return revealed
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
@@ -108,6 +120,8 @@ struct ProseTextView: UIViewRepresentable {
     final class Coordinator: NSObject, UITextViewDelegate {
         var parent: ProseTextView
         var updating = false
+        /// The spans whose markers are showing (by where they start), so a caret move restyles only when that changes.
+        var revealed = Set<Int>()
         init(_ parent: ProseTextView) { self.parent = parent }
 
         /// Bold, italic and scene break, written as the Markdown the manuscript is stored in. Only the characters that
@@ -135,7 +149,7 @@ struct ProseTextView: UIViewRepresentable {
         func textViewDidChange(_ textView: UITextView) {
             guard !updating else { return }
             parent.text = textView.text
-            parent.restyle(textView)
+            revealed = parent.restyle(textView)
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -143,6 +157,10 @@ struct ProseTextView: UIViewRepresentable {
             let text = textView.text ?? ""
             guard let range = Range(textView.selectedRange, in: text) else { return }
             parent.selection = TextSelection(range: range)
+            if textView.markedTextRange == nil,
+               ProseMarkdown.touchedSpans(in: textView.text as NSString, selection: textView.selectedRange) != revealed {
+                revealed = parent.restyle(textView)
+            }
             let picked = textView.selectedRange.length > 0
                 ? String(text[range]).replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
                 : nil
@@ -241,7 +259,7 @@ enum ProseFormat {
 /// exactly `* * *` is the scene break.
 enum ProseMarkdown {
     struct Run {
-        enum Kind { case marker, styled(bold: Bool, italic: Bool), sceneBreak }
+        enum Kind { case marker(outer: NSRange), styled(bold: Bool, italic: Bool), sceneBreak }
         let kind: Kind
         let range: NSRange
     }
@@ -260,8 +278,8 @@ enum ProseMarkdown {
                 let r = f.range
                 guard r.length > 2 * m else { continue }
                 runs.append(Run(kind: .styled(bold: b, italic: i), range: NSRange(location: r.location + m, length: r.length - 2 * m)))
-                runs.append(Run(kind: .marker, range: NSRange(location: r.location, length: m)))
-                runs.append(Run(kind: .marker, range: NSRange(location: r.location + r.length - m, length: m)))
+                runs.append(Run(kind: .marker(outer: r), range: NSRange(location: r.location, length: m)))
+                runs.append(Run(kind: .marker(outer: r), range: NSRange(location: r.location + r.length - m, length: m)))
                 if consume { blank(r) } else {
                     blank(NSRange(location: r.location, length: m)); blank(NSRange(location: r.location + r.length - m, length: m))
                 }
@@ -284,6 +302,19 @@ enum ProseMarkdown {
             start = end + 2
         }
         return runs
+    }
+
+    /// A span is touched when the caret sits in it or against either end, or the selection reaches into it.
+    static func touches(_ outer: NSRange, _ sel: NSRange) -> Bool {
+        sel.location <= outer.location + outer.length && sel.location + sel.length >= outer.location
+    }
+
+    static func touchedSpans(in text: NSString, selection: NSRange) -> Set<Int> {
+        var out = Set<Int>()
+        for run in runs(in: text) {
+            if case .marker(let outer) = run.kind, touches(outer, selection) { out.insert(outer.location) }
+        }
+        return out
     }
 
     /// Where a bold run and an italic run overlap, one font with both traits.
