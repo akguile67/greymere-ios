@@ -242,7 +242,8 @@ private struct CreationChapterView: View {
                     Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
                 }
                 .buttonStyle(.glass)
-                Spacer()
+                Spacer(minLength: 6)
+                if model.doc != nil { textTools }
             }
             .padding(.horizontal, 16).padding(.vertical, 6)
             ScrollView {
@@ -412,8 +413,6 @@ private struct CreationChapterView: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Text("CHAPTER").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(connection.theme.muted)
-                Spacer(minLength: 6)
-                textTools
             }
             if model.isLocked { lockBar }
             if let notice = dictation.notice {
@@ -459,12 +458,20 @@ private struct CreationChapterView: View {
             Button {
                 if let q = model.noteQuote { composingQuote = q }
                 else { model.banner = .init(text: "Select the passage you want to leave a note about, then press Note.") }
-            } label: { Label("Note", systemImage: "note.text").font(.footnote) }
-                .buttonStyle(.glass)
-            Button { showNotes = true } label: {
-                Label("Notes" + (model.openNotes.isEmpty ? "" : " (\(model.openNotes.count))"), systemImage: "list.bullet").font(.footnote)
+            } label: {
+                if sizeClass == .compact { Image(systemName: "note.text").padding(2) } else { Label("Note", systemImage: "note.text").font(.footnote) }
             }
-            .buttonStyle(.glass)
+            .buttonStyle(.glass).accessibilityLabel("Add a note to the selected passage")
+            Button { showNotes = true } label: {
+                if sizeClass == .compact {
+                    Image(systemName: "list.bullet").padding(2).overlay(alignment: .topTrailing) {
+                        if !model.openNotes.isEmpty { Text("\(model.openNotes.count)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white).padding(3).background(Color.orange, in: Circle()).offset(x: 8, y: -8) }
+                    }
+                } else {
+                    Label("Notes" + (model.openNotes.isEmpty ? "" : " (\(model.openNotes.count))"), systemImage: "list.bullet").font(.footnote)
+                }
+            }
+            .buttonStyle(.glass).accessibilityLabel("Drafting notes")
         }
     }
 
@@ -491,6 +498,10 @@ private struct CreationChapterView: View {
         let field = DictationField(
             text: Binding(get: { model.segmentsShown.indices.contains(i) ? model.segmentsShown[i] : "" }, set: { model.setSegment(i, $0) }),
             selection: $selection)
+        // Dictating needs no keyboard: put it away. The caret and the dictation point stay where they were.
+        if dictation.state == .idle {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
         await dictation.toggle(client: client, bookId: model.doc?.book?.id, field: field)
     }
 
