@@ -233,6 +233,7 @@ private struct CreationChapterView: View {
     @State private var showNotes = false
     @State private var confirmLock = false
     @State private var confirmUnlock = false
+    @State private var prose = ProseController()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -240,9 +241,14 @@ private struct CreationChapterView: View {
             // Pinned, so the way back to the chapter list is always on screen.
             HStack {
                 Button { if model.briefEditing { confirmLeave = true } else { Task { await model.close() } } } label: {
-                    Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
+                    // On a phone, with the formatting buttons showing, the way back is the arrow alone.
+                    if sizeClass == .compact && activeSeg != nil && !model.isLocked {
+                        Image(systemName: "chevron.backward").font(.subheadline.weight(.semibold)).padding(.horizontal, 2)
+                    } else {
+                        Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
+                    }
                 }
-                .buttonStyle(.glass)
+                .buttonStyle(.glass).accessibilityLabel("Chapters")
                 Spacer(minLength: 6)
                 if model.doc != nil { textTools }
             }
@@ -465,8 +471,19 @@ private struct CreationChapterView: View {
         }
     }
 
+    /// Bold, Italic and Scene break for the prose segment being edited. Pressing one does not take focus from it.
+    private var formatTools: some View {
+        HStack(spacing: 4) {
+            Button { prose.format(.bold) } label: { Image(systemName: "bold").padding(2) }.accessibilityLabel("Bold")
+            Button { prose.format(.italic) } label: { Image(systemName: "italic").padding(2) }.accessibilityLabel("Italic")
+            Button { prose.format(.sceneBreak) } label: { Image(systemName: "ellipsis").padding(2) }.accessibilityLabel("Scene break")
+        }
+        .buttonStyle(.glass)
+    }
+
     private var textTools: some View {
         HStack(spacing: 6) {
+            if activeSeg != nil && !model.isLocked { formatTools }
             Button { Task { await toggleDictation() } } label: {
                 Image(systemName: dictation.state == .listening ? "mic.fill" : (dictation.available == false ? "mic.slash" : "mic"))
                     .foregroundStyle(dictation.state == .listening ? Color.red : connection.theme.text)
@@ -541,6 +558,7 @@ private struct CreationChapterView: View {
                 focusOnAppear: focusSeg == i,
                 hideKeyboard: activeSeg == i && (dictation.state == .listening || dictation.state == .starting),
                 trailingBreak: i < segs.count - 1,
+                controller: prose,
                 onFocus: { activeSeg = i; selection = nil; if focusSeg == i { focusSeg = nil } },
                 onSelectedQuote: { q in if activeSeg == i || q != nil { model.noteQuote = q } })
                 .padding(.horizontal, 6)

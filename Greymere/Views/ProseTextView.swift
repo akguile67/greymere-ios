@@ -1,6 +1,12 @@
 import SwiftUI
 import UIKit
 
+/// Lets controls outside the text view (the top action bar) act on the prose field being edited, without taking its focus.
+@MainActor final class ProseController {
+    var apply: ((ProseFormat.Kind) -> Void)?
+    func format(_ kind: ProseFormat.Kind) { apply?(kind) }
+}
+
 /// One segment of the chapter's manuscript as an editable text view. It takes the height its text needs (the page
 /// scrolls, not the segment), reports the caret and the selected passage, and paints the passages that carry open
 /// drafting notes. The text is the manuscript's own bytes: nothing is trimmed or rewritten here.
@@ -16,6 +22,7 @@ struct ProseTextView: UIViewRepresentable {
     /// False for the last segment of the chapter: a scene break at the end of any other one has to leave the blank line
     /// that separates it from the next segment's first paragraph.
     var trailingBreak = false
+    var controller: ProseController?
     var onFocus: () -> Void = {}
     var onSelectedQuote: (String?) -> Void = { _ in }
 
@@ -51,20 +58,43 @@ struct ProseTextView: UIViewRepresentable {
             view.inputView = hideKeyboard ? UIView(frame: .zero) : nil
             if view.isFirstResponder { view.reloadInputViews() }
         }
-        paint(view)
+        restyle(view)
     }
 
-    private func paint(_ view: UITextView) {
+    /// Draws the manuscript's Markdown: bold and italic between balanced markers (the markers dimmed, not hidden), a
+    /// `* * *` paragraph centred and spaced, and the passages that carry open notes. Attributes only: the string, the
+    /// caret and undo are not touched.
+    func restyle(_ view: UITextView) {
+        guard view.markedTextRange == nil else { return }
+        let base = UIFont.preferredFont(forTextStyle: .body)
         let storage = view.textStorage
-        let all = NSRange(location: 0, length: storage.length)
+        let ns = storage.string as NSString
+        let all = NSRange(location: 0, length: ns.length)
         storage.beginEditing()
-        storage.removeAttribute(.backgroundColor, range: all)
+        storage.setAttributes([.font: base, .foregroundColor: UIColor.label], range: all)
+        for run in ProseMarkdown.runs(in: ns) {
+            switch run.kind {
+            case .marker: storage.addAttribute(.foregroundColor, value: UIColor.tertiaryLabel, range: run.range)
+            case .styled(let bold, let italic):
+                var traits: UIFontDescriptor.SymbolicTraits = []
+                if bold { traits.insert(.traitBold) }
+                if italic { traits.insert(.traitItalic) }
+                if let d = base.fontDescriptor.withSymbolicTraits(traits) {
+                    storage.addAttribute(.font, value: UIFont(descriptor: d, size: base.pointSize), range: run.range)
+                }
+            case .sceneBreak:
+                let style = NSMutableParagraphStyle(); style.alignment = .center
+                storage.addAttributes([.paragraphStyle: style, .kern: 6.0, .foregroundColor: UIColor.secondaryLabel], range: run.range)
+            }
+        }
         for quote in highlights {
-            if let r = NoteAnchor.range(of: quote, in: text) {
-                storage.addAttribute(.backgroundColor, value: highlightColor, range: NSRange(r, in: text))
+            if let r = NoteAnchor.range(of: quote, in: storage.string) {
+                storage.addAttribute(.backgroundColor, value: highlightColor, range: NSRange(r, in: storage.string))
             }
         }
         storage.endEditing()
+        // What is typed next is plain, whatever it was typed beside.
+        view.typingAttributes = [.font: base, .foregroundColor: UIColor.label]
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
@@ -94,11 +124,18 @@ struct ProseTextView: UIViewRepresentable {
             textViewDidChangeSelection(view)
         }
 
-        func textViewDidBeginEditing(_ textView: UITextView) { parent.onFocus() }
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            parent.onFocus()
+            parent.controller?.apply = { [weak self, weak textView] kind in
+                guard let self, let textView else { return }
+                self.format(kind, in: textView)
+            }
+        }
 
         func textViewDidChange(_ textView: UITextView) {
             guard !updating else { return }
             parent.text = textView.text
+            parent.restyle(textView)
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -114,25 +151,11 @@ struct ProseTextView: UIViewRepresentable {
     }
 }
 
-/// A text view with a Bold / Italic / Scene break bar above the keyboard and Cmd-B / Cmd-I for a hardware keyboard.
+/// A text view with Cmd-B / Cmd-I for a hardware keyboard (the Bold, Italic and Scene break buttons are in the top action bar).
 final class ProseUITextView: UITextView {
     var onFormat: (ProseFormat.Kind, UITextView) -> Void = { _, _ in }
 
-    init() {
-        super.init(frame: .zero, textContainer: nil)
-        let bar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 320, height: 44))
-        bar.items = [
-            UIBarButtonItem(image: UIImage(systemName: "bold"), primaryAction: UIAction(title: "Bold") { [unowned self] _ in onFormat(.bold, self) }),
-            UIBarButtonItem(image: UIImage(systemName: "italic"), primaryAction: UIAction(title: "Italic") { [unowned self] _ in onFormat(.italic, self) }),
-            UIBarButtonItem(title: "* * *", primaryAction: UIAction(title: "Scene break") { [unowned self] _ in onFormat(.sceneBreak, self) }),
-            UIBarButtonItem.flexibleSpace(),
-        ]
-        bar.items?[0].accessibilityLabel = "Bold"
-        bar.items?[1].accessibilityLabel = "Italic"
-        bar.items?[2].accessibilityLabel = "Scene break"
-        bar.autoresizingMask = .flexibleWidth
-        inputAccessoryView = bar
-    }
+    init() { super.init(frame: .zero, textContainer: nil) }
     required init?(coder: NSCoder) { fatalError() }
 
     override var keyCommands: [UIKeyCommand]? {
@@ -210,5 +233,77 @@ enum ProseFormat {
         // The caret goes to the start of the next paragraph.
         let caret = lo + body.utf16.count + (hi >= text.length ? 0 : after)
         return Edit(range: selection, text: body, selection: NSRange(location: caret, length: 0))
+    }
+}
+
+/// Finds the Markdown the editor draws. A pair of markers counts only when it opens and closes inside one paragraph
+/// (paragraphs are separated by a blank line) and its text neither starts nor ends with a space; a paragraph that is
+/// exactly `* * *` is the scene break.
+enum ProseMarkdown {
+    struct Run {
+        enum Kind { case marker, styled(bold: Bool, italic: Bool), sceneBreak }
+        let kind: Kind
+        let range: NSRange
+    }
+
+    private static let boldItalic = try! NSRegularExpression(pattern: "\\*\\*\\*(?=\\S)[^\\n]+?(?<=\\S)\\*\\*\\*|\\*\\*\\*(?=\\S)(?:(?!\\n\\n)[\\s\\S])+?(?<=\\S)\\*\\*\\*")
+    private static let bold = try! NSRegularExpression(pattern: "\\*\\*(?=[^\\s*])(?:(?!\\n\\n)[\\s\\S])+?(?<=[^\\s*])\\*\\*")
+    private static let italic = try! NSRegularExpression(pattern: "\\*(?=[^\\s*])(?:(?!\\n\\n)[^*])+?(?<=[^\\s*])\\*")
+
+    static func runs(in text: NSString) -> [Run] {
+        var runs: [Run] = []
+        let mask = NSMutableString(string: text)
+        func blank(_ r: NSRange) { mask.replaceCharacters(in: r, with: String(repeating: "\u{1}", count: r.length)) }
+        func scan(_ re: NSRegularExpression, _ m: Int, bold b: Bool, italic i: Bool, consume: Bool) {
+            let found = re.matches(in: mask as String, range: NSRange(location: 0, length: mask.length))
+            for f in found {
+                let r = f.range
+                guard r.length > 2 * m else { continue }
+                runs.append(Run(kind: .styled(bold: b, italic: i), range: NSRange(location: r.location + m, length: r.length - 2 * m)))
+                runs.append(Run(kind: .marker, range: NSRange(location: r.location, length: m)))
+                runs.append(Run(kind: .marker, range: NSRange(location: r.location + r.length - m, length: m)))
+                if consume { blank(r) } else {
+                    blank(NSRange(location: r.location, length: m)); blank(NSRange(location: r.location + r.length - m, length: m))
+                }
+            }
+        }
+        scan(boldItalic, 3, bold: true, italic: true, consume: true)
+        scan(bold, 2, bold: true, italic: false, consume: false)
+        scan(italic, 1, bold: false, italic: true, consume: false)
+        // Styled runs nest (italic inside bold): apply the wider ones first so the later, narrower traits are merged.
+        runs = merged(runs)
+        // Scene breaks.
+        var start = 0
+        while start <= text.length {
+            let next = text.range(of: "\n\n", range: NSRange(location: start, length: text.length - start))
+            let end = next.location == NSNotFound ? text.length : next.location
+            if text.substring(with: NSRange(location: start, length: end - start)) == "* * *" {
+                runs.append(Run(kind: .sceneBreak, range: NSRange(location: start, length: end - start)))
+            }
+            if next.location == NSNotFound { break }
+            start = end + 2
+        }
+        return runs
+    }
+
+    /// Where a bold run and an italic run overlap, one font with both traits.
+    private static func merged(_ runs: [Run]) -> [Run] {
+        var bolds: [NSRange] = [], italics: [NSRange] = []
+        var out: [Run] = []
+        for r in runs {
+            if case .styled(let b, let i) = r.kind {
+                if b && i { out.append(r) } else if b { bolds.append(r.range) } else if i { italics.append(r.range) }
+            } else { out.append(r) }
+        }
+        var cuts = Set<Int>()
+        for r in bolds + italics { cuts.insert(r.location); cuts.insert(r.location + r.length) }
+        let points = cuts.sorted()
+        for (a, b) in zip(points, points.dropFirst()) {
+            let piece = NSRange(location: a, length: b - a)
+            let isBold = bolds.contains { NSIntersectionRange($0, piece).length == piece.length }
+            let isItalic = italics.contains { NSIntersectionRange($0, piece).length == piece.length }
+            if isBold || isItalic { out.append(Run(kind: .styled(bold: isBold, italic: isItalic), range: piece)) }
+        }
+        return out
     }
 }
