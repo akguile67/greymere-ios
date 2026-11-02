@@ -20,6 +20,13 @@ struct BeatCard: View {
                 Text(beat.number.map { "BEAT \($0)" } ?? "BEAT").font(.caption.weight(.semibold)).tracking(0.6).foregroundStyle(connection.theme.muted)
                 Text(model.placeLabel(beat)).font(.caption).foregroundStyle(connection.theme.faint).lineLimit(2)
                 Spacer(minLength: 4)
+                HStack(spacing: 2) {
+                    Button { Task { await model.move(beat, by: -1) } } label: { Image(systemName: "arrow.up").padding(6) }
+                        .disabled(!model.canMove(beat, by: -1) || model.working).accessibilityLabel("Move beat up")
+                    Button { Task { await model.move(beat, by: 1) } } label: { Image(systemName: "arrow.down").padding(6) }
+                        .disabled(!model.canMove(beat, by: 1) || model.working).accessibilityLabel("Move beat down")
+                }
+                .buttonStyle(.plain).foregroundStyle(connection.theme.muted)
                 Menu {
                     Button { edit() } label: { Label("Edit", systemImage: "pencil") }
                     Button { Task { await model.move(beat, by: -1) } } label: { Label("Move up", systemImage: "arrow.up") }

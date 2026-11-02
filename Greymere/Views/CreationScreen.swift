@@ -213,6 +213,15 @@ private struct CreationChapterView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Pinned, so the way back to the chapter list is always on screen.
+            HStack {
+                Button { Task { await model.close() } } label: {
+                    Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.glass).disabled(model.briefEditing)
+                Spacer()
+            }
+            .padding(.horizontal, 16).padding(.vertical, 6)
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     header
@@ -246,10 +255,6 @@ private struct CreationChapterView: View {
         let ch = model.doc?.chapter
         let badge = model.bookDoc.flatMap { CreationModel.badges($0.acts)[model.chapterId ?? 0] }
         return VStack(alignment: .leading, spacing: 6) {
-            Button { Task { await model.close() } } label: {
-                Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
-            }
-            .buttonStyle(.glass).disabled(model.briefEditing)
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 if let badge { Text(badge).font(.subheadline.weight(.semibold)).foregroundStyle(connection.theme.muted) }
                 Text(ch?.title ?? "Chapter").font(.serif(24)).foregroundStyle(connection.theme.text)
