@@ -141,6 +141,10 @@ struct GlassBar: ViewModifier {
     @Environment(ConnectionModel.self) private var connection
     @Environment(ShellModel.self) private var shell
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    /// An upright phone has no room for a screen's own action beside the Ask Godric label: Godric shrinks to his sparkle.
+    private var godricIconOnly: Bool { inline != nil && sizeClass == .compact && verticalSizeClass != .compact }
 
     /// Bigger on an iPad, where a phone-sized bar gets lost.
     private var regular: Bool { sizeClass == .regular }
@@ -163,18 +167,22 @@ struct GlassBar: ViewModifier {
                 HStack(spacing: 12) {
                     round("house", label: "Home", active: shell.destination == .home && !shell.trayOpen) { shell.goHome() }
                     if let inline { inline }
-                    Button(action: action) {
-                        HStack(spacing: regular ? 12 : 8) {
-                            Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
-                            Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                    if godricIconOnly {
+                        round(isOpen ? "xmark" : "sparkles", label: isOpen ? "Close Godric" : "Talk to Godric", active: isOpen, action)
+                    } else {
+                        Button(action: action) {
+                            HStack(spacing: regular ? 12 : 8) {
+                                Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                                Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                            }
+                            .foregroundStyle(connection.theme.text)
+                            .padding(.horizontal, regular ? 32 : 20).frame(height: size)
+                            .contentShape(Capsule())
                         }
-                        .foregroundStyle(connection.theme.text)
-                        .padding(.horizontal, regular ? 32 : 20).frame(height: size)
-                        .contentShape(Capsule())
+                        .buttonStyle(.plain)
+                        .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
+                        .accessibilityLabel("Talk to Godric")
                     }
-                    .buttonStyle(.plain)
-                    .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
-                    .accessibilityLabel("Talk to Godric")
                     round("square.grid.2x2", label: "Panels", active: shell.trayOpen || shell.destination != .home) { shell.trayOpen.toggle() }
                 }
             }

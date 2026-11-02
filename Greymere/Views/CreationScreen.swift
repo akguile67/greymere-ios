@@ -21,8 +21,8 @@ struct CreationScreen: View {
         return ChatBook(id: book.id, title: book.title)
     }
 
-    /// The bar has room for the chapter's actions on an iPad and on a phone on its side; a phone upright gets a row above it.
-    private var inlineBar: Bool { verticalSizeClass == .compact || sizeClass == .regular }
+    /// The chapter's actions always sit in the glass bar's row; an upright phone shrinks Ask Godric to his sparkle to make room.
+    private var inlineBar: Bool { true }
 
     /// On a phone on its side the chapter's actions go into the glass bar's own row.
     private var inlineActions: AnyView? {
@@ -559,9 +559,7 @@ private struct CreationChapterView: View {
     // MARK: bottom bar
 
     @ViewBuilder private var actions: some View {
-        if !(verticalSizeClass == .compact || sizeClass == .regular) {
-            ChapterActions(model: model).frame(maxWidth: .infinity).padding(.vertical, 4)
-        }
+        EmptyView()
     }
 }
 
