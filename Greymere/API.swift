@@ -24,7 +24,7 @@ enum APIError: Error {
 /// A request that sends nothing but `{}`.
 struct EmptyBody: Encodable, Sendable {}
 
-/// The one place the app talks to the server. GET for everything it reads; POST for Godric chat (0.3.0) and the Ideation synopsis actions (0.5.0), PATCH to save a hand edit.
+/// The one place the app talks to the server. GET for everything it reads; POST for Godric chat (0.3.0) and the Ideation synopsis actions (0.5.0), PATCH to save a hand edit, PUT and DELETE for the Creation panel's beats (0.6.0).
 struct APIClient: Sendable {
     let baseURL: URL
 
@@ -69,6 +69,16 @@ struct APIClient: Sendable {
     /// Saving the synopsis by hand (0.5.0): the only PATCH the app makes.
     func patch<B: Encodable, T: Decodable>(_ path: String, body: B, as type: T.Type = T.self) async throws -> T {
         try await send("PATCH", path, body: body)
+    }
+
+    /// Replacing a beat's reference list (0.6.0).
+    func put<B: Encodable, T: Decodable>(_ path: String, body: B, as type: T.Type = T.self) async throws -> T {
+        try await send("PUT", path, body: body)
+    }
+
+    /// Deleting a beat (0.6.0).
+    func delete<T: Decodable>(_ path: String, as type: T.Type = T.self) async throws -> T {
+        try await send("DELETE", path, body: EmptyBody())
     }
 
     private func send<B: Encodable, T: Decodable>(_ method: String, _ path: String, body: B) async throws -> T {
