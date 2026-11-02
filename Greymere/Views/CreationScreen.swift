@@ -540,6 +540,7 @@ private struct CreationChapterView: View {
                 highlights: model.openNotes.compactMap(\.anchorQuote),
                 focusOnAppear: focusSeg == i,
                 hideKeyboard: activeSeg == i && (dictation.state == .listening || dictation.state == .starting),
+                trailingBreak: i < segs.count - 1,
                 onFocus: { activeSeg = i; selection = nil; if focusSeg == i { focusSeg = nil } },
                 onSelectedQuote: { q in if activeSeg == i || q != nil { model.noteQuote = q } })
                 .padding(.horizontal, 6)

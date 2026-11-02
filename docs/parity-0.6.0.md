@@ -6,7 +6,7 @@ Baseline: the desktop Creation pane at server 0.54.0 behaviour (`public/index.ht
 
 Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upgraded only on what was seen in the simulator, never on the code.
 
-**Counts: 75 rows. Run 32 · Built, not run 30 · Not built 2 · Different 11.**
+**Counts: 79 rows. Run 35 · Built, not run 31 · Not built 2 · Different 11.**
 
 | # | Feature | Desktop behaviour | Status | Evidence | Gap or note |
 |---|---|---|---|---|---|
@@ -86,6 +86,11 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 | 74 | Unlock to change… / Lock again | Confirm with the server's warning, PUT proofread-lock {locked:false, accept:true}; "Lock again" the reverse | Run | Me on iPhone 14 Pro: warning shown, unlocked (server confirmed locked false), controls came back, Lock again re-locked | Not run on iPad mini. Locking again with unsaved edits is refused with "Save or discard your edits first." |
 | 75 | 423 PROSE_LOCKED in words | Toast "This chapter is locked, so nothing was saved." | Built, not run | Server confirmed to answer 423 on prose-with-beats; the app text was not triggered | Prose save keeps its own message; every other beat or reference failure says "Chapter is locked. Unlock to change." and re-reads the chapter |
 
+| 76 | Prose formatting: Bold, Italic | Cmd-B / Cmd-I; stored as `**bold**` and `*italic*` | Run | Me on iPhone 14 Pro (Dev build, chapter 2517 of The Route): wrap, unwrap, bold on italic (`***x***`), no selection (`****` with the caret between). Buttons above the keyboard | Cmd-B / Cmd-I are wired (`keyCommands`) but a hardware keyboard was not used. Not seen on iPad mini. The editor shows the asterisks as typed; it is not a rich-text view |
+| 77 | Prose formatting: Scene break | Button; a paragraph of exactly `* * *` | Run | Me on iPhone 14 Pro: inserted at the caret, Save, then GET chapter: `...\n\n* * *\n\n...` in `prose.raw` | The caret landed inside a paragraph, so the break split it; between two paragraphs, at the end of a segment before a beat card, and at the chapter's end were checked only by a standalone run of the same function. Not seen on iPad mini |
+| 78 | Formatting with unsaved-edits, Save, Discard | Autosave | Run | Me on iPhone: Unsaved edits appears; undoing back to the saved text clears it; Save wrote the Markdown; Discard restored | Dictation insertion and the stale-save guard were not re-run with formatting |
+| 79 | Desktop shows the app's formatting | Renders bold, italic and the scene-break divider | Built, not run | The stored form matches what the desktop splits on (`\n\n* * *\n\n`, index.html ~10236) | Not opened in the desktop on :3000 |
+
 ## Rows still not run
 
 - 3. "Draft one — locked" text in an open chapter
@@ -118,6 +123,7 @@ Simulators: iPad mini (A17 Pro) and iPhone 14 Pro. No real device. Rows were upg
 - 63. The other pills: Save and Discard, Apply and Discard, Undo arrow
 - 73. Locked chapter: Accept, Undo, Lock as draft one, Apply a Godric beat change, reference chips
 - 75. 423 PROSE_LOCKED shown in words on beat and reference calls
+- 79. Desktop shows the app's formatting
 
 ## Bug Hotel candidates
 
