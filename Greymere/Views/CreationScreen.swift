@@ -498,10 +498,6 @@ private struct CreationChapterView: View {
         let field = DictationField(
             text: Binding(get: { model.segmentsShown.indices.contains(i) ? model.segmentsShown[i] : "" }, set: { model.setSegment(i, $0) }),
             selection: $selection)
-        // Dictating needs no keyboard: put it away. The caret and the dictation point stay where they were.
-        if dictation.state == .idle {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        }
         await dictation.toggle(client: client, bookId: model.doc?.book?.id, field: field)
     }
 
@@ -523,6 +519,7 @@ private struct CreationChapterView: View {
                 editable: !model.isLocked,
                 highlights: model.openNotes.compactMap(\.anchorQuote),
                 focusOnAppear: focusSeg == i,
+                hideKeyboard: activeSeg == i && (dictation.state == .listening || dictation.state == .starting),
                 onFocus: { activeSeg = i; selection = nil; if focusSeg == i { focusSeg = nil } },
                 onSelectedQuote: { q in if activeSeg == i || q != nil { model.noteQuote = q } })
                 .padding(.horizontal, 6)

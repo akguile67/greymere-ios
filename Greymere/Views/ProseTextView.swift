@@ -11,6 +11,8 @@ struct ProseTextView: UIViewRepresentable {
     var highlights: [String] = []
     var highlightColor: UIColor = UIColor.systemYellow.withAlphaComponent(0.35)
     var focusOnAppear = false
+    /// While dictating the keyboard is put away but the text keeps focus, so the caret stays in sight.
+    var hideKeyboard = false
     var onFocus: () -> Void = {}
     var onSelectedQuote: (String?) -> Void = { _ in }
 
@@ -39,6 +41,11 @@ struct ProseTextView: UIViewRepresentable {
         if let selection, case .selection(let range) = selection.indices, range.upperBound <= text.endIndex {
             let ns = NSRange(range, in: text)
             if view.selectedRange != ns, view.isFirstResponder { view.selectedRange = ns }
+        }
+        let hidden = view.inputView != nil
+        if hideKeyboard != hidden {
+            view.inputView = hideKeyboard ? UIView(frame: .zero) : nil
+            if view.isFirstResponder { view.reloadInputViews() }
         }
         paint(view)
     }
