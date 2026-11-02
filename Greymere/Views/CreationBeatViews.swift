@@ -10,7 +10,7 @@ struct BeatCard: View {
     let fixBrief: () -> Void
     @Environment(ConnectionModel.self) private var connection
     @State private var confirmDelete = false
-    @State private var proposalOpen = false
+    @State private var proposalOpen = true
 
     private var busy: Bool { model.busyBeats.contains(beat.id) }
 
@@ -56,7 +56,8 @@ struct BeatCard: View {
             continuityBlock
             referencesBlock
 
-            if let draft = beat.proposal, !draft.isEmpty { draftBlock(draft) }
+            stopBlock
+            if let draft = beat.proposal, !draft.isEmpty { draftBlock(draft) } else { generateRow }
         }
         .padding(12)
         .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -146,17 +147,82 @@ struct BeatCard: View {
         .accessibilityLabel("\(name), dismissed. Restore")
     }
 
+    private var generating: Bool { model.generating.contains(beat.id) }
+    private var canGenerate: Bool {
+        !generating && !model.isLocked && !beat.whatHappens.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var generateRow: some View {
+        HStack(spacing: 10) {
+            Button { Task { await model.generate(beat) } } label: {
+                Label(generating ? "Drafting…" : "Generate", systemImage: "sparkles").font(.footnote)
+            }
+            .buttonStyle(.glassProminent).disabled(!canGenerate)
+            if generating {
+                ProgressView().controlSize(.small)
+                Text("This can take about a minute.").font(.caption).foregroundStyle(connection.theme.muted)
+            }
+        }
+    }
+
+    // Generation paused before any prose: the exits the iPad has.
+    @ViewBuilder private var stopBlock: some View {
+        if let stop = model.stops[beat.id] {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Generation stopped", systemImage: "hand.raised.fill").font(.footnote.weight(.semibold)).foregroundStyle(.orange)
+                Text(stop.message).font(.footnote).foregroundStyle(connection.theme.text)
+                if let note = stop.continuity {
+                    Text(note).font(.footnote).foregroundStyle(connection.theme.muted)
+                    HStack(spacing: 8) {
+                        Button("Yes — the story goes this way") { Task { await model.acceptStoppedContinuity(beat) } }.buttonStyle(.glassProminent)
+                        Button("Let me correct the brief") { fixBrief() }.buttonStyle(.glass)
+                    }
+                    .font(.footnote).disabled(model.working)
+                }
+                ForEach(stop.gaps) { gap in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("\(gap.name) — " + (gap.reason == "needs_development" ? "has an entry that still needs development" : "no codex entry"))
+                            .font(.footnote.weight(.semibold)).foregroundStyle(connection.theme.text)
+                        HStack(spacing: 8) {
+                            Button("Dismiss — a walk-on") { Task { await model.dismissGap(beat, name: gap.name) } }.buttonStyle(.glass)
+                            if gap.reason != "needs_development" {
+                                Button("Link to an entry…") { refs(gap.name) }.buttonStyle(.glass)
+                            }
+                        }
+                        .font(.footnote).disabled(model.working)
+                    }
+                }
+                if !stop.gaps.isEmpty {
+                    Text("To create or develop an entry, finish it in World & Character on the laptop, then generate again.")
+                        .font(.caption).foregroundStyle(connection.theme.muted)
+                }
+                Button("Close") { model.clearStop(beat) }.font(.footnote).buttonStyle(.plain).foregroundStyle(connection.theme.muted)
+            }
+            .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+    }
+
     private func draftBlock(_ draft: String) -> some View {
         let words = draft.split(whereSeparator: \.isWhitespace).count
-        return VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: 8) {
             Button { withAnimation(.snappy) { proposalOpen.toggle() } } label: {
-                Label("Draft — \(words.formatted()) words, waiting for Accept", systemImage: proposalOpen ? "chevron.down" : "chevron.right")
-                    .font(.footnote.weight(.semibold)).foregroundStyle(connection.theme.muted)
+                Label("Draft — \(words.formatted()) words. Read it; nothing is in the chapter until you accept.", systemImage: proposalOpen ? "chevron.down" : "chevron.right")
+                    .font(.footnote.weight(.semibold)).foregroundStyle(connection.theme.muted).multilineTextAlignment(.leading)
             }
             .buttonStyle(.plain)
             if proposalOpen {
                 Text(draft).font(.callout).foregroundStyle(connection.theme.text).textSelection(.enabled)
-                Text("Accepting a draft isn't in the app yet. Do that on the laptop.").font(.caption).foregroundStyle(connection.theme.faint)
+                HStack(spacing: 8) {
+                    Button { Task { await model.acceptDraft(beat) } } label: { Label("Accept into the chapter", systemImage: "checkmark") }
+                        .buttonStyle(.glassProminent).disabled(model.working || generating || model.isLocked)
+                    Button { Task { await model.generate(beat) } } label: { Label(generating ? "Drafting…" : "Regenerate", systemImage: "arrow.clockwise") }
+                        .buttonStyle(.glass).disabled(!canGenerate)
+                    Button("Discard") { Task { await model.discardDraft(beat) } }
+                        .buttonStyle(.glass).disabled(model.working || generating)
+                }
+                .font(.footnote)
+                if generating { HStack { ProgressView().controlSize(.small); Text("This can take about a minute.").font(.caption).foregroundStyle(connection.theme.muted) } }
             }
         }
         .padding(10).frame(maxWidth: .infinity, alignment: .leading)

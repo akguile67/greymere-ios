@@ -38,9 +38,11 @@
 		352F80F11D4AF6134B2B98B8 /* Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */; };
 		372760ED9FD6182674D7D61D /* CreationBeatViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */; };
 		3828AD822FCBE001D7D9BDB8 /* IdeationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E049D442FE007392E81DB030 /* IdeationScreen.swift */; };
+		382C498A39628FB1BF51F4C1 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
 		3AE755B08D555579190FDF81 /* IdeationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E049D442FE007392E81DB030 /* IdeationScreen.swift */; };
 		4356C399F4A98CEFC40F81A5 /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
 		46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
+		46E61A0173B8D14F2B674856 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
 		49BDD97D039466AB7E85D0A9 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
 		4A2DCB2784E2F378ADB467B1 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		4B79E3CE6A7FFE57997AB6C4 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
@@ -92,6 +94,7 @@
 		B36A18F192F79380D158F7F0 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		B5C094E404334BA2E476D07E /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		B63270938C6D73F20C90581D /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05104EB8902965BD219D23B /* Shell.swift */; };
+		B6A37204529A7E1334B273CD /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
 		BAB4DB81E33A31B3FCD496AA /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		BCD5A5AA53BD56C527BDEDE8 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
 		BD36A4B4DD2648D8787E2A02 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
@@ -151,6 +154,7 @@
 		E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionViews.swift; sourceTree = "<group>"; };
 		E86DC597154FB476C5247EE5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EB09C190A5D6C555959CE60D /* DiffText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffText.swift; sourceTree = "<group>"; };
+		EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProseTextView.swift; sourceTree = "<group>"; };
 		EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "EBGaramond-Regular.ttf"; sourceTree = "<group>"; };
 		F38FCA4871968FB71E4F811E /* IdeationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdeationModel.swift; sourceTree = "<group>"; };
 		FD6AB11F2597837B284FD01B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -180,6 +184,7 @@
 				65FDFE72D51DD4458C46567C /* GodricChatView.swift */,
 				0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */,
 				E049D442FE007392E81DB030 /* IdeationScreen.swift */,
+				EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */,
 				A3E874CACCA6F59089D34C70 /* Reorder.swift */,
 				FD6AB11F2597837B284FD01B /* RootView.swift */,
 				B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */,
@@ -402,6 +407,7 @@
 				E43ABBDF8BC9D1622CDD3F15 /* IdeationModel.swift in Sources */,
 				3828AD822FCBE001D7D9BDB8 /* IdeationScreen.swift in Sources */,
 				5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */,
+				46E61A0173B8D14F2B674856 /* ProseTextView.swift in Sources */,
 				CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */,
 				E67F46C38727A245E699F064 /* RootView.swift in Sources */,
 				6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */,
@@ -438,6 +444,7 @@
 				A2DAC8533A950EFD15AE97D0 /* IdeationModel.swift in Sources */,
 				3AE755B08D555579190FDF81 /* IdeationScreen.swift in Sources */,
 				B17F2D5BA2A122B7D6BB9007 /* Models.swift in Sources */,
+				382C498A39628FB1BF51F4C1 /* ProseTextView.swift in Sources */,
 				A4B69C56E6B20519B4848608 /* Reorder.swift in Sources */,
 				CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */,
 				29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */,
@@ -474,6 +481,7 @@
 				94A7C30FC9C76D30B11337F6 /* IdeationModel.swift in Sources */,
 				667D59CC036A65EFB3587444 /* IdeationScreen.swift in Sources */,
 				BD36A4B4DD2648D8787E2A02 /* Models.swift in Sources */,
+				B6A37204529A7E1334B273CD /* ProseTextView.swift in Sources */,
 				651888C670EDE5A6C7E463B3 /* Reorder.swift in Sources */,
 				08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */,
 				8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */,

@@ -211,6 +211,15 @@ private struct CreationChapterView: View {
     @State private var sheet: BeatSheetTarget?
     @State private var refsFor: RefsTarget?
     @State private var confirmLeave = false
+    @State private var dictation = DictationModel()
+    @State private var activeSeg: Int?
+    @State private var selection: TextSelection?
+    @State private var openEmpty: Set<Int> = []
+    @State private var focusSeg: Int?
+    @State private var composingQuote: String?
+    @State private var showNotes = false
+    @State private var confirmLock = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         VStack(spacing: 0) {
@@ -237,7 +246,7 @@ private struct CreationChapterView: View {
                         }
                     } else if model.doc != nil {
                         briefSection
-                        beatsSection
+                        flowSection
                     }
                 }
                 .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 16)
@@ -252,7 +261,23 @@ private struct CreationChapterView: View {
             Button("Discard and leave", role: .destructive) { Task { await model.close() } }
             Button("Keep editing", role: .cancel) {}
         }
+        .task(id: client.baseURL) { await dictation.check(client: client) }
+        .onChange(of: activeText) { _, new in dictation.textChanged(to: new) }
+        .onChange(of: activeSeg) { dictation.settle(); dictation.end() }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.settle(); dictation.end() } }
+        .onDisappear { dictation.settle(); dictation.end() }
         .sheet(item: $sheet) { target in BeatSheet(model: model, target: target) }
+        .sheet(item: $model.conflict) { c in ProseConflictSheet(model: model, conflict: c) }
+        .sheet(isPresented: Binding(get: { composingQuote != nil }, set: { if !$0 { composingQuote = nil } })) {
+            NoteComposer(model: model, quote: composingQuote ?? "") { composingQuote = nil }
+        }
+        .sheet(isPresented: $showNotes) { NotesSheet(model: model) }
+        .confirmationDialog("Lock this chapter as draft one?", isPresented: $confirmLock, titleVisibility: .visible) {
+            Button("Lock as draft one") { Task { await model.lockDraft() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(lockMessage)
+        }
         .sheet(item: $refsFor) { target in RefsSheet(model: model, beatId: target.beatId, linking: target.linking) }
     }
 
@@ -270,6 +295,14 @@ private struct CreationChapterView: View {
                     if ch.creationStatus == "draft_one" { Text("Draft one — locked").font(.caption).foregroundStyle(connection.theme.muted) }
                     if let words = model.doc?.prose?.wordCount, words > 0 {
                         Text("\(words.formatted()) words").font(.caption).foregroundStyle(connection.theme.faint)
+                    }
+                    if model.dirty {
+                        Label("Unsaved edits", systemImage: "circle.fill").labelStyle(.titleAndIcon).font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                    }
+                    Spacer(minLength: 8)
+                    if ch.creationStatus != "draft_one", !model.isLocked {
+                        Button { confirmLock = true } label: { Label(model.locking ? "Locking…" : "Lock as draft one", systemImage: "lock").font(.footnote) }
+                            .buttonStyle(.glass).disabled(model.locking || model.working || model.doc?.prose?.wordCount ?? 0 == 0)
                     }
                 }
             }
@@ -345,20 +378,132 @@ private struct CreationChapterView: View {
 
     // MARK: beats
 
-    private var beatsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("BEATS").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(connection.theme.muted)
-            let beats = model.doc?.beats ?? []
-            if beats.isEmpty {
-                Text("No beats yet. Add one below, or talk the chapter through with Godric and ask him to shape them.")
-                    .font(.subheadline).foregroundStyle(connection.theme.muted)
+    private var activeText: String {
+        guard let i = activeSeg, model.segmentsShown.indices.contains(i) else { return "" }
+        return model.segmentsShown[i]
+    }
+
+    private var lockMessage: String {
+        let n = model.openNotes.count
+        let pending = model.doc?.beats.count ?? 0
+        var parts = ["The chapter is marked draft one and becomes eligible for the editing tower. The prose is already the manuscript; nothing is rebuilt."]
+        if pending > 0 { parts.append("\(pending) pending beat\(pending == 1 ? "" : "s") will stay on the chapter.") }
+        if n > 0 { parts.append("You have \(n) drafting note\(n == 1 ? "" : "s") in this chapter. You may want to look at \(n == 1 ? "it" : "them") first. They have to be cleared before the book goes to Editing.") }
+        return parts.joined(separator: "\n\n")
+    }
+
+    // MARK: the chapter: its text with each pending beat's card between the passages
+
+    private var flowSection: some View {
+        let beats = model.doc?.beats ?? []
+        let segs = model.segmentsShown
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text("CHAPTER").font(.caption.weight(.semibold)).tracking(0.8).foregroundStyle(connection.theme.muted)
+                Spacer(minLength: 6)
+                textTools
             }
-            ForEach(beats) { beat in
-                BeatCard(model: model, beat: beat,
-                         edit: { sheet = .edit(beat) },
-                         refs: { linking in refsFor = RefsTarget(beatId: beat.id, linking: linking) },
-                         fixBrief: { briefOpen = true; model.beginBriefEdit() })
+            if model.isLocked { lockBar }
+            if let notice = dictation.notice {
+                Text(notice).font(.caption).foregroundStyle(connection.theme.muted).onTapGesture { dictation.notice = nil }
             }
+            if !dictation.chips.isEmpty { chipStrip }
+            if segs.count == beats.count + 1 {
+                ForEach(0...beats.count, id: \.self) { i in
+                    segmentView(i, of: segs)
+                    if i < beats.count {
+                        BeatCard(model: model, beat: beats[i],
+                                 edit: { sheet = .edit(beats[i]) },
+                                 refs: { linking in refsFor = RefsTarget(beatId: beats[i].id, linking: linking) },
+                                 fixBrief: { briefOpen = true; model.beginBriefEdit() })
+                    }
+                }
+            } else {
+                Text("The chapter couldn't be laid out. Pull down to read it again.").font(.footnote).foregroundStyle(connection.theme.muted)
+            }
+            if beats.isEmpty, (segs.first ?? "").isEmpty {
+                Text("Nothing here yet. Write, dictate, or add a beat and generate it.").font(.subheadline).foregroundStyle(connection.theme.muted)
+            }
+        }
+    }
+
+    private var lockBar: some View {
+        Label(model.doc?.chapter.proseLock?.warning ?? "This chapter is locked and can't be edited here.", systemImage: "lock.fill")
+            .font(.footnote).foregroundStyle(connection.theme.text)
+            .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private var textTools: some View {
+        HStack(spacing: 6) {
+            Button { Task { await toggleDictation() } } label: {
+                Image(systemName: dictation.state == .listening ? "mic.fill" : (dictation.available == false ? "mic.slash" : "mic"))
+                    .foregroundStyle(dictation.state == .listening ? Color.red : connection.theme.text)
+                    .symbolEffect(.pulse, isActive: dictation.state == .listening).padding(4)
+            }
+            .buttonStyle(.glass).buttonBorderShape(.circle)
+            .disabled(model.isLocked || dictation.state == .starting || dictation.state == .stopping)
+            .accessibilityLabel(dictation.state == .listening ? "Stop dictation" : "Dictate into the text")
+            Button {
+                if let q = model.noteQuote { composingQuote = q }
+                else { model.banner = .init(text: "Select the passage you want to leave a note about, then press Note.") }
+            } label: { Label("Note", systemImage: "note.text").font(.footnote) }
+                .buttonStyle(.glass)
+            Button { showNotes = true } label: {
+                Label("Notes" + (model.openNotes.isEmpty ? "" : " (\(model.openNotes.count))"), systemImage: "list.bullet").font(.footnote)
+            }
+            .buttonStyle(.glass)
+        }
+    }
+
+    private var chipStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(dictation.chips) { chip in
+                    Button { dictation.act(on: chip) } label: {
+                        Text(chip.label).font(.footnote).lineLimit(1)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .foregroundStyle(connection.theme.muted).background(.thinMaterial, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func toggleDictation() async {
+        guard let i = activeSeg, model.segmentsShown.indices.contains(i) else {
+            model.banner = .init(text: "Tap in the text where you want the words to go, then press the microphone.")
+            return
+        }
+        let field = DictationField(
+            text: Binding(get: { model.segmentsShown.indices.contains(i) ? model.segmentsShown[i] : "" }, set: { model.setSegment(i, $0) }),
+            selection: $selection)
+        await dictation.toggle(client: client, bookId: model.doc?.book?.id, field: field)
+    }
+
+    @ViewBuilder private func segmentView(_ i: Int, of segs: [String]) -> some View {
+        let text = segs[i]
+        if text.isEmpty && !openEmpty.contains(i) && activeSeg != i {
+            if !model.isLocked {
+                Button { openEmpty.insert(i); focusSeg = i } label: {
+                    Label("Write here", systemImage: "plus").font(.caption).foregroundStyle(connection.theme.muted)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .overlay(Capsule().strokeBorder(connection.theme.faint, style: StrokeStyle(lineWidth: 1, dash: [3])))
+                }
+                .buttonStyle(.plain)
+            }
+        } else {
+            ProseTextView(
+                text: Binding(get: { model.segmentsShown.indices.contains(i) ? model.segmentsShown[i] : "" }, set: { model.setSegment(i, $0) }),
+                selection: activeSeg == i ? $selection : .constant(nil),
+                editable: !model.isLocked,
+                highlights: model.openNotes.compactMap(\.anchorQuote),
+                focusOnAppear: focusSeg == i,
+                onFocus: { activeSeg = i; selection = nil; if focusSeg == i { focusSeg = nil } },
+                onSelectedQuote: { q in if activeSeg == i || q != nil { model.noteQuote = q } })
+                .padding(.horizontal, 6)
+                .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
     }
 
@@ -407,13 +552,141 @@ private struct CreationChapterView: View {
                 Button { Task { await model.applyProposal() } } label: { Label("Apply drafted change", systemImage: "checkmark") }
                     .buttonStyle(.glassProminent).disabled(model.working)
                 Button("Discard") { Task { await model.discardProposal() } }.buttonStyle(.glass).disabled(model.working)
+            } else if model.dirty {
+                Button { Task { await model.saveProse() } } label: { Label(model.savingProse ? "Saving…" : "Save", systemImage: "checkmark") }
+                    .buttonStyle(.glassProminent).disabled(model.savingProse)
+                Button("Discard edits") { model.discardEdits() }.buttonStyle(.glass).disabled(model.savingProse)
             } else {
                 Button { sheet = .add } label: { Label("Add beat", systemImage: "plus") }
                     .buttonStyle(.glassProminent).disabled(model.doc == nil || model.working)
+                if model.lastAccept != nil {
+                    Button { Task { await model.undoLastDraft() } } label: { Label("Undo last draft", systemImage: "arrow.uturn.backward") }
+                        .buttonStyle(.glass).disabled(model.working)
+                }
             }
         }
         .labelStyle(.titleAndIcon).font(.subheadline).lineLimit(1).minimumScaleFactor(0.75)
         .frame(maxWidth: .infinity).padding(.horizontal, 12).padding(.vertical, 6)
+    }
+}
+
+// MARK: conflict and notes
+
+/// The chapter changed elsewhere since it was opened (or its beats did): what the author typed beside the text now.
+struct ProseConflictSheet: View {
+    let model: CreationModel
+    let conflict: ProseConflict
+    @Environment(\.dismiss) private var dismiss
+    @Environment(ConnectionModel.self) private var connection
+
+    private func block(_ title: String, _ text: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(connection.theme.muted)
+            ScrollView { Text(text.isEmpty ? "—" : text).font(.footnote).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled) }
+                .padding(8).frame(maxHeight: 220)
+                .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(conflict.kind == .changed
+                         ? "This chapter changed somewhere else since you opened it, so your typing was not saved. Nothing has been overwritten."
+                         : "The beats on this chapter changed since you opened it, so nothing was saved. Copy what you typed, then use the chapter as it is now.")
+                        .font(.subheadline)
+                    block("What you typed", conflict.mine)
+                    if conflict.kind == .changed { block("The chapter now", conflict.theirs) }
+                    VStack(spacing: 10) {
+                        if conflict.kind == .changed {
+                            Button { Task { await model.keepMine(); dismiss() } } label: { Text("Keep what I typed").frame(maxWidth: .infinity) }
+                                .buttonStyle(.glassProminent)
+                        }
+                        Button { UIPasteboard.general.string = conflict.mine } label: { Text("Copy what I typed").frame(maxWidth: .infinity) }.buttonStyle(.glass)
+                        Button { Task { await model.useCurrent(); dismiss() } } label: { Text("Use the current text").frame(maxWidth: .infinity) }.buttonStyle(.glass)
+                    }
+                    Text(conflict.kind == .changed ? "Keeping yours first keeps the other text as a version, so it can be brought back." : "")
+                        .font(.caption).foregroundStyle(connection.theme.muted)
+                }
+                .padding(16)
+            }
+            .navigationTitle("The chapter changed").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Not yet") { dismiss() } } }
+        }
+        .presentationDetents([.large])
+    }
+}
+
+struct NoteComposer: View {
+    let model: CreationModel
+    let quote: String
+    let done: () -> Void
+    @Environment(ConnectionModel.self) private var connection
+    @State private var text = ""
+    @State private var saving = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("The passage") { Text("“\(quote.prefix(300))”").font(.footnote).foregroundStyle(connection.theme.muted) }
+                Section("Your note") { TextEditor(text: $text).frame(minHeight: 120) }
+            }
+            .navigationTitle("Drafting note").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: done) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save note") {
+                        saving = true
+                        Task { if await model.addNote(text.trimmingCharacters(in: .whitespacesAndNewlines), quote: quote) { model.noteQuote = nil; done() }; saving = false }
+                    }
+                    .disabled(saving || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
+struct NotesSheet: View {
+    let model: CreationModel
+    @Environment(\.dismiss) private var dismiss
+    @Environment(ConnectionModel.self) private var connection
+    @State private var deleting: DraftingNote?
+
+    private func row(_ n: DraftingNote) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(n.anchorQuote == nil ? "On the chapter" : (model.isPlaced(n) ? "On a passage" : "can’t place · the passage has changed"))
+                .font(.caption).foregroundStyle(n.anchorQuote != nil && !model.isPlaced(n) ? Color.orange : connection.theme.muted)
+            if let q = n.anchorQuote, !q.isEmpty { Text("“\(q.prefix(160))”").font(.footnote).italic().foregroundStyle(connection.theme.muted) }
+            Text(n.noteText).font(.callout)
+            HStack(spacing: 10) {
+                Button { Task { await model.setNote(n, open: !n.isOpen) } } label: { Label(n.isOpen ? "Clear" : "Reopen", systemImage: n.isOpen ? "checkmark" : "arrow.uturn.backward") }
+                Button(role: .destructive) { deleting = n } label: { Label("Delete", systemImage: "trash") }
+            }
+            .font(.footnote).buttonStyle(.glass)
+        }
+        .padding(.vertical, 4)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Open") {
+                    ForEach(model.openNotes) { row($0) }
+                    if model.openNotes.isEmpty { Text("None").foregroundStyle(connection.theme.muted) }
+                }
+                let cleared = model.notes.filter { !$0.isOpen }
+                if !cleared.isEmpty { Section("Cleared") { ForEach(cleared) { row($0) } } }
+            }
+            .navigationTitle("Drafting notes").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .confirmationDialog("Delete this note?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+                Button("Delete note", role: .destructive) { if let n = deleting { Task { await model.deleteNote(n) } }; deleting = nil }
+                Button("Cancel", role: .cancel) { deleting = nil }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 

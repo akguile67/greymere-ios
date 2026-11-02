@@ -442,7 +442,7 @@ final class CreationModel {
     }
 
     func addBeat(_ text: String, target: Int?, position: Int?) async -> Bool {
-        guard let client, let id = chapterId, !working else { return false }
+        guard let client, let id = chapterId, !working, requireSaved() else { return false }
         working = true; defer { working = false }
         do {
             let r: InsertBeatResult = try await client.post("/api/creation/chapters/\(id)/insert-beat", body: InsertBeatBody(position: position, what_happens: text))
@@ -465,7 +465,7 @@ final class CreationModel {
     }
 
     func deleteBeat(_ beat: CreationBeat) async {
-        guard let client, !working else { return }
+        guard let client, !working, requireSaved() else { return }
         working = true; defer { working = false }
         do {
             let _: Ignored = try await client.delete("/api/creation/beats/\(beat.id)")
@@ -479,7 +479,7 @@ final class CreationModel {
     }
 
     func move(_ beat: CreationBeat, by step: Int) async {
-        guard let client, !working, canMove(beat, by: step),
+        guard let client, !working, canMove(beat, by: step), requireSaved(),
               let scene = doc?.scenes.first(where: { $0.id == beat.sceneId }),
               let i = scene.beats.firstIndex(where: { $0.id == beat.id }) else { return }
         var ids = scene.beats.map(\.id)
