@@ -210,15 +210,16 @@ private struct CreationChapterView: View {
     @State private var briefOpen = true
     @State private var sheet: BeatSheetTarget?
     @State private var refsFor: RefsTarget?
+    @State private var confirmLeave = false
 
     var body: some View {
         VStack(spacing: 0) {
             // Pinned, so the way back to the chapter list is always on screen.
             HStack {
-                Button { Task { await model.close() } } label: {
+                Button { if model.briefEditing { confirmLeave = true } else { Task { await model.close() } } } label: {
                     Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
                 }
-                .buttonStyle(.glass).disabled(model.briefEditing)
+                .buttonStyle(.glass)
                 Spacer()
             }
             .padding(.horizontal, 16).padding(.vertical, 6)
@@ -247,6 +248,10 @@ private struct CreationChapterView: View {
             actions
         }
         .onAppear { briefOpen = sizeClass == .regular }
+        .confirmationDialog("Discard your changes to the brief?", isPresented: $confirmLeave, titleVisibility: .visible) {
+            Button("Discard and leave", role: .destructive) { Task { await model.close() } }
+            Button("Keep editing", role: .cancel) {}
+        }
         .sheet(item: $sheet) { target in BeatSheet(model: model, target: target) }
         .sheet(item: $refsFor) { target in RefsSheet(model: model, beatId: target.beatId, linking: target.linking) }
     }
@@ -404,7 +409,7 @@ private struct CreationChapterView: View {
                 Button("Discard") { Task { await model.discardProposal() } }.buttonStyle(.glass).disabled(model.working)
             } else {
                 Button { sheet = .add } label: { Label("Add beat", systemImage: "plus") }
-                    .buttonStyle(.glassProminent).disabled(model.doc == nil || model.working || model.briefEditing)
+                    .buttonStyle(.glassProminent).disabled(model.doc == nil || model.working)
             }
         }
         .labelStyle(.titleAndIcon).font(.subheadline).lineLimit(1).minimumScaleFactor(0.75)
