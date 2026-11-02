@@ -128,17 +128,23 @@ extension View {
 
     /// The floating glass bar at the bottom of every screen, in the manner of the Music app: Home, the Ask Godric
     /// pill, and Panels (which raises the tray of workflow stages).
-    func glassBar(isOpen: Bool, action: @escaping () -> Void) -> some View {
-        modifier(GlassBar(isOpen: isOpen, action: action))
+    func glassBar(isOpen: Bool, inline: AnyView? = nil, action: @escaping () -> Void) -> some View {
+        modifier(GlassBar(isOpen: isOpen, inline: inline, action: action))
     }
 }
 
 struct GlassBar: ViewModifier {
     let isOpen: Bool
+    /// A screen's own actions, set into the bar's row instead of a row of their own (a phone on its side has no room to spare).
+    var inline: AnyView?
     let action: () -> Void
     @Environment(ConnectionModel.self) private var connection
     @Environment(ShellModel.self) private var shell
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
+    /// An upright phone has no room for a screen's own action beside the Ask Godric label: Godric shrinks to his sparkle.
+    private var godricIconOnly: Bool { inline != nil && sizeClass == .compact && verticalSizeClass != .compact }
 
     /// Bigger on an iPad, where a phone-sized bar gets lost.
     private var regular: Bool { sizeClass == .regular }
@@ -160,18 +166,23 @@ struct GlassBar: ViewModifier {
             GlassEffectContainer(spacing: 12) {
                 HStack(spacing: 12) {
                     round("house", label: "Home", active: shell.destination == .home && !shell.trayOpen) { shell.goHome() }
-                    Button(action: action) {
-                        HStack(spacing: regular ? 12 : 8) {
-                            Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
-                            Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                    if let inline { inline }
+                    if godricIconOnly {
+                        round(isOpen ? "xmark" : "sparkles", label: isOpen ? "Close Godric" : "Talk to Godric", active: isOpen, action)
+                    } else {
+                        Button(action: action) {
+                            HStack(spacing: regular ? 12 : 8) {
+                                Image(systemName: "sparkles").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                                Text(isOpen ? "Close Godric" : "Ask Godric").font((regular ? Font.title3 : .subheadline).weight(.semibold))
+                            }
+                            .foregroundStyle(connection.theme.text)
+                            .padding(.horizontal, regular ? 32 : 20).frame(height: size)
+                            .contentShape(Capsule())
                         }
-                        .foregroundStyle(connection.theme.text)
-                        .padding(.horizontal, regular ? 32 : 20).frame(height: size)
-                        .contentShape(Capsule())
+                        .buttonStyle(.plain)
+                        .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
+                        .accessibilityLabel("Talk to Godric")
                     }
-                    .buttonStyle(.plain)
-                    .glassEffect(.regular.tint(connection.theme.glassTint).interactive(), in: .capsule)
-                    .accessibilityLabel("Talk to Godric")
                     round("square.grid.2x2", label: "Panels", active: shell.trayOpen || shell.destination != .home) { shell.trayOpen.toggle() }
                 }
             }
@@ -234,5 +245,69 @@ struct ShelfRowLayout: Layout {
                        proposal: ProposedViewSize(width: width, height: nil))
             x += width + spacing
         }
+    }
+}
+
+/// The divider between a panel and the Godric chat docked beside it on an iPad: drag it to give Godric more or less room.
+/// Dragging left widens Godric; the panel keeps at least `minPanel` points.
+struct DockHandle: View {
+    @Binding var width: Double
+    var available: CGFloat
+    var minPanel: CGFloat = 300
+    @State private var start: Double?
+    @Environment(ConnectionModel.self) private var connection
+
+    var body: some View {
+        ZStack {
+            Rectangle().fill(connection.theme.faint.opacity(0.35)).frame(width: 1)
+            Capsule().fill(connection.theme.muted.opacity(0.55)).frame(width: 4, height: 44)
+        }
+        .frame(width: 22)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { v in
+                    if start == nil { start = width }
+                    let limit = max(240, Double(available - minPanel))
+                    width = min(max((start ?? width) - Double(v.translation.width), 220), limit)
+                }
+                .onEnded { _ in start = nil }
+        )
+        .accessibilityLabel("Resize Godric")
+        .accessibilityHint("Drag to change how much room Godric has")
+    }
+}
+
+/// An action that belongs to the screen, set in the bottom glass bar: the same height, glass and type as the Ask Godric
+/// pill (a design rule for the app: what the author can do here appears in that bar, in glass, when it is needed).
+/// `prominent` tints it with the accent for the main action. With no title it is a round button.
+struct GlassPill: View {
+    var title: String?
+    var systemImage: String?
+    var prominent = false
+    var label: String?
+    let action: () -> Void
+    @Environment(ConnectionModel.self) private var connection
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.isEnabled) private var enabled
+
+    private var regular: Bool { sizeClass == .regular }
+    private var size: CGFloat { regular ? 60 : 44 }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: regular ? 12 : 8) {
+                if let systemImage { Image(systemName: systemImage).font((regular ? Font.title3 : .subheadline).weight(.semibold)) }
+                if let title { Text(title).font((regular ? Font.title3 : .subheadline).weight(.semibold)).lineLimit(1) }
+            }
+            .foregroundStyle(prominent ? connection.theme.accent : connection.theme.text)
+            .padding(.horizontal, title == nil ? 0 : (regular ? 32 : 20))
+            .frame(width: title == nil ? size : nil, height: size)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.tint(prominent ? connection.theme.accent.opacity(0.28) : connection.theme.glassTint).interactive(), in: .capsule)
+        .opacity(enabled ? 1 : 0.45)
+        .accessibilityLabel(label ?? title ?? "")
     }
 }

@@ -88,6 +88,7 @@ struct SynopsisProposal: Decodable, Sendable, Identifiable, Equatable {
     let proposedText: String?
 }
 
+private struct CreationSend: Encodable { let text: String }
 private struct IdeationSend: Encodable { let text: String; let source_pane = "right_panel" }
 
 /// The server reads these keys as written (camelCase). `quickOpen` asks for the fixed greeting instead of a model-written brief.
@@ -112,14 +113,14 @@ enum GodricStatus { case ready, thinking, offline }
 /// The reply arrives whole, as on the desktop: there is no streaming (checklist, finding 1).
 @MainActor @Observable
 final class GodricModel {
-    /// Which panel's thread this is. Home chat is `/api/godric/*`; Ideation is the book's own thread.
-    enum Thread { case home, ideation }
+    /// Which panel's thread this is. Home chat is `/api/godric/*`; Ideation is the book's own thread; Creation is the open chapter's.
+    enum Thread { case home, ideation, creation }
 
     let thread: Thread
     init(thread: Thread = .home) { self.thread = thread }
 
     /// The panel context the server keys the thread by.
-    var contextName: String { thread == .home ? "home" : "ideation" }
+    var contextName: String { switch thread { case .home: "home"; case .ideation: "ideation"; case .creation: "creation" } }
 
     var messages: [ChatMessage] = []
     var status: GodricStatus = .ready
@@ -142,11 +143,14 @@ final class GodricModel {
     var synopsisTick = 0
     /// Ideation only: Godric drafted a synopsis change in this turn.
     var onProposal: ((SynopsisProposal?) -> Void)?
+    /// Creation only: Godric drafted a change to a beat in this turn. It is only a draft: the author applies it.
+    var onBeatProposal: ((BeatProposalCard?) -> Void)?
     /// Ideation only: reload the book's thread and synopsis after a Continue.
     var onContinued: (() async -> Void)?
 
     private var activeMessages: [ChatMessage] = []
     private var focusedBookId: Int?
+    private var focusedChapterId: Int?
     private var generation = 0
 
     // MARK: lifecycle
@@ -197,6 +201,7 @@ final class GodricModel {
     func newChat(client: APIClient) async {
         guard !busy else { return }
         if thread == .ideation { await onNewConversation?(); return }
+        if thread == .creation { return }
         status = .thinking
         do {
             let r: ConversationResponse = try await client.post("/api/godric/conversation/new",
@@ -224,6 +229,26 @@ final class GodricModel {
         status = .ready
     }
 
+    // MARK: creation thread
+
+    /// Puts the open chapter's thread on screen. The server keeps the one thread per chapter; there is no History for it.
+    func seedCreation(bookId: Int, chapterId: Int, title: String?, messages server: [CreationMessage]) {
+        focusedBookId = bookId; focusedChapterId = chapterId
+        activeKey = "c-\(chapterId)"
+        let opener = ChatMessage(role: .note, text: "Chapter conversation" + (title.map { " — \($0)" } ?? ""), time: nil)
+        let turns = server.filter { $0.kind == "chat" || $0.kind == "opening" }.map {
+            ChatMessage(role: $0.role == "user" ? .user : .godric, text: $0.text, time: Self.parse($0.createdAt))
+        }
+        activeMessages = [opener] + turns
+        messages = activeMessages
+        status = .ready
+        loaded = true
+    }
+
+    func resetCreation() {
+        activeMessages = []; messages = []; viewing = nil; loaded = false; focusedChapterId = nil; status = .ready
+    }
+
     func appendNote(_ text: String) {
         messages.append(ChatMessage(role: .note, text: text, time: nil))
         activeMessages = messages
@@ -249,6 +274,23 @@ final class GodricModel {
                 if r.synopsisProposed == true, let p = r.synopsisProposal {
                     onProposal?(p)
                     messages.append(ChatMessage(role: .note, text: "Godric drafted a change to the synopsis. Close this to review it. Apply and Discard are in the bar at the bottom; nothing changes until you press Apply.", time: nil))
+                }
+                status = .ready
+            } catch {
+                fail(error, opening: false)
+            }
+            activeMessages = messages
+            busy = false
+            return
+        }
+        if thread == .creation, let chapterId = focusedChapterId {
+            do {
+                // A reply is one JSON response and can take about a minute; APIClient's POST waits up to ten.
+                let r: CreationReply = try await client.post("/api/creation/chapters/\(chapterId)/godric", body: CreationSend(text: text))
+                messages.append(ChatMessage(role: .godric, text: r.text, time: Date()))
+                if let p = r.pendingBeatChange {
+                    onBeatProposal?(p)
+                    messages.append(ChatMessage(role: .note, text: "Godric drafted a change to a beat. Close this to review it. Apply and Discard are on the chapter; nothing changes until you press Apply.", time: nil))
                 }
                 status = .ready
             } catch {
@@ -314,6 +356,7 @@ final class GodricModel {
         guard let entry = viewing else { return true }
         switch thread {
         case .ideation: return entry.key.hasPrefix("i-") && entry.bookId == focusedBookId
+        case .creation: return true
         case .home: return entry.key.hasPrefix("g-") && (entry.panel ?? "home") == "home"
         }
     }

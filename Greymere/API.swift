@@ -24,7 +24,7 @@ enum APIError: Error {
 /// A request that sends nothing but `{}`.
 struct EmptyBody: Encodable, Sendable {}
 
-/// The one place the app talks to the server. GET for everything it reads; POST for Godric chat (0.3.0) and the Ideation synopsis actions (0.5.0), PATCH to save a hand edit.
+/// The one place the app talks to the server. GET for everything it reads; POST for Godric chat (0.3.0) and the Ideation synopsis actions (0.5.0), PATCH to save a hand edit, PUT and DELETE for the Creation panel's beats (0.6.0).
 struct APIClient: Sendable {
     let baseURL: URL
 
@@ -71,6 +71,16 @@ struct APIClient: Sendable {
         try await send("PATCH", path, body: body)
     }
 
+    /// Replacing a beat's reference list (0.6.0).
+    func put<B: Encodable, T: Decodable>(_ path: String, body: B, as type: T.Type = T.self) async throws -> T {
+        try await send("PUT", path, body: body)
+    }
+
+    /// Deleting a beat (0.6.0).
+    func delete<T: Decodable>(_ path: String, as type: T.Type = T.self) async throws -> T {
+        try await send("DELETE", path, body: EmptyBody())
+    }
+
     private func send<B: Encodable, T: Decodable>(_ method: String, _ path: String, body: B) async throws -> T {
         guard let url = URL(string: path, relativeTo: baseURL) else { throw APIError.unreachable }
         var request = URLRequest(url: url)
@@ -83,7 +93,7 @@ struct APIClient: Sendable {
         catch { throw APIError.unreachable }
         guard let http = response as? HTTPURLResponse else { throw APIError.unreachable }
         guard (200..<300).contains(http.statusCode) else {
-            throw APIError.http(http.statusCode, String(decoding: data.prefix(200), as: UTF8.self))
+            throw APIError.http(http.statusCode, String(decoding: data.prefix(1000), as: UTF8.self))
         }
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

@@ -11,6 +11,7 @@ struct IdeationScreen: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @AppStorage("greymere.activeBookId") private var activeBookId = 0
     @State private var chatOpen = false
+    @AppStorage("greymere.godricWidth") private var godricWidth = 400.0
 
     private var books: [ShelfItem] { home.inPlan }
     private var current: ShelfItem? { books.first { $0.rawId == activeBookId } ?? books.first }
@@ -18,13 +19,15 @@ struct IdeationScreen: View {
     private var chatBook: ChatBook? { current.map { ChatBook(id: $0.rawId, title: $0.title) } }
 
     var body: some View {
-        HStack(spacing: 0) {
-            synopsisPane
-            if docked && chatOpen, let chatBook {
-                Divider()
-                GodricChatView(model: model.godric, client: client, showsBar: false, book: chatBook, onClose: { chatOpen = false })
-                    .frame(width: 400)
-                    .transition(.move(edge: .trailing))
+        GeometryReader { geo in
+            HStack(spacing: 0) {
+                synopsisPane
+                if docked && chatOpen, let chatBook {
+                    DockHandle(width: $godricWidth, available: geo.size.width)
+                    GodricChatView(model: model.godric, client: client, showsBar: false, book: chatBook, onClose: { chatOpen = false })
+                        .frame(width: min(max(godricWidth, 220), max(240, geo.size.width - 300)))
+                        .transition(.move(edge: .trailing))
+                }
             }
         }
         .animation(.snappy, value: chatOpen)

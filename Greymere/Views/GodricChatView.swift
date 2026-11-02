@@ -109,11 +109,14 @@ struct GodricChatView: View {
             Text("Godric").font(.serif(22))
             statusChip
             Spacer()
-            Button { showHistory = true } label: { Image(systemName: "clock.arrow.circlepath").padding(6) }
-                .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("History")
-            Button { Task { await model.newChat(client: client) } } label: { Image(systemName: "square.and.pencil").padding(6) }
-                .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("New chat")
-                .disabled(model.busy)
+            // A chapter has the one thread, so Creation has neither History nor New chat.
+            if model.thread != .creation {
+                Button { showHistory = true } label: { Image(systemName: "clock.arrow.circlepath").padding(6) }
+                    .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("History")
+                Button { Task { await model.newChat(client: client) } } label: { Image(systemName: "square.and.pencil").padding(6) }
+                    .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("New chat")
+                    .disabled(model.busy)
+            }
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
     }
