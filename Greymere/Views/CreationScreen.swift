@@ -276,6 +276,7 @@ private struct CreationChapterView: View {
         }
         .task(id: client.baseURL) { await dictation.check(client: client) }
         .onChange(of: activeText) { _, new in dictation.textChanged(to: new) }
+        .onChange(of: dictation.state) { old, new in if old == .listening || old == .stopping, new == .idle { dismissKeyboard() } }
         .onChange(of: activeSeg) { dictation.settle(); dictation.end() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.settle(); dictation.end() } }
         .onDisappear { dictation.settle(); dictation.end() }
@@ -591,6 +592,7 @@ struct ChapterActions: View {
                     .disabled(model.working)
             } else if model.dirty {
                 GlassPill(title: model.savingProse ? "Saving…" : "Save", systemImage: "checkmark", prominent: true) {
+                    dismissKeyboard()
                     Task { await model.saveProse() }
                 }
                 .disabled(model.savingProse)
@@ -725,6 +727,11 @@ struct NotesSheet: View {
         }
         .presentationDetents([.medium, .large])
     }
+}
+
+/// Puts the on-screen keyboard away (the text keeps what it has; tapping it brings the keyboard back).
+@MainActor func dismissKeyboard() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 }
 
 struct RefsTarget: Identifiable {
