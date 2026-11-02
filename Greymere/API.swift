@@ -93,7 +93,7 @@ struct APIClient: Sendable {
         catch { throw APIError.unreachable }
         guard let http = response as? HTTPURLResponse else { throw APIError.unreachable }
         guard (200..<300).contains(http.statusCode) else {
-            throw APIError.http(http.statusCode, String(decoding: data.prefix(200), as: UTF8.self))
+            throw APIError.http(http.statusCode, String(decoding: data.prefix(1000), as: UTF8.self))
         }
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase

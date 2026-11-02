@@ -125,13 +125,18 @@ struct CreationChapterDoc: Decodable, Sendable {
     struct BookHead: Decodable, Sendable { let id: Int; let title: String; let number: Int? }
     struct ActHead: Decodable, Sendable { let id: Int; let title: String?; let number: Int? }
     struct Scene: Decodable, Sendable, Identifiable { let id: Int; let beats: [CreationBeat] }
-    struct Prose: Decodable, Sendable { let text: String?; let wordCount: Int?; let paragraphs: Int? }
+    struct Prose: Decodable, Sendable { let text: String?; let wordCount: Int?; let paragraphs: Int?; let hash: String? }
     let chapter: Head
     let book: BookHead?
     let act: ActHead?
     let scenes: [Scene]
     let beats: [CreationBeat]
     let prose: Prose?
+    /// The manuscript's own bytes cut at the pending beats' places; joined end to end they are the chapter (0.55.0).
+    let segments: [String]?
+
+    /// A chapter past editing in a book at production or later is read-only.
+    var proseLocked: Bool { chapter.proseLock?.applies == true && chapter.proseLock?.locked == true }
 }
 
 /// A change to a beat that Godric has drafted in the chapter conversation. Only Apply writes it.
@@ -242,7 +247,22 @@ final class CreationModel {
     var proposal: BeatProposalCard?
     var candidates: [ReferenceCandidate] = []
 
-    private var client: APIClient?
+    // prose: unsaved edits live here in memory only (ADR 0.55.0: the server is the only text store)
+    var proseEdits: [String]?
+    var editOrigin: [String] = []
+    var editBase: EditBase?
+    var beganSession = false
+    var conflict: ProseConflict?
+    var savingProse = false
+    /// The last Accept, kept for this session so Undo can put things back.
+    var lastAccept: AcceptResult?
+    var generating: Set<Int> = []
+    var stops: [Int: GenerationStop] = [:]
+    var notes: [DraftingNote] = []
+    var noteQuote: String?
+    var locking = false
+
+    var client: APIClient?
 
     // MARK: status wording (the desktop's)
 
@@ -323,12 +343,14 @@ final class CreationModel {
         godric.resetCreation()
         chapterId = id; doc = nil; openError = nil; banner = nil; proposal = nil
         briefEditing = false
+        discardEdits(); lastAccept = nil; stops = [:]; notes = []; beganSession = false; noteQuote = nil
         opening = true
         defer { opening = false }
         _ = try? await client.post("/api/creation/chapters/\(id)/prune-empty-beats", body: EmptyBody(), as: Ignored.self)
         do {
             doc = try await client.get("/api/creation/chapters/\(id)")
             await readChat(id, client: client)
+            await loadNotes()
         } catch {
             openError = "This chapter couldn't be opened."
         }
@@ -338,6 +360,7 @@ final class CreationModel {
     func close() async {
         guard let id = chapterId, let client else { chapterId = nil; return }
         chapterId = nil; doc = nil; proposal = nil; briefEditing = false
+        discardEdits(); lastAccept = nil; stops = [:]; notes = []
         godric.resetCreation()
         _ = try? await client.post("/api/creation/chapters/\(id)/prune-empty-beats", body: EmptyBody(), as: Ignored.self)
         await reloadBook()
@@ -349,6 +372,7 @@ final class CreationModel {
         if let id = chapterId {
             if let d: CreationChapterDoc = try? await client.get("/api/creation/chapters/\(id)") { doc = d }
             if !godric.busy { await readChat(id, client: client) }
+            await loadNotes()
         } else {
             await reloadBook()
         }
@@ -542,5 +566,291 @@ final class CreationModel {
         } catch APIError.http(409, _) {
             self.proposal = nil
         } catch { fail("Discard failed", error) }
+    }
+}
+
+// MARK: - Sprint 3: generation, prose, drafting notes, lock (ADR 0.55.0)
+
+struct EditBase: Equatable { let hash: String?; let beatIds: [Int] }
+
+struct ProseConflict: Identifiable {
+    enum Kind { case changed, beats }
+    let id = UUID()
+    let kind: Kind
+    /// What the author typed, whole.
+    let mine: String
+    /// The server's text now (for `.changed`).
+    let theirs: String
+}
+
+struct GenerationStop: Equatable {
+    struct Gap: Decodable, Sendable, Equatable, Identifiable {
+        let name: String
+        let reason: String?
+        let type: String?
+        var id: String { name }
+    }
+    struct Continuity: Decodable, Sendable, Equatable { let note: String? }
+    var message: String
+    var gaps: [Gap]
+    var continuity: String?
+}
+
+private struct GenerateResult: Decodable, Sendable {
+    let stopped: Bool?
+    let message: String?
+    let gaps: [GenerationStop.Gap]?
+    let continuity: GenerationStop.Continuity?
+    let wordCount: Int?
+}
+
+struct AcceptResult: Decodable, Sendable {
+    struct BeatBack: Decodable, Sendable {
+        let sceneId: Int?
+        let whatHappens: String?
+        let targetWords: Int?
+        let position: Int?
+        let refsJson: String?
+    }
+    let insertedParagraphs: Int?
+    let undoVersionId: Int?
+    let beat: BeatBack?
+}
+
+private struct UndoBody: Encodable, Sendable {
+    struct Beat: Encodable, Sendable {
+        let scene_id: Int?; let what_happens: String; let target_words: Int?; let position: Int?; let refs_json: String?
+    }
+    let undo_version_id: Int
+    let inserted_paragraphs: Int
+    let beat: Beat?
+}
+
+private struct ProseBody: Encodable, Sendable {
+    let segments: [String]
+    let beat_ids: [Int]
+    let base_hash: String?
+    let overwrite: Bool
+    let begin_session: Bool
+}
+
+private struct ProseSaved: Decodable, Sendable { let saved: Bool?; let unchanged: Bool?; let proseWordCount: Int? }
+private struct NotesResponse: Decodable, Sendable { let notes: [DraftingNote] }
+private struct NewNote: Encodable, Sendable { let note_text: String; let anchor_quote: String? }
+private struct NoteStatus: Encodable, Sendable { let status: String }
+private struct LockResult: Decodable, Sendable { let wordCount: Int? }
+
+struct DraftingNote: Decodable, Sendable, Identifiable, Equatable {
+    let id: Int
+    let noteText: String
+    let anchorQuote: String?
+    let status: String
+    var isOpen: Bool { status == "open" }
+}
+
+/// Finds a note's passage in the text. The passage was selected in rendered text, so italic and bold markers in the
+/// manuscript are allowed between its words, and any run of white space matches.
+enum NoteAnchor {
+    static func range(of quote: String, in text: String) -> Range<String.Index>? {
+        let words = quote.split(whereSeparator: \.isWhitespace).map(String.init)
+        guard quote.trimmingCharacters(in: .whitespacesAndNewlines).count >= 6, !words.isEmpty else { return nil }
+        let pattern = words.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "[\\s*_]+")
+        return text.range(of: pattern, options: .regularExpression)
+    }
+}
+
+extension CreationModel {
+    // MARK: edits in memory
+
+    var segmentsShown: [String] { proseEdits ?? doc?.segments ?? [] }
+    var dirty: Bool { proseEdits != nil && proseEdits! != editOrigin }
+    var isLocked: Bool { doc?.proseLocked == true }
+
+    /// An edit to one segment. The first edit remembers what it was made from (the hash and the beats shown), which is
+    /// what the save sends, so a change made elsewhere meanwhile is caught by the server.
+    func setSegment(_ i: Int, _ text: String) {
+        guard !isLocked, var segs = proseEdits ?? doc?.segments, segs.indices.contains(i) else { return }
+        if proseEdits == nil {
+            editOrigin = segs
+            editBase = EditBase(hash: doc?.prose?.hash, beatIds: (doc?.beats ?? []).map(\.id))
+        }
+        guard segs[i] != text else { return }
+        segs[i] = text
+        proseEdits = segs
+        if noteQuote != nil { noteQuote = nil }
+    }
+
+    func discardEdits() { proseEdits = nil; editBase = nil; conflict = nil }
+
+    /// Structural actions need the text saved first: they change what the segments are.
+    func requireSaved() -> Bool {
+        if dirty { banner = Banner(text: "Save or discard your edits first.", isError: true); return false }
+        return true
+    }
+
+    // MARK: saving through the segment save
+
+    func saveProse(overwrite: Bool = false) async {
+        guard let client, let id = chapterId, let segs = proseEdits, let base = editBase, dirty, !savingProse else { return }
+        savingProse = true; defer { savingProse = false }
+        banner = nil
+        do {
+            let r: ProseSaved = try await client.put("/api/creation/chapters/\(id)/prose-with-beats",
+                body: ProseBody(segments: segs, beat_ids: base.beatIds, base_hash: base.hash, overwrite: overwrite, begin_session: !beganSession))
+            beganSession = true
+            discardEdits()
+            lastAccept = nil
+            await reloadChapter()
+            banner = Banner(text: r.unchanged == true ? "Nothing to save." : "Saved" + (r.proseWordCount.map { " · \($0.formatted()) words" } ?? "") + ".")
+        } catch APIError.http(let code, let body) {
+            let mine = segs.joined()
+            switch code {
+            case 409 where body.contains("BEATS_CHANGED"):
+                await reloadChapter()
+                conflict = ProseConflict(kind: .beats, mine: mine, theirs: "")
+            case 409:
+                let current: CreationChapterDoc? = try? await client.get("/api/creation/chapters/\(id)")
+                conflict = ProseConflict(kind: .changed, mine: mine, theirs: current?.segments?.joined() ?? current?.prose?.text ?? "")
+            case 423:
+                await reloadChapter()
+                banner = Banner(text: "This chapter is locked, so nothing was saved. What you typed is still on screen.", isError: true)
+            case 400:
+                banner = Banner(text: "A chapter can't be saved empty. What you typed is still on screen.", isError: true)
+            default:
+                banner = Banner(text: "Save failed: \(APIError.http(code, body).message). What you typed is still on screen.", isError: true)
+            }
+        } catch {
+            fail("Save failed, and what you typed is still on screen", error)
+        }
+    }
+
+    /// Keep what the author typed: the save is sent again, and the server first keeps the other text as a version.
+    func keepMine() async {
+        conflict = nil
+        await saveProse(overwrite: true)
+    }
+
+    /// Use the server's text: the author's edits are dropped (copied first if asked).
+    func useCurrent() async {
+        conflict = nil
+        discardEdits()
+        await reloadChapter()
+    }
+
+    // MARK: generation
+
+    func generate(_ beat: CreationBeat) async {
+        guard let client, !generating.contains(beat.id), requireSaved() else { return }
+        generating.insert(beat.id); defer { generating.remove(beat.id) }
+        stops[beat.id] = nil
+        banner = nil
+        do {
+            let r: GenerateResult = try await client.post("/api/creation/beats/\(beat.id)/generate", body: EmptyBody())
+            if r.stopped == true {
+                stops[beat.id] = GenerationStop(message: r.message ?? "Generation stopped.", gaps: r.gaps ?? [], continuity: r.continuity?.note)
+            }
+            await reloadChapter()
+        } catch { fail("The draft couldn't be made", error) }
+    }
+
+    func clearStop(_ beat: CreationBeat) { stops[beat.id] = nil }
+
+    func dismissGap(_ beat: CreationBeat, name: String) async {
+        await dismissRef(beat, name: name, restore: false)
+        stops[beat.id]?.gaps.removeAll { $0.name == name }
+        if stops[beat.id]?.gaps.isEmpty == true, stops[beat.id]?.continuity == nil { stops[beat.id] = nil }
+    }
+
+    func acceptStoppedContinuity(_ beat: CreationBeat) async {
+        await acceptContinuity(beat)
+        stops[beat.id]?.continuity = nil
+        if stops[beat.id]?.gaps.isEmpty == true { stops[beat.id] = nil }
+    }
+
+    func acceptDraft(_ beat: CreationBeat) async {
+        guard let client, !working, requireSaved() else { return }
+        working = true; defer { working = false }
+        do {
+            let r: AcceptResult = try await client.post("/api/creation/beats/\(beat.id)/accept", body: EmptyBody())
+            lastAccept = r
+            await reloadChapter()
+            banner = Banner(text: "The draft is in the chapter. Undo last draft is available until you save an edit.")
+        } catch { fail("The draft wasn't accepted", error) }
+    }
+
+    func discardDraft(_ beat: CreationBeat) async {
+        guard let client, !working else { return }
+        working = true; defer { working = false }
+        do {
+            let _: CreationBeat = try await client.post("/api/creation/beats/\(beat.id)/discard-proposal", body: EmptyBody())
+            await reloadChapter()
+        } catch { fail("The draft wasn't discarded", error) }
+    }
+
+    func undoLastDraft() async {
+        guard let client, let id = chapterId, let a = lastAccept, let version = a.undoVersionId, !working, requireSaved() else { return }
+        working = true; defer { working = false }
+        let back = a.beat.map { UndoBody.Beat(scene_id: $0.sceneId, what_happens: $0.whatHappens ?? "", target_words: $0.targetWords, position: $0.position, refs_json: $0.refsJson) }
+        do {
+            struct Undone: Decodable { let chapterId: Int? }
+            let _: Undone = try await client.post("/api/creation/chapters/\(id)/undo-draft",
+                body: UndoBody(undo_version_id: version, inserted_paragraphs: a.insertedParagraphs ?? 0, beat: back))
+            lastAccept = nil
+            await reloadChapter()
+            banner = Banner(text: "Undone. The chapter is back as it was, and the beat is back.")
+        } catch { fail("Undo failed", error) }
+    }
+
+    // MARK: drafting notes
+
+    func loadNotes() async {
+        guard let client, let id = chapterId else { return }
+        if let r: NotesResponse = try? await client.get("/api/chapters/\(id)/drafting-notes") { notes = r.notes }
+    }
+
+    var openNotes: [DraftingNote] { notes.filter(\.isOpen) }
+
+    func isPlaced(_ note: DraftingNote) -> Bool {
+        guard let q = note.anchorQuote, !q.isEmpty else { return true }
+        return segmentsShown.contains { NoteAnchor.range(of: q, in: $0) != nil }
+    }
+
+    func addNote(_ text: String, quote: String?) async -> Bool {
+        guard let client, let id = chapterId else { return false }
+        do {
+            let n: DraftingNote = try await client.post("/api/chapters/\(id)/drafting-notes", body: NewNote(note_text: text, anchor_quote: quote))
+            notes.append(n)
+            return true
+        } catch { fail("The note wasn't saved", error); return false }
+    }
+
+    func setNote(_ note: DraftingNote, open: Bool) async {
+        guard let client else { return }
+        do {
+            let n: DraftingNote = try await client.patch("/api/drafting-notes/\(note.id)", body: NoteStatus(status: open ? "open" : "cleared"))
+            if let i = notes.firstIndex(where: { $0.id == n.id }) { notes[i] = n }
+        } catch { fail("The note wasn't changed", error) }
+    }
+
+    func deleteNote(_ note: DraftingNote) async {
+        guard let client else { return }
+        do {
+            struct Gone: Decodable { let deleted: Bool? }
+            let _: Gone = try await client.delete("/api/drafting-notes/\(note.id)")
+            notes.removeAll { $0.id == note.id }
+        } catch { fail("The note wasn't deleted", error) }
+    }
+
+    // MARK: lock as draft one
+
+    func lockDraft() async {
+        guard let client, let id = chapterId, requireSaved(), !locking else { return }
+        locking = true; defer { locking = false }
+        do {
+            let r: LockResult = try await client.post("/api/creation/chapters/\(id)/lock-draft", body: EmptyBody())
+            lastAccept = nil
+            await reloadChapter()
+            banner = Banner(text: "Locked as draft one" + (r.wordCount.map { " — \($0.formatted()) words" } ?? "") + ". Eligible for the editing tower.")
+        } catch { fail("The chapter wasn't locked", error) }
     }
 }
