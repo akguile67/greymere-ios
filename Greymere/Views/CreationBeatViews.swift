@@ -256,7 +256,7 @@ struct BeatCard: View {
         }
         .padding(10).frame(maxWidth: .infinity, alignment: .leading)
         .background(connection.theme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .confirmationDialog(confirm == .regenerate ? "Replace this draft?" : "Discard this draft?", isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }), titleVisibility: .visible) {
+        .confirmationDialog(confirm == .regenerate ? "Replace this draft?" : "Discard draft and beat?", isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }), titleVisibility: .visible) {
             if confirm == .regenerate {
                 Button("Replace it", role: .destructive) { Task { await model.generate(beat) } }
             } else {
@@ -264,7 +264,7 @@ struct BeatCard: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(confirm == .regenerate ? "Regenerate replaces this draft, including the changes you made to it." : "This discards the draft, including the changes you made to it. The chapter is unchanged.")
+            Text(confirm == .regenerate ? "Regenerate replaces this draft, including the changes you made to it." : "Discard this draft, with the changes you made to it, and the beat? The chapter is unchanged.")
         }
     }
 }

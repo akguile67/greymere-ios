@@ -884,9 +884,11 @@ extension CreationModel {
         draftTimers[beat.id]?.cancel(); draftTimers[beat.id] = nil
         working = true; defer { working = false }
         do {
-            let _: CreationBeat = try await client.post("/api/creation/beats/\(beat.id)/discard-proposal", body: EmptyBody())
+            // As on the desktop: the draft and the beat go together. Regenerate is the way to try again.
+            let _: Ignored = try await client.delete("/api/creation/beats/\(beat.id)")
             draftEdits[beat.id] = nil
             await reloadChapter()
+            banner = Banner(text: "Draft and beat discarded. The chapter is unchanged.")
         } catch { fail("The draft wasn't discarded", error) }
     }
 
