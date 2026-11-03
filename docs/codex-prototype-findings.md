@@ -56,7 +56,7 @@ portrait navigation is better than the iPad's. Changes:
   (Edit replaces it on an entry): phone-12.
 - The phone home no longer has a Tools section (they are in the menu).
 - **iPad portrait now defaults to the iPhone drill-down** (the switch in the menu still flips back to two panes). iPad
-  landscape keeps the split. Not re-screenshotted on the iPad after this change.
+  landscape keeps the split. Verified on the iPad mini in portrait: the phone-style home with the glass bar and New pill (ipad-portrait-02-drilldown-home). Landscape split not re-checked.
 - New observation: the menu is long (nine type rows plus series plus tools) and scrolls on a phone; the series choices
   could become a submenu or move to the scope row.
 
