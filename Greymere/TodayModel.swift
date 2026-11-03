@@ -56,6 +56,12 @@ final class TodayModel {
     private struct SizeBody: Encodable { let size: String }
     private struct ReorderBody: Encodable { let orderedIds: [Int]; let on: String
         enum CodingKeys: String, CodingKey { case orderedIds = "ordered_ids", on } }
+    private struct PromoteBody: Encodable { let sourceKey: String
+        enum CodingKeys: String, CodingKey { case sourceKey = "source_key" } }
+    private struct SendBackBody: Encodable { let taskId: Int
+        enum CodingKeys: String, CodingKey { case taskId = "task_id" } }
+    private struct PinBody: Encodable { let sourceKey: String; let on: Bool
+        enum CodingKeys: String, CodingKey { case sourceKey = "source_key", on } }
     struct Ack: Decodable, Sendable {}
 
     private func write(client: APIClient, _ call: () async throws -> Void) async {
@@ -83,6 +89,17 @@ final class TodayModel {
     }
     func setSize(_ id: Int, size: String, client: APIClient) async {
         await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/\(id)/hours", body: SizeBody(size: size)) }
+    }
+    /// Takes an offer from the studio onto today's list (the desktop's Add to today).
+    func promote(_ key: String, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/studio/promote", body: PromoteBody(sourceKey: key)) }
+    }
+    /// Puts a task that came from the studio back on offer.
+    func sendBack(_ taskId: Int, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/studio/send-back", body: SendBackBody(taskId: taskId)) }
+    }
+    func pin(_ key: String, on: Bool, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/studio/pin", body: PinBody(sourceKey: key, on: on)) }
     }
     func reorder(_ ids: [Int], client: APIClient) async {
         await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/reorder", body: ReorderBody(orderedIds: ids, on: iso)) }

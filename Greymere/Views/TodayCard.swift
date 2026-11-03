@@ -23,7 +23,7 @@ struct TodayCard: View {
                 ForEach(model.flags) { flag in flagRow(flag) }
                 dayItems(daily)
                 TaskCardsBlock(model: model, client: client, tasks: tasks)
-                if let studio = tasks.studio, tasks.view == "today" { studioBlock(studio) }
+                if let studio = tasks.studio, tasks.view == "today" { StudioOffers(model: model, client: client, studio: studio) }
             } else {
                 ProgressView().frame(maxWidth: .infinity)
             }
@@ -155,28 +155,6 @@ struct TodayCard: View {
     }
 
     // MARK: studio offers, capacity, flags
-
-    private func studioBlock(_ s: Studio) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if let m = s.message { note(m, good: true) }
-            if !s.areas.isEmpty {
-                SectionLabel(title: "On offer from the studio", count: nil)
-                ForEach(s.areas) { a in
-                    VStack(alignment: .leading, spacing: 3) {
-                        HStack(spacing: 8) {
-                            pill(a.label)
-                            if let more = a.more, more > 0 { Text("\(more) more waiting").font(.caption).foregroundStyle(theme.faint) }
-                        }
-                        Text(a.item.title).font(.subheadline.weight(.semibold)).foregroundStyle(theme.text)
-                        let basis = ["set": "your size", "default": "default size for its type", "unsized": "not sized"][a.item.sizeBasis ?? ""] ?? ""
-                        let hrs = a.item.sizeHours.map { "\(Fmt.hours($0))h" } ?? "unsized"
-                        Text("From \(a.item.source ?? a.label) — \(a.item.reason ?? "") · \(hrs) (\(basis))" + (a.item.pinned == true ? " · pinned" : ""))
-                            .font(.footnote).foregroundStyle(theme.muted)
-                    }
-                }
-            }
-        }
-    }
 
     @ViewBuilder
     private func capacity(_ c: Capacity, view: String) -> some View {
