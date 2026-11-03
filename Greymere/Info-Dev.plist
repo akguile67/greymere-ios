@@ -19,7 +19,7 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>GreymereDefaultServerURL</key>
-	<string>http://100.87.110.63:3005</string>
+	<string>http://100.87.110.63:3001</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>
