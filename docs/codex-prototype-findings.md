@@ -46,6 +46,20 @@ tile). With an entry open the bar gains an **Edit** pill and Ask Godric becomes 
 phone-10-shell-entry-bar; iPad portrait shows the bar on the stub Home. The bar floats over list content (rows scroll under
 it), as in the real app. Home and Godric are stubs.
 
+## Update 2: filter pull-down, top right left free, iPad follows the phone
+
+Author feedback: the type chips should be a pull-down; the top-right menu clashes with the app's Settings gear; the iPhone
+portrait navigation is better than the iPad's. Changes:
+- Type chips are gone. One **filter button top left** opens a pull-down: Show (All and each type, with counts), Series,
+  Show contained places, Find missing, Ask Godric about the Codex. It is the same menu on iPhone and iPad (phone-11).
+- The top-right ⋯ and ＋ are gone, so the top right is free for Settings. **New** is a pill in the glass bar on list screens
+  (Edit replaces it on an entry): phone-12.
+- The phone home no longer has a Tools section (they are in the menu).
+- **iPad portrait now defaults to the iPhone drill-down** (the switch in the menu still flips back to two panes). iPad
+  landscape keeps the split. Not re-screenshotted on the iPad after this change.
+- New observation: the menu is long (nine type rows plus series plus tools) and scrolls on a phone; the series choices
+  could become a submenu or move to the scope row.
+
 ## What the screenshots show
 
 | File | Shows |

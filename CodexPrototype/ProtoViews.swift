@@ -38,7 +38,8 @@ struct SplitLayout: View {
                 .navigationTitle("Codex")
                 .navigationSplitViewColumnWidth(min: 290, ideal: 330, max: 380)
                 .searchable(text: $query, prompt: "Search names, aliases, text")
-                .toolbar { CodexMenu(sheet: $sheet) }
+                .toolbar { ToolbarItem(placement: .topBarLeading) { FilterMenu(sheet: $sheet, current: type) { type = $0 } } }
+                .onChange(of: store.newToken) { _, _ in sheet = .newEntry }
         } detail: {
             if let id = selection {
                 NavigationStack {
@@ -73,23 +74,31 @@ struct ToolSheetView: View {
     }
 }
 
-struct CodexMenu: ToolbarContent {
+/// One pull-down for everything that is not content: the type filter, series scope, the fold switch and the tools.
+/// It sits top LEFT: the top right belongs to the app's Settings gear. "New" lives in the glass bar.
+struct FilterMenu: View {
     @Environment(CodexStore.self) private var store
     @Binding var sheet: ToolSheet?
-    var body: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button { sheet = .newEntry } label: { Image(systemName: "plus") }
-            Menu {
-                ScopeMenu()
-                @Bindable var s = store
-                Toggle("Show contained places", isOn: $s.showContained)
-                Divider()
+    var current: EType?
+    var onType: (EType?) -> Void
+    var body: some View {
+        @Bindable var s = store
+        Menu {
+            Section("Show") {
+                Button { onType(nil) } label: { Label("All (\(store.count(nil)))", systemImage: current == nil ? "checkmark" : "square.grid.2x2") }
+                ForEach(EType.allCases) { t in
+                    Button { onType(t) } label: { Label("\(t.title) (\(store.count(t)))", systemImage: current == t ? "checkmark" : t.symbol) }
+                }
+            }
+            Section("Series") { ScopeMenu() }
+            Toggle("Show contained places", isOn: $s.showContained)
+            Section {
                 Button { sheet = .find } label: { Label("Find missing", systemImage: "magnifyingglass") }
-                Button { sheet = .ask } label: { Label("Ask Godric", systemImage: "bubble.left.and.text.bubble.right") }
-                Divider()
-                Toggle("Prototype: iPad portrait drill-down", isOn: $s.ipadPortraitDrill)
-            } label: { Image(systemName: "ellipsis.circle") }
-        }
+                Button { sheet = .ask } label: { Label("Ask Godric about the Codex", systemImage: "bubble.left.and.text.bubble.right") }
+            }
+            Toggle("Prototype: iPad portrait drill-down", isOn: $s.ipadPortraitDrill)
+        } label: { Image(systemName: current == nil ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill") }
+        .accessibilityLabel("Filter and tools")
     }
 }
 
@@ -127,7 +136,6 @@ struct EntryList: View {
             }
         }
         .listStyle(.sidebar)
-        .safeAreaInset(edge: .top, spacing: 0) { TypeChips(type: $type, query: query).padding(.horizontal).padding(.vertical, 6).background(.bar) }
         .onChange(of: selection) { _, new in if let new { store.touch(new) } }
     }
 }
@@ -190,10 +198,10 @@ struct PhoneLayout: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            PhoneHome(query: $query, path: $path)
+            PhoneHome(query: $query, path: $path, sheet: $sheet)
                 .navigationTitle("Codex")
                 .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search names, aliases, text")
-                .toolbar { CodexMenu(sheet: $sheet) }
+                .onChange(of: store.newToken) { _, _ in sheet = .newEntry }
                 .navigationDestination(for: Route.self) { r in
                     switch r {
                     case .entry(let id): EntryView(id: id)
@@ -211,6 +219,7 @@ struct PhoneHome: View {
     @Environment(CodexStore.self) private var store
     @Binding var query: String
     @Binding var path: [Route]
+    @Binding var sheet: ToolSheet?
     @State private var chip: EType?
 
     var body: some View {
@@ -233,19 +242,19 @@ struct PhoneHome: View {
                         NavigationLink(value: Route.type(t)) { HStack { Label(t.title, systemImage: t.symbol); Spacer(); Text("\(store.count(t))").foregroundStyle(.secondary) } }
                     }
                 }
-                Section("Tools") {
-                    NavigationLink(value: Route.findMissing) { Label("Find missing", systemImage: "magnifyingglass") }
-                    NavigationLink(value: Route.ask("")) { Label("Ask Godric about the Codex", systemImage: "bubble.left.and.text.bubble.right") }
-                }
             } else {
                 let hits = store.search(query, type: chip)
-                Section {
-                    TypeChips(type: $chip, query: query).listRowInsets(.init(top: 4, leading: 12, bottom: 4, trailing: 12))
-                }
-                Section("\(hits.count) results") {
+                Section("\(hits.count) results" + (chip.map { " in \($0.title)" } ?? "")) {
                     ForEach(hits) { h in NavigationLink(value: Route.entry(h.id)) { EntryRow(hit: h, showWhy: true) } }
                 }
                 Section { NavigationLink(value: Route.ask(query)) { Label("Ask Godric: “\(query)”", systemImage: "bubble.left.and.text.bubble.right") } }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                FilterMenu(sheet: $sheet, current: query.isEmpty ? nil : chip) { t in
+                    if query.isEmpty { if let t { path.append(.type(t)) } } else { chip = t }
+                }
             }
         }
         .onChange(of: path) { _, p in if case .entry(let id)? = p.last { store.touch(id) } }

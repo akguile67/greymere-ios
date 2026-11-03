@@ -31,7 +31,8 @@ final class CodexStore {
     var godricContext: Int?
     var currentEntry: Int?
     var editToken = 0
-    var ipadPortraitDrill = false
+    var newToken = 0
+    var ipadPortraitDrill = true
     var split = false
     var nextID = 10_000
 

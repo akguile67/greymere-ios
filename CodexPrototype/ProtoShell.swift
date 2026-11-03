@@ -42,6 +42,8 @@ struct ProtoShell: View {
                 // A screen's own action sits in the bar: with an entry open in the Codex, that is Edit.
                 if shell.dest == .codex, store.currentEntry != nil {
                     pill("Edit", "pencil") { store.editToken += 1 }
+                } else if shell.dest == .codex {
+                    pill("New", "plus") { store.newToken += 1 }
                 }
                 pill(store.currentEntry != nil && shell.dest == .codex ? "Godric" : "Ask Godric", "sparkles") { godric = true }
                 round("square.grid.2x2", active: shell.trayOpen || shell.dest != .home) { shell.trayOpen.toggle() }
