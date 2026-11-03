@@ -164,8 +164,12 @@ struct PlanningScreen: View {
             .onTapGesture { openDetails(book) }
             .contextMenu {
                 Section("Move to") {
-                    ForEach(model.phases.filter { $0.key != book.currentPhase }) { phase in
-                        Button(phase.title) { model.drop(book, on: phase) }
+                    ForEach(model.phases) { phase in
+                        if phase.key == book.currentPhase {
+                            Button { model.drop(book, on: phase) } label: { Label("\(phase.title) (steps)", systemImage: "checkmark") }
+                        } else {
+                            Button(phase.title) { model.drop(book, on: phase) }
+                        }
                     }
                 }
                 Button { openDetails(book) } label: { Label("Details", systemImage: "info.circle") }
