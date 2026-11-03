@@ -129,7 +129,8 @@ struct TodayCard: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 6, y: 3)
     }
 
     private func availableBlock(_ items: [DayItem]) -> some View {

@@ -19,28 +19,37 @@ struct TaskCardsBlock: View {
     @State private var newSize = "M"
     @State private var dictation = DictationModel()
     @FocusState private var addFocused: Bool
+    @State private var pendingOrder: [Int]?
+    @State private var heights: [Int: CGFloat] = [:]
+    @State private var dragging: Int?
+    @State private var dragY: CGFloat = 0
 
     private var theme: ThemeStore { connection.theme }
     private var editable: Bool { tasks.view == "today" }
-    private var open: [TaskRow] { tasks.tasks.filter { !$0.done } }
+    private var openRows: [TaskRow] { tasks.tasks.filter { !$0.done } }
+    /// The open tasks in the order shown: the author's drop is held here until the server's answer arrives.
+    private var open: [TaskRow] {
+        guard let order = pendingOrder else { return openRows }
+        let byID = Dictionary(uniqueKeysWithValues: openRows.map { ($0.id, $0) })
+        let ordered = order.compactMap { byID[$0] }
+        return ordered.count == openRows.count ? ordered : openRows
+    }
+    private let gap: CGFloat = 8
     private var finished: [TaskRow] { tasks.tasks.filter(\.done) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             header
-            ForEach(open) { task in
+            ForEach(Array(open.enumerated()), id: \.element.id) { index, task in
                 TaskCard(task: task, date: model.iso, editable: editable, showGrip: sizeClass == .regular,
+                         lifted: dragging == task.id,
                          onTick: { startTick(task) }, onDone: { startTick(task) }, onDefer: { deferring = task },
                          onOpen: { detail = task }, onSize: { size in Task { await model.setSize(task.id, size: size, client: client) } })
-                    .draggable(String(task.id))
-                    .dropDestination(for: String.self) { items, _ in
-                        guard editable, let moved = items.first.flatMap(Int.init) else { return false }
-                        var ids = open.map(\.id)
-                        guard let from = ids.firstIndex(of: moved), let to = ids.firstIndex(of: task.id), from != to else { return false }
-                        ids.remove(at: from); ids.insert(moved, at: to)
-                        Task { await model.reorder(ids, client: client) }
-                        return true
-                    }
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { heights[task.id] = $0 }
+                    .offset(y: offset(for: task.id, at: index))
+                    .zIndex(dragging == task.id ? 1 : 0)
+                    .animation(dragging == task.id ? nil : .snappy(duration: 0.2), value: offset(for: task.id, at: index))
+                    .gesture(editable ? reorderGesture(for: task.id) : nil)
             }
             ForEach(finished) { task in
                 TaskCard(task: task, date: model.iso, editable: editable, showGrip: false,
@@ -76,6 +85,50 @@ struct TaskCardsBlock: View {
                        onDone: { detail = nil; startTick(t) }, onDefer: { detail = nil; deferring = t })
                 .presentationDetents([.medium])
         }
+    }
+
+    // MARK: reorder: press and hold, the card lifts a little, then it follows the finger and the others make room
+
+    private func rowHeight(_ id: Int) -> CGFloat { (heights[id] ?? 64) + gap }
+
+    /// Where the dragged card would land if it were dropped now.
+    private func targetIndex() -> Int? {
+        guard let id = dragging, let from = open.firstIndex(where: { $0.id == id }) else { return nil }
+        var shift = dragY, to = from
+        while shift > 0, to < open.count - 1, shift > rowHeight(open[to + 1].id) / 2 { shift -= rowHeight(open[to + 1].id); to += 1 }
+        while shift < 0, to > 0, -shift > rowHeight(open[to - 1].id) / 2 { shift += rowHeight(open[to - 1].id); to -= 1 }
+        return to
+    }
+
+    private func offset(for id: Int, at index: Int) -> CGFloat {
+        guard let dragID = dragging, let from = open.firstIndex(where: { $0.id == dragID }), let to = targetIndex() else { return 0 }
+        if id == dragID { return dragY }
+        let h = rowHeight(dragID)
+        if from < to, index > from, index <= to { return -h }
+        if from > to, index >= to, index < from { return h }
+        return 0
+    }
+
+    private func reorderGesture(for id: Int) -> some Gesture {
+        LongPressGesture(minimumDuration: 0.35)
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .onChanged { value in
+                guard case .second(true, let drag) = value else { return }
+                if dragging != id {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(.snappy(duration: 0.15)) { dragging = id }
+                }
+                dragY = drag?.translation.height ?? 0
+            }
+            .onEnded { value in
+                defer { withAnimation(.snappy(duration: 0.2)) { dragging = nil; dragY = 0 } }
+                guard case .second(true, _) = value, let to = targetIndex(),
+                      let from = open.firstIndex(where: { $0.id == id }), from != to else { return }
+                var ids = open.map(\.id)
+                ids.remove(at: from); ids.insert(id, at: to)
+                pendingOrder = ids
+                Task { await model.reorder(ids, client: client); pendingOrder = nil }
+            }
     }
 
     private var header: some View {
@@ -141,7 +194,7 @@ struct TaskCardsBlock: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4, 3])).foregroundStyle(theme.faint))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 
     private func submitAdd() {
@@ -162,6 +215,7 @@ private struct TaskCard: View {
     let date: String
     let editable: Bool
     let showGrip: Bool
+    var lifted = false
     let onTick: () -> Void
     let onDone: () -> Void
     let onDefer: () -> Void
@@ -185,7 +239,7 @@ private struct TaskCard: View {
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 24)
             .onChanged { v in
-                guard editable, !task.done, abs(v.translation.width) > abs(v.translation.height) * 1.5 else { return }
+                guard editable, !task.done, !lifted, abs(v.translation.width) > abs(v.translation.height) * 1.5 else { return }
                 dx = max(-140, min(140, v.translation.width))
             }
             .onEnded { v in
@@ -249,9 +303,11 @@ private struct TaskCard: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(lifted ? 0.22 : 0.08), radius: lifted ? 14 : 6, y: lifted ? 8 : 3)
+        .scaleEffect(lifted ? 1.025 : 1)
         .opacity(task.done ? 0.7 : 1)
-        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .contentShape(RoundedRectangle(cornerRadius: 16))
         .onTapGesture(perform: onOpen)
     }
 
