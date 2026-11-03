@@ -139,10 +139,6 @@ struct PlanningScreen: View {
                     Text("No books in this phase.").font(.footnote).foregroundStyle(theme.faint).padding(.vertical, 20)
                 }
                 ForEach(here) { book in interactive(book) }
-                if dragging != nil {
-                    Text("Drop on a phase above to move it").font(.footnote).foregroundStyle(theme.muted)
-                        .frame(maxWidth: .infinity).padding(.top, 8)
-                }
                 if !others.isEmpty {
                     Text("OTHER PHASES WITH BOOKS").font(.caption.weight(.semibold)).tracking(0.8)
                         .foregroundStyle(theme.muted).padding(.top, 14)
@@ -162,12 +158,18 @@ struct PlanningScreen: View {
         .scrollDisabled(dragging != nil)
     }
 
-    /// A card that opens its details on a tap and is held to be dragged.
+    /// A card that opens its details on a tap. Held, it offers the phases to move to (a phone has nowhere to drop it).
     private func interactive(_ book: PlanningBoard.Book) -> some View {
         PlanningCard(book: book, client: client, lifted: false)
-            .opacity(dragging?.id == book.id ? 0.3 : 1)
             .onTapGesture { openDetails(book) }
-            .gesture(dragGesture(for: book))
+            .contextMenu {
+                Section("Move to") {
+                    ForEach(model.phases.filter { $0.key != book.currentPhase }) { phase in
+                        Button(phase.title) { model.drop(book, on: phase) }
+                    }
+                }
+                Button { openDetails(book) } label: { Label("Details", systemImage: "info.circle") }
+            }
     }
 
     // MARK: the columns
