@@ -46,6 +46,7 @@
 		4356C399F4A98CEFC40F81A5 /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
 		46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
 		46E61A0173B8D14F2B674856 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
+		475BFF9F5F42194A7F1DBFAD /* ProtoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B49499FDB9BF860CB4E76C /* ProtoStore.swift */; };
 		49BDD97D039466AB7E85D0A9 /* EBGaramond-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A70A7AD9DEC1BC752F8412A8 /* EBGaramond-SemiBold.ttf */; };
 		4A12E47B1F6828D28EE59D8C /* StudioOffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92C646C5F0802DB55C2CF58 /* StudioOffers.swift */; };
 		4A2DCB2784E2F378ADB467B1 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
@@ -80,6 +81,9 @@
 		7328F9CD76F69CE2097AE67D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DC597154FB476C5247EE5 /* Assets.xcassets */; };
 		7399F36A0C551E0CCD2FF405 /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
 		77ABFC07F20E8146A1A9FA4D /* StudioOffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92C646C5F0802DB55C2CF58 /* StudioOffers.swift */; };
+		7A722EBB87BAAB5C0B5B483C /* ProtoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47BB9A4D168949DCA255002B /* ProtoViews.swift */; };
+		7D6BF2799E001EC7862C1700 /* ProtoSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D509E0A1BD9E0B34FCB9A12F /* ProtoSheets.swift */; };
+		7E84B28A47B9CCE29D0D3C27 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 92659DC9336D02EA668C9D49 /* README.md */; };
 		837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276D4C7BBC5996DA6E25D15C /* TodayModel.swift */; };
 		83AC58A95882242F736BFCC0 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 81C04A5556A704F3558717E4 /* OFL.txt */; };
 		8AE3CCB77E3EE14ADD5BABA0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
@@ -130,12 +134,14 @@
 		EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
+		FA546BCA458A9F935B2A2869 /* ProtoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F19D6312633685B5A5F6072 /* ProtoData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		18A7175A3DB8CCEF791ACBCB /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		1DF1334D54A055964A887194 /* CreationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationScreen.swift; sourceTree = "<group>"; };
+		1F19D6312633685B5A5F6072 /* ProtoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoData.swift; sourceTree = "<group>"; };
 		2098A157E6F1C67602BDC88B /* ChatTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTextView.swift; sourceTree = "<group>"; };
 		276D4C7BBC5996DA6E25D15C /* TodayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModel.swift; sourceTree = "<group>"; };
 		2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -143,6 +149,7 @@
 		30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModel.swift; sourceTree = "<group>"; };
 		3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreymereApp.swift; sourceTree = "<group>"; };
 		42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-PreProd.plist"; sourceTree = "<group>"; };
+		47BB9A4D168949DCA255002B /* ProtoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoViews.swift; sourceTree = "<group>"; };
 		4BF8E1132B247929CB788E3D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningScreen.swift; sourceTree = "<group>"; };
 		54AC0B957DEE150ACDE31400 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -156,8 +163,11 @@
 		81C04A5556A704F3558717E4 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymereDev.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		88B0C488211E5B4F6280E3E7 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
+		88B49499FDB9BF860CB4E76C /* ProtoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoStore.swift; sourceTree = "<group>"; };
 		896912D29762DABD9EE49720 /* GreymerePreProd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymerePreProd.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A30A3447B9AC1CED1FECC32 /* GreymereCodexProto.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymereCodexProto.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		901A2EB047E4FF0A1128484A /* Format.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Format.swift; sourceTree = "<group>"; };
+		92659DC9336D02EA668C9D49 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		A05104EB8902965BD219D23B /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		A27D197DD55701F7DBFEED0B /* Greymere.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Greymere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A3CCFFA219A47C320A78B75B /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
@@ -168,6 +178,7 @@
 		BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationBeatViews.swift; sourceTree = "<group>"; };
 		C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedModel.swift; sourceTree = "<group>"; };
 		C749C683F83148085FE97A29 /* TodayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayModels.swift; sourceTree = "<group>"; };
+		D509E0A1BD9E0B34FCB9A12F /* ProtoSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoSheets.swift; sourceTree = "<group>"; };
 		D92C646C5F0802DB55C2CF58 /* StudioOffers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioOffers.swift; sourceTree = "<group>"; };
 		E049D442FE007392E81DB030 /* IdeationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdeationScreen.swift; sourceTree = "<group>"; };
 		E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionViews.swift; sourceTree = "<group>"; };
@@ -219,6 +230,7 @@
 		3B00293A12437620EEDCE410 = {
 			isa = PBXGroup;
 			children = (
+				FC39A2A0FD0E6B0FF64211FB /* CodexPrototype */,
 				9C428A8DB73BABFDC5C802D1 /* Greymere */,
 				C6AE39388E801383306259EC /* Products */,
 			);
@@ -258,10 +270,23 @@
 			isa = PBXGroup;
 			children = (
 				A27D197DD55701F7DBFEED0B /* Greymere.app */,
+				8A30A3447B9AC1CED1FECC32 /* GreymereCodexProto.app */,
 				85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */,
 				896912D29762DABD9EE49720 /* GreymerePreProd.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		FC39A2A0FD0E6B0FF64211FB /* CodexPrototype */ = {
+			isa = PBXGroup;
+			children = (
+				1F19D6312633685B5A5F6072 /* ProtoData.swift */,
+				D509E0A1BD9E0B34FCB9A12F /* ProtoSheets.swift */,
+				88B49499FDB9BF860CB4E76C /* ProtoStore.swift */,
+				47BB9A4D168949DCA255002B /* ProtoViews.swift */,
+				92659DC9336D02EA668C9D49 /* README.md */,
+			);
+			path = CodexPrototype;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -283,6 +308,24 @@
 			);
 			productName = GreymereDev;
 			productReference = 85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */;
+			productType = "com.apple.product-type.application";
+		};
+		85D080BCE26C994FC7D9EEA5 /* GreymereCodexProto */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A69F1C640EE1EC74F8732BD2 /* Build configuration list for PBXNativeTarget "GreymereCodexProto" */;
+			buildPhases = (
+				9C3F8B06EA21A4619DC2251F /* Sources */,
+				6E7BBCBFBDFD4EAAF8AB1C91 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GreymereCodexProto;
+			packageProductDependencies = (
+			);
+			productName = GreymereCodexProto;
+			productReference = 8A30A3447B9AC1CED1FECC32 /* GreymereCodexProto.app */;
 			productType = "com.apple.product-type.application";
 		};
 		9E13916082E0FB1F34A697CE /* Greymere */ = {
@@ -334,6 +377,10 @@
 						DevelopmentTeam = D25P46655T;
 						ProvisioningStyle = Automatic;
 					};
+					85D080BCE26C994FC7D9EEA5 = {
+						DevelopmentTeam = D25P46655T;
+						ProvisioningStyle = Automatic;
+					};
 					9E13916082E0FB1F34A697CE = {
 						DevelopmentTeam = D25P46655T;
 						ProvisioningStyle = Automatic;
@@ -361,6 +408,7 @@
 				9E13916082E0FB1F34A697CE /* Greymere */,
 				AC7A5A988DB1812E63141DEE /* GreymerePreProd */,
 				3BA09B1EF4489D5341388650 /* GreymereDev */,
+				85D080BCE26C994FC7D9EEA5 /* GreymereCodexProto */,
 			);
 		};
 /* End PBXProject section */
@@ -376,6 +424,14 @@
 				352F80F11D4AF6134B2B98B8 /* Info-Dev.plist in Resources */,
 				21B795185266C5188F9EC109 /* Info-Prod.plist in Resources */,
 				2E2DACA08D458FA873B8B3B1 /* OFL.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6E7BBCBFBDFD4EAAF8AB1C91 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7E84B28A47B9CCE29D0D3C27 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -492,6 +548,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9C3F8B06EA21A4619DC2251F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA546BCA458A9F935B2A2869 /* ProtoData.swift in Sources */,
+				7D6BF2799E001EC7862C1700 /* ProtoSheets.swift in Sources */,
+				475BFF9F5F42194A7F1DBFAD /* ProtoStore.swift in Sources */,
+				7A722EBB87BAAB5C0B5B483C /* ProtoViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A80541633A98EEA424096486 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -553,6 +620,46 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.greymere.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1A94EA27404128579768D786 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Codex Proto";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greymere.ios.codexproto;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4E3BB5651AD6B08BD5BDC9C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Codex Proto";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.greymere.ios.codexproto;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -818,6 +925,15 @@
 			buildConfigurations = (
 				11D9A81D01ED558DE2CCE218 /* Debug */,
 				AC5FC1747C6D679E8EFA9234 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A69F1C640EE1EC74F8732BD2 /* Build configuration list for PBXNativeTarget "GreymereCodexProto" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4E3BB5651AD6B08BD5BDC9C8 /* Debug */,
+				1A94EA27404128579768D786 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

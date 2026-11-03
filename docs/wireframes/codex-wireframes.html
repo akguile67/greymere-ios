@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Greymere iOS — Codex panel wireframes (iOS 0.9.0)</title>
+<style>
+:root{--bg:#f4f4f6;--ink:#222;--mute:#777;--line:#bbb;--box:#fff;--soft:#ececf0;--blue:#3a6fd0;--blue-bg:#e3ecfb;--green:#2f7d3a;--green-bg:#e2f2e3;--amber:#8a5a00;--amber-bg:#fbefd2;--red:#b3261e;--red-bg:#fbe3e1}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1c1f;--ink:#eee;--mute:#999;--line:#555;--box:#2a2a2e;--soft:#34343a;--blue:#8fb2f0;--blue-bg:#25344f;--green:#8fd29a;--green-bg:#22392a;--amber:#e6b34a;--amber-bg:#3d3320;--red:#f2a29c;--red-bg:#4a2523}}
+*{box-sizing:border-box}body{margin:0;padding:24px 16px 80px;background:var(--bg);color:var(--ink);font:14px/1.4 -apple-system,system-ui,sans-serif}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:42px 0 4px}h3{font-size:13px;margin:0 0 6px}p.n{color:var(--mute);margin:0 0 14px;max-width:820px}
+.row{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start}
+.dev{border:2px solid var(--line);border-radius:28px;padding:10px;background:var(--bg)}.phone{width:300px}.land{width:760px;border-radius:20px}.port{width:400px;border-radius:20px}
+.cap{font-size:11px;color:var(--mute);margin:0 0 6px;text-align:center}
+.nav{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--blue);padding:2px 4px 8px}.nav b{color:var(--ink);font-size:14px}
+.search{background:var(--soft);border-radius:10px;padding:7px 10px;color:var(--mute);margin-bottom:8px}.search.on{color:var(--ink);border:1.5px solid var(--blue)}
+.card{background:var(--box);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:6px;display:flex;gap:9px;align-items:flex-start}.card.sel{border-color:var(--blue);outline:1.5px solid var(--blue)}
+.ph{width:34px;height:34px;border-radius:8px;background:var(--soft);border:1px solid var(--line);flex:none;font-size:15px;text-align:center;line-height:32px}
+.t{font-size:14px;font-weight:600;margin:0}.m{font-size:11px;color:var(--mute);margin:2px 0 0}
+.chip{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:var(--soft);border:1px solid var(--line);color:var(--mute);margin:2px 4px 2px 0}
+.chip.a{background:var(--amber-bg);color:var(--amber)}.chip.g{background:var(--green-bg);color:var(--green)}.chip.i{background:var(--blue-bg);color:var(--blue);border-color:var(--blue)}.chip.r{background:var(--red-bg);color:var(--red)}
+.chips{white-space:nowrap;overflow:hidden;margin-bottom:8px}.chips .chip{font-size:12px;padding:3px 9px}
+.lbl{font-size:11px;color:var(--mute);margin:10px 2px 5px;display:flex;justify-content:space-between}
+.list{background:var(--box);border:1px solid var(--line);border-radius:12px}.list>div{padding:8px 11px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.list>div:first-child{border-top:0}
+.list span.c{color:var(--mute)}
+.box{background:var(--box);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:8px}.dash{border:1.5px dashed var(--blue);background:var(--blue-bg);color:var(--blue);border-radius:12px;padding:8px 11px;margin-bottom:8px}
+.btn{display:inline-block;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:var(--box);margin:2px 4px 2px 0;font-size:13px}.btn.p{background:var(--blue);color:#fff;border-color:var(--blue)}.btn.d{color:var(--red)}
+.split{display:grid;gap:10px}.l{grid-template-columns:270px 1fr}.pt{grid-template-columns:165px 1fr}
+.pane{min-height:100px}.hero{display:flex;gap:10px;margin-bottom:8px}.pic{width:70px;height:90px;border-radius:8px;background:var(--soft);border:1px solid var(--line);flex:none;text-align:center;line-height:90px;color:var(--mute);font-size:11px}
+.add{background:#e2f2e3;color:#1e5c27;border-left:3px solid var(--green);padding:2px 7px;margin:2px 0;font-size:12px}.del{background:var(--red-bg);color:var(--red);border-left:3px solid var(--red);padding:2px 7px;margin:2px 0;font-size:12px;text-decoration:line-through}
+.notes{max-width:300px;font-size:13px}.notes p{margin:0 0 8px}.R{display:inline-block;background:var(--amber-bg);color:var(--amber);border-radius:5px;font-size:10px;font-weight:700;padding:0 5px;margin-right:3px}
+table{border-collapse:collapse;max-width:980px;width:100%;font-size:13px;background:var(--box)}td,th{border:1px solid var(--line);padding:6px 9px;vertical-align:top;text-align:left}th{background:var(--soft)}
+.stale{background:var(--red-bg);color:var(--red);border-radius:10px;padding:8px 11px;margin-bottom:8px}
+</style></head><body>
+<h1>Codex panel — wireframes for iOS 0.9.0</h1>
+<p class="n">Sprint 1, step 2 of ADR 0.59.0 (platform card 0.59.0). Targets: iPad mini 7 (landscape 1133×744 pt, portrait 744×1133 pt) and iPhone 14 Plus (428×926 pt). Sample content is invented. Decisions already made by the author are built in: no World tab; objects are cards; locations are cards with Contains chips; search by name and alias is the primary way in; appears-in-chapters and tappable body references are out; every edit is a proposal shown as a diff, applied by the author, and refused if the entry changed meanwhile; image generation, Standardise, Godric context, Find missing and Ask Godric are in. Orange <span class="R">R</span> marks a "needs a mobile rethink" item from the parity checklist; the table at the end maps every R to its treatment and to the screen that shows it. The clickable version of this navigation is the throwaway prototype (<code>CodexPrototype/</code>).</p>
+
+<h2>1. The navigation in one paragraph</h2>
+<p class="n"><b>Search first.</b> The Codex opens on a search field. Typing matches name <i>and</i> alias (and body), across every entry including rooms inside buildings. With nothing typed, the screen shows what you were last reading, then Browse by type (counts include everything), then the tools (Find missing, Ask Godric, series scope). <b>Browse by type is one tap away</b>: on iPhone, a row under the search field; on iPad, a chip strip above the list. <b>iPad</b>: always two panes (list left, entry right), in landscape and in portrait (the list is narrower in portrait but never hidden, so there is no sidebar toggle to find). <b>iPhone</b>: drill-down stack, home → list → entry, with back swipe. <b>Contains chips</b> on a building move you down into a room; the back chevron brings you back up. Everything that edits (edit, standardise, image, delete) lives behind one <b>⋯ menu</b> on the entry, so the reading screen stays quiet. <b>Godric context</b> is a single toggle pill on the entry ("Godric is looking at this").</p>
+
+<h2>2. iPhone 14 Plus — finding an entry</h2>
+<div class="row">
+<div><p class="cap">A · Codex home (search-first)</p><div class="dev phone">
+<div class="nav"><span>‹ Home</span><b>Codex</b><span>＋</span></div>
+<div class="search">🔍 Search names, aliases, text</div>
+<div class="dash" style="font-size:12px"><span class="R">R</span> Scope: <b>The Route (series)</b> ▾ — one tap, remembered</div>
+<div class="lbl"><span>Recent</span></div>
+<div class="card"><div class="ph">👤</div><div><p class="t">Marenne Voss</p><p class="m">Character · Captain of the Tern</p></div></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">Harrow Hall</p><p class="m">Location · 14 rooms inside</p></div></div>
+<div class="lbl"><span>Browse by type</span><span>427 in scope</span></div>
+<div class="list"><div>👤 Characters<span class="c">98 ›</span></div><div>🏛 Locations<span class="c">74 ›</span></div><div>🗝 Objects<span class="c">61 ›</span></div><div>📜 Lore<span class="c">52 ›</span></div><div>🎙 Voice guides<span class="c">6 ›</span></div><div>🗂 Reference lists<span class="c">11 ›</span></div><div>Other<span class="c">19 ›</span></div></div>
+<div class="lbl"><span>Tools</span></div>
+<div class="list"><div>🔎 Find missing (scan a synopsis)<span class="c">›</span></div><div>💬 Ask Godric about the Codex<span class="c">›</span></div></div>
+</div></div>
+
+<div><p class="cap">B · Typing "tam"</p><div class="dev phone">
+<div class="nav"><span>‹ Home</span><b>Codex</b><span>＋</span></div>
+<div class="search on">🔍 tam <span style="float:right">✕</span></div>
+<div class="chips"><span class="chip i">All 7</span><span class="chip">Characters 3</span><span class="chip">Locations 2</span><span class="chip">Objects 1</span><span class="chip">Lore 1</span></div>
+<div class="card"><div class="ph">👤</div><div><p class="t">Tamsin Hale</p><p class="m">Character · name match</p></div></div>
+<div class="card"><div class="ph">👤</div><div><p class="t">Marenne Voss</p><p class="m">Character · <span class="chip g" style="margin:0">alias: Captain Tam</span></p></div></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">The Tamarind Room</p><p class="m">Location · in Harrow Hall · <span class="chip" style="margin:0">room</span></p></div></div>
+<div class="card"><div class="ph">📜</div><div><p class="t">The Tamber Accord</p><p class="m">Lore · text match</p></div></div>
+<div class="dash" style="font-size:13px">💬 Ask Godric: "tam"</div>
+<p class="m" style="padding:0 4px"><span class="R">R</span> Search ignores the "fold": rooms and floors always appear here, labelled with their building. Each hit says why it matched (name, alias, text). Chips narrow by type.</p>
+</div></div>
+
+<div><p class="cap">C · Type list (Locations)</p><div class="dev phone">
+<div class="nav"><span>‹ Codex</span><b>Locations</b><span>＋</span></div>
+<div class="search">🔍 Filter locations</div>
+<div class="box" style="font-size:12px;display:flex;justify-content:space-between"><span><span class="R">R</span> Show contained places</span><span class="chip">off</span></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">Harrow Hall</p><p class="m">Building · <span class="chip" style="margin:0">14 inside</span> · 2 books</p></div></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">Saltgate Quay</p><p class="m">Area · <span class="chip" style="margin:0">6 inside</span></p></div></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">The Tern (ship)</p><p class="m">Vessel · <span class="chip" style="margin:0">9 inside</span></p></div></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">Wend Lighthouse</p><p class="m">Building</p></div></div>
+<p class="m" style="padding:0 4px">Footnote kept from desktop: "58 rooms and floors are inside their building. Switch on to list them."</p>
+<p class="m" style="padding:4px 4px 0">Same list for every type; fixed row height keeps a 100-entry list quick. An A–Z index along the right edge scrolls long lists.</p>
+</div></div>
+</div>
+
+<h2>3. iPhone 14 Plus — reading an entry</h2>
+<div class="row">
+<div><p class="cap">D · Location with Contains chips</p><div class="dev phone">
+<div class="nav"><span>‹ Locations</span><b></b><span>⋯</span></div>
+<div class="hero"><div class="pic">image</div><div><p class="t" style="font-size:17px">Harrow Hall</p><p class="m">Location · The Route</p><span class="chip g">approved</span><br><p class="m">Also known as: the Hall, Old Harrow</p><p class="m">Appears in: Book 1, Book 2</p></div></div>
+<div class="chips" style="white-space:normal"><div class="m" style="margin-bottom:3px">Contains · 14</div><span class="chip i">Great Hall</span><span class="chip i">Tamarind Room</span><span class="chip i">Cellars (3)</span><span class="chip i">East Stair</span><span class="chip i">+10 more ›</span></div>
+<div class="box" style="font-size:13px"><b>Overview</b><br>A grey sandstone house above the quay, built round a cold courtyard. The shutters are never opened on the east side…<br><br><b>Atmosphere</b><br>• salt, damp wool<br>• a clock that is always four minutes slow</div>
+<div style="text-align:center"><span class="btn" style="width:48%">🎙 Godric is looking at this</span><span class="btn p" style="width:48%">✎ Edit</span></div>
+</div></div>
+
+<div><p class="cap">E · Inside a room (back goes up)</p><div class="dev phone">
+<div class="nav"><span>‹ Harrow Hall</span><b></b><span>⋯</span></div>
+<div class="hero"><div class="pic">no image</div><div><p class="t" style="font-size:17px">The Tamarind Room</p><p class="m">Location · room in Harrow Hall</p><p class="m">Also known as: the Orange Room</p></div></div>
+<div class="chips"><span class="chip">In: Harrow Hall ›</span><span class="chip">Floor 2 ›</span></div>
+<div class="box" style="font-size:13px">A narrow room at the top of the east stair, papered in a faded orange…</div>
+<p class="m"><b>⋯ menu</b></p>
+<div class="list" style="font-size:13px"><div>Edit<span class="c">✎</span></div><div>Dictate an edit<span class="c">🎙</span></div><div><span class="R">R</span>Standardise to template<span class="c">⌘</span></div><div><span class="R">R</span>Image… (craft, generate, upload)<span class="c">🖼</span></div><div><span class="R">R</span>Series, books, scope…<span class="c">›</span></div><div style="color:var(--red)">Delete entry<span class="c"></span></div></div>
+</div></div>
+
+<div class="notes"><p><b>Why this shape</b></p><p>The reading screen has no tabs and no permanent toolbar of ten buttons. The two things you do most away from the desk — read, and ask Godric about this entry — sit in the bottom pair; everything that changes data hides in ⋯.</p><p>Contains chips are the only in-body navigation (tappable references in bodies are out). A chip pushes one level; back returns. The "In: Harrow Hall" chip on a room is the same link going up, so a room reached from search is never a dead end.</p><p>Objects use the same card and the same reading screen as characters; there is simply no map. An object's "Where it sits" is just text in its body.</p></div>
+</div>
+
+<h2>4. iPhone 14 Plus — editing: propose, diff, Apply</h2>
+<div class="row">
+<div><p class="cap">F · Edit (typed or dictated)</p><div class="dev phone">
+<div class="nav"><span>Cancel</span><b>Edit</b><span>Review ›</span></div>
+<div class="box"><div class="m">Name</div>Harrow Hall</div>
+<div class="box"><div class="m">Also known as</div><span class="chip">the Hall ✕</span><span class="chip">Old Harrow ✕</span><span class="chip i">＋ add</span></div>
+<div class="box"><div class="m">Type</div>Location <span class="chip">voice guide / reference list: fixed once set 🔒</span></div>
+<div class="box"><div class="m">Body (Markdown)</div>A grey sandstone house above the quay, built round a cold courtyard. <b>The shutters on the east side are never opened.</b>|</div>
+<div style="text-align:center"><span class="btn" style="width:48%">🎙 Dictate</span><span class="btn p" style="width:48%">Review changes</span></div>
+<p class="m"><span class="R">R</span> Series, Book series and "Appears in" books are one row each, below, opening the pickers on screen I.</p>
+</div></div>
+
+<div><p class="cap">G · Proposal as a diff</p><div class="dev phone">
+<div class="nav"><span>‹ Edit</span><b>Proposed change</b><span></span></div>
+<div class="m" style="padding:0 4px 6px">Based on the entry as of 14:02 (version 7)</div>
+<div class="box" style="font-size:12px"><div class="m">Body</div>
+<div class="del">The shutters are never opened on the east side.</div>
+<div class="add">The shutters on the east side are never opened.</div>
+<div class="m" style="margin-top:6px">Also known as</div>
+<div class="add">+ Old Harrow</div></div>
+<div style="text-align:center"><span class="btn" style="width:48%">Discard</span><span class="btn p" style="width:48%">Apply</span></div>
+<p class="m" style="padding:6px 4px">Nothing is written until Apply. Unchanged parts are collapsed ("12 unchanged lines").</p>
+</div></div>
+
+<div><p class="cap">H · Apply refused (stale edit)</p><div class="dev phone">
+<div class="nav"><span>‹ Edit</span><b>Proposed change</b><span></span></div>
+<div class="stale"><b>This entry changed after the proposal was made.</b><br>Edited at 14:09 on another device. Your change was not applied.</div>
+<div class="box" style="font-size:12px"><div class="m">Your proposal (kept)</div><div class="add">The shutters on the east side are never opened.</div></div>
+<div class="box" style="font-size:12px"><div class="m">Now in the Codex</div>The shutters are never opened on the east side. <b>Cellar door added.</b></div>
+<div style="text-align:center"><span class="btn" style="width:48%">Discard</span><span class="btn p" style="width:48%">Re-propose on latest</span></div>
+</div></div>
+
+<div class="notes"><p><b>The one edit path</b></p><p>Typed edit, dictated edit, Standardise, an accepted image, Godric's own change: all of them end on screen G. One review screen, one Apply, one refusal (H). That is the only way a write reaches the Codex from the phone.</p><p>On refusal nothing is lost: the proposal stays, the current text is shown beside it, and "Re-propose on latest" re-runs it against the new version.</p><p><span class="R">R</span> Series, books, scope and Appears-in are edited in the same flow, so they also appear in the diff as chips added or removed.</p></div>
+</div>
+
+<h2>5. iPhone 14 Plus — images, Standardise, series and books</h2>
+<div class="row">
+<div><p class="cap">I · Series and books pickers</p><div class="dev phone">
+<div class="nav"><span>Done</span><b>Series and books</b><span></span></div>
+<div class="lbl"><span>Series (chain)</span><span>pick any</span></div>
+<div class="list"><div>The Route<span class="c">✓</span></div><div>The Lamplit Years<span class="c"></span></div><div>Standalone<span class="c"></span></div></div>
+<div class="lbl"><span>Appears in — characters and locations only</span></div>
+<div class="list"><div><b>The Route</b><span class="c">All · None</span></div><div>Book 1 · Salt<span class="c">✓</span></div><div>Book 2 · Ballast<span class="c">✓</span></div><div>Book 3 · Keel<span class="c"></span></div><div><b>The Lamplit Years</b><span class="c">collapsed ›</span></div></div>
+<p class="m" style="padding:6px 4px"><span class="R">R</span> Replaces desktop's tick boxes and badges with add/remove. Books group by series under collapsible headers; All / None per group.</p>
+</div></div>
+
+<div><p class="cap">J · Image</p><div class="dev phone">
+<div class="nav"><span>Close</span><b>Image</b><span></span></div>
+<div class="pic" style="width:100%;height:150px;line-height:150px;margin-bottom:8px">Pending review image</div>
+<div style="text-align:center"><span class="btn p">Approve</span><span class="btn">Reject</span><span class="btn d">Delete</span></div>
+<div class="lbl"><span>Make a new one</span></div>
+<div class="box" style="font-size:12px"><span class="R">R</span>Godric crafts the prompt → you edit it:<br><i>A grey sandstone house above a quay at dusk, cold courtyard…</i><br><span class="btn">Craft prompt</span><span class="btn p">Generate (~15 s)</span></div>
+<div class="box" style="font-size:12px"><span class="R">R</span>Or use your own: <span class="btn">Photo library</span><span class="btn">Camera</span></div>
+<p class="m" style="padding:0 4px">Generate says what it costs and asks first. Result lands here: Use it, Regenerate, or Discard.</p>
+</div></div>
+
+<div><p class="cap">K · Standardise a location</p><div class="dev phone">
+<div class="nav"><span>Cancel</span><b>Standardise</b><span></span></div>
+<div class="box" style="font-size:12px"><span class="R">R</span> A model reorganises the text into the location template. Nothing is saved.</div>
+<div class="m" style="padding:0 4px 4px">Working… (about 10 s)</div>
+<div class="box" style="font-size:12px"><div class="add">## Overview<br>A grey sandstone house…</div><div class="add">## Atmosphere<br>• salt, damp wool</div><div class="del">Misc notes: the clock</div></div>
+<div style="text-align:center"><span class="btn" style="width:48%">Discard</span><span class="btn p" style="width:48%">Apply</span></div>
+<p class="m" style="padding:6px 4px">Lands on the same diff-and-Apply screen (G), so a stale refusal protects it too.</p>
+</div></div>
+</div>
+
+<h2>6. iPhone 14 Plus — Find missing and Ask Godric</h2>
+<div class="row">
+<div><p class="cap">L · Find missing</p><div class="dev phone">
+<div class="nav"><span>‹ Codex</span><b>Find missing</b><span></span></div>
+<div class="box"><span class="R">R</span> Book: <b>Book 2 · Ballast</b> ▾ <span class="btn p" style="float:right;margin:-3px 0 0">Scan</span><div class="m">Scans the locked synopsis (one model call).</div></div>
+<div class="chips"><span class="chip i">Open 7</span><span class="chip">Created 4</span><span class="chip">Dismissed 2</span></div>
+<div class="card" style="display:block"><p class="t">Brother Ansel</p><p class="m">Character · "keeps the lamp at Wend"</p><span class="btn p">Develop</span><span class="btn">Link…</span><span class="btn">Dismiss</span></div>
+<div class="card" style="display:block"><p class="t">The ledger of tides</p><p class="m">Object</p><span class="btn p">Develop</span><span class="btn">Link…</span><span class="btn">Dismiss</span></div>
+<p class="m" style="padding:0 4px">Created → shows the entry it became (tap to open). Dismissed → Put back. "Clear untouched" in ⋯ clears items nobody has touched.</p>
+</div></div>
+
+<div><p class="cap">M · Link… is a picker</p><div class="dev phone">
+<div class="nav"><span>Cancel</span><b>Link to existing</b><span></span></div>
+<div class="m" style="padding:0 4px 6px">"Brother Ansel" is the same as…</div>
+<div class="search on">🔍 ansel</div>
+<div class="card"><div class="ph">👤</div><div><p class="t">Ansel Pryor</p><p class="m">Character · alias: Brother Ansel</p></div></div>
+<div class="card"><div class="ph">🗝</div><div><p class="t">Ansel's Lamp</p><p class="m">Object</p></div></div>
+<p class="m" style="padding:0 4px"><span class="R">R</span> Replaces typing an exact name. Same search as the Codex home (name and alias). Develop opens New entry pre-filled and links on save.</p>
+</div></div>
+
+<div><p class="cap">N · Ask Godric over the Codex</p><div class="dev phone">
+<div class="nav"><span>‹ Codex</span><b>Ask Godric</b><span></span></div>
+<div class="box" style="font-size:13px"><b>Who knows about the east shutters?</b></div>
+<div class="box" style="font-size:13px">Only the housekeeper and the captain know why they stay closed <span class="chip i">Entry 3</span>. The captain's log mentions it <span class="chip i">Entry 7</span>.<div class="m" style="margin-top:6px">Sources</div><span class="chip i">1 Harrow Hall</span><span class="chip i">3 Mrs Pell</span><span class="chip i">7 Marenne Voss</span></div>
+<p class="m" style="padding:0 4px">Citation chips open the entry (back returns to the answer). The same screen opens from "Ask Godric: …" under a search, with the query filled in.</p>
+</div></div>
+</div>
+
+<h2>7. iPad mini 7 — landscape (split view)</h2>
+<div class="row">
+<div class="dev land">
+<div class="split l">
+<div>
+<div class="nav"><span>‹ Home</span><b>Codex</b><span>＋ · ⋯</span></div>
+<div class="search on">🔍 harrow</div>
+<div class="chips"><span class="chip i">All 6</span><span class="chip">Char</span><span class="chip">Loc 4</span><span class="chip">Obj</span><span class="chip">Lore 1</span><span class="chip">▾ Scope</span></div>
+<div class="card sel"><div class="ph">🏛</div><div><p class="t">Harrow Hall</p><p class="m">Location · 14 inside</p></div></div>
+<div class="card"><div class="ph">🏛</div><div><p class="t">Harrow Cellars</p><p class="m">in Harrow Hall</p></div></div>
+<div class="card"><div class="ph">👤</div><div><p class="t">Edda Harrow</p><p class="m">Character</p></div></div>
+<div class="card"><div class="ph">📜</div><div><p class="t">The Harrow Accord</p><p class="m">Lore</p></div></div>
+<p class="m" style="padding:0 4px">Empty search: recent entries, then the full list for the chosen type. The type chips and "Show contained places" live here; Find missing and Ask Godric are in ⋯.</p>
+</div>
+<div class="pane">
+<div class="nav"><span></span><b></b><span>🎙 Godric: looking at this · ⋯</span></div>
+<div class="hero"><div class="pic" style="width:96px;height:120px;line-height:120px">image</div><div><p class="t" style="font-size:20px">Harrow Hall</p><p class="m">Location · The Route · <span class="chip g" style="margin:0">approved</span></p><p class="m">Also known as: the Hall, Old Harrow · Appears in: Book 1, Book 2 · Edited 2 h ago</p></div></div>
+<div class="chips" style="white-space:normal"><span class="m">Contains · 14 </span><span class="chip i">Great Hall</span><span class="chip i">Tamarind Room</span><span class="chip i">Cellars (3)</span><span class="chip i">East Stair</span><span class="chip i">+10 ›</span></div>
+<div class="box" style="font-size:13px"><b>Overview</b><br>A grey sandstone house above the quay, built round a cold courtyard…<br><br><b>Atmosphere</b><br>• salt, damp wool • a clock four minutes slow</div>
+<span class="btn p">✎ Edit</span><span class="btn">🎙 Dictate an edit</span><span class="btn">Image…</span><span class="btn">Standardise</span>
+</div>
+</div>
+<p class="m" style="padding:6px 4px">Tapping a Contains chip swaps the right pane to that room and adds "‹ Harrow Hall" to the pane's header; the list on the left keeps its selection and scroll. Edit, Image, Find missing and Ask Godric open as sheets over the right pane (the list stays visible beside them), so you can still glance at it while editing.</p>
+</div>
+</div>
+
+<h2>8. iPad mini 7 — portrait</h2>
+<div class="row">
+<div class="dev port">
+<div class="split pt">
+<div>
+<div class="nav"><span>‹</span><b>Codex</b><span>＋</span></div>
+<div class="search" style="font-size:12px">🔍 Search</div>
+<div class="chips"><span class="chip i">All</span><span class="chip">Char</span><span class="chip">Loc</span><span class="chip">Obj</span></div>
+<div class="card sel" style="font-size:12px"><div><p class="t" style="font-size:13px">Harrow Hall</p><p class="m">Location</p></div></div>
+<div class="card" style="font-size:12px"><div><p class="t" style="font-size:13px">Marenne Voss</p><p class="m">Character</p></div></div>
+<div class="card" style="font-size:12px"><div><p class="t" style="font-size:13px">Saltgate Quay</p><p class="m">Location</p></div></div>
+</div>
+<div class="pane">
+<div class="hero"><div class="pic" style="width:56px;height:72px;line-height:72px">img</div><div><p class="t" style="font-size:17px">Harrow Hall</p><p class="m">Location · The Route</p></div></div>
+<div class="chips" style="white-space:normal"><span class="chip i">Great Hall</span><span class="chip i">Tamarind Room</span><span class="chip i">+12 ›</span></div>
+<div class="box" style="font-size:12px">A grey sandstone house above the quay…</div>
+</div>
+</div>
+<p class="m" style="padding:6px 4px"><span class="R">R</span> The hypothesis was "portrait collapses to the phone pattern". Wireframe proposal instead: keep two panes in portrait (list ≈ 280 pt, entry ≈ 460 pt). Reason: a drill-down on a 744 pt-wide screen wastes most of the width and loses the list you were scanning. The prototype lets the author compare both (see its Settings switch "iPad portrait: split / drill-down").</p>
+</div>
+<div class="notes"><p><b>Where this panel lives</b></p><p>Opened from the app's floating glass menu workflow tray like Planning, never a tab bar of its own. The ⋯ at the top right of the list holds: New entry, Series scope, Find missing, Ask Godric, Show contained places.</p></div>
+</div>
+
+<h2>9. Every "needs a mobile rethink" item and where it goes</h2>
+<table>
+<tr><th>#</th><th>Checklist item</th><th>Treatment</th><th>Screen</th></tr>
+<tr><td>1.2</td><td>Seven tabs with counts</td><td>Browse-by-type rows (phone) / chip strip (iPad), counts include all entries in scope. No World tab. Objects get their own row.</td><td>A, C, §7</td></tr>
+<tr><td>1.4</td><td>Objects only on the map</td><td>Objects are ordinary cards with a type row of their own.</td><td>A</td></tr>
+<tr><td>1.5</td><td>Search (name + body)</td><td>Home screen is the search field. Name, alias and body, ranked name → alias → text; each hit says why it matched; type chips narrow; rooms always reachable.</td><td>B</td></tr>
+<tr><td>1.6</td><td>Fold rooms and floors into the building</td><td>Locations list shows buildings with "N inside"; the "Show contained places" switch and the footnote sit at the top of the list; search ignores the fold.</td><td>C, B</td></tr>
+<tr><td>1.7</td><td>Series (chain) scope</td><td>One scope control on the home screen / list header, remembered between launches; counts follow it.</td><td>A, §7</td></tr>
+<tr><td>3.3</td><td>Series membership tick boxes and badges</td><td>One multi-select row on the entry's ⋯ menu; changes show as chips in the diff.</td><td>I, G</td></tr>
+<tr><td>3.4</td><td>Book series and Appears-in checklist</td><td>Grouped, collapsible list with All / None per series.</td><td>I</td></tr>
+<tr><td>3.7 / D1</td><td>Save conflicts</td><td>Every edit becomes a proposal diff; Apply refused if the entry changed since; proposal kept; current text shown; Re-propose on latest.</td><td>F, G, H</td></tr>
+<tr><td>4.1</td><td>Portrait upload from a file</td><td>Photo library or camera.</td><td>J</td></tr>
+<tr><td>4.2</td><td>Generate an image</td><td>Craft prompt (Godric) → edit → Generate (cost shown, asks first, ~15 s) → Use / Regenerate / Discard; Approve / Reject / Delete once an image exists.</td><td>J</td></tr>
+<tr><td>4.4</td><td>Standardise to template</td><td>Runs, then lands on the diff-and-Apply screen. Available from ⋯ on locations only.</td><td>K</td></tr>
+<tr><td>5.1</td><td>Find missing slide-out</td><td>Full screen from the home Tools list: book picker, Scan, three state chips.</td><td>L</td></tr>
+<tr><td>5.4</td><td>Link to an item by typing its exact name</td><td>Link… opens a search picker over entries (name and alias).</td><td>M</td></tr>
+<tr><td>6.2</td><td>Godric context</td><td>"Godric is looking at this" pill toggles the open entry as context for the app's Godric; shown on the entry, cleared when you leave unless pinned.</td><td>D, §7</td></tr>
+<tr><td>6.1</td><td>Ask Godric over the Codex (A)</td><td>Own screen; citation chips open entries; also offered under any search.</td><td>B, N</td></tr>
+<tr><td>3.5 / 3.6 / 3.2</td><td>New entry, Delete, type rules (A)</td><td>＋ in the list header; Delete in ⋯ with a confirmation; type picker disables after voice guide or reference list is chosen.</td><td>C, E, F</td></tr>
+</table>
+
+<h2>10. Things the prototype is meant to answer</h2>
+<p class="n">1) Is search-first right at several hundred entries, or does the author reach for Browse by type more? 2) Do Contains chips and the "In: …" chip make a building/room hop feel safe, or does the author get lost two levels down? 3) iPad portrait: split or drill-down? 4) Is one ⋯ menu for every write too hidden? 5) Does the scope control belong on the home screen or in a settings row?</p>
+</body></html>
