@@ -11,6 +11,7 @@ of the Greymere server, which lives in `~/Code/greymere` (GitHub
   `~/Code/greymere/docs/adrs/adr-0.50.0-ios-0-1-0-mobile-foundation-home-landing-screen.md`.
 - **iOS 0.2.0** adds the read-only seed screen (ADR 0.51.0, server release 0.51.0, no server change; minimum server
   version stays 0.50.0). It reads `/api/vault/ideas/:id` and `/api/vault/ideas/:id/research`; the app still writes nothing.
+- **iOS 0.7.0** makes a beat's generated draft editable before Accept (server 0.57.0, Bug Hotel #317; minimum server version 0.57.0).
 - **iOS 0.4.0** adds dictation (ADR 0.53.0, server release 0.53.0; minimum server version 0.53.0). A third target,
   **GreymereDev** (`com.greymere.ios.dev`), points at a laptop dev server (its address is in `project.yml`).
 - **Builds happen on the MacBook Pro only** (Xcode, Team ID D25P46655T). Two

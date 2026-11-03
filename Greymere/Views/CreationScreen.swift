@@ -226,6 +226,8 @@ private struct CreationChapterView: View {
     @State private var confirmLeave = false
     @State private var dictation = DictationModel()
     @State private var activeSeg: Int?
+    @State private var draftFocused = false
+    @State private var scrollPos = ScrollPosition()
     @State private var selection: TextSelection?
     @State private var openEmpty: Set<Int> = []
     @State private var focusSeg: Int?
@@ -242,7 +244,7 @@ private struct CreationChapterView: View {
             HStack {
                 Button { if model.briefEditing { confirmLeave = true } else { Task { await model.close() } } } label: {
                     // On a phone, with the formatting buttons showing, the way back is the arrow alone.
-                    if sizeClass == .compact && activeSeg != nil && !model.isLocked {
+                    if sizeClass == .compact && (activeSeg != nil || draftFocused) && !model.isLocked {
                         Image(systemName: "chevron.backward").font(.subheadline.weight(.semibold)).padding(.horizontal, 2)
                     } else {
                         Label("Chapters", systemImage: "chevron.backward").font(.subheadline.weight(.semibold))
@@ -274,6 +276,12 @@ private struct CreationChapterView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollDismissesKeyboard(.interactively)
+            .scrollPosition($scrollPos)
+            // A reload (a beat added, references made) must not throw the page back to the top: a jump from well down
+            // to the very top in one step is put back where it was.
+            .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { old, new in
+                if new <= 1, old > 150 { scrollPos.scrollTo(y: old) }
+            }
             .refreshable { await model.refreshOnForeground() }
             actions
         }
@@ -431,7 +439,7 @@ private struct CreationChapterView: View {
                 ForEach(0...beats.count, id: \.self) { i in
                     segmentView(i, of: segs)
                     if i < beats.count {
-                        BeatCard(model: model, beat: beats[i],
+                        BeatCard(model: model, beat: beats[i], prose: prose, draftActive: { draftFocused = $0 },
                                  edit: { model.beatSheet = .edit(beats[i]) },
                                  refs: { linking in refsFor = RefsTarget(beatId: beats[i].id, linking: linking) },
                                  fixBrief: { briefOpen = true; model.beginBriefEdit() })
@@ -483,7 +491,7 @@ private struct CreationChapterView: View {
 
     private var textTools: some View {
         HStack(spacing: 6) {
-            if activeSeg != nil && !model.isLocked { formatTools }
+            if (activeSeg != nil || draftFocused) && !model.isLocked { formatTools }
             Button { Task { await toggleDictation() } } label: {
                 Image(systemName: dictation.state == .listening ? "mic.fill" : (dictation.available == false ? "mic.slash" : "mic"))
                     .foregroundStyle(dictation.state == .listening ? Color.red : connection.theme.text)
