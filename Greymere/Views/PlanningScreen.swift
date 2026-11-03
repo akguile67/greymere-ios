@@ -17,6 +17,7 @@ struct PlanningScreen: View {
     @State private var dragging: PlanningBoard.Book?
     @State private var dragAt: CGPoint = .zero
     @State private var detail: ShelfItem?
+    @State private var selectedPhase: String?
 
     private var theme: ThemeStore { connection.theme }
     private var visible: Int { sizeClass == .regular ? 3 : 1 }
@@ -42,8 +43,10 @@ struct PlanningScreen: View {
                     if model.failed { Text("The board couldn't be loaded.").foregroundStyle(theme.muted).padding(.top, 40) }
                     else { ProgressView().padding(.top, 60) }
                     Spacer()
-                } else {
+                } else if sizeClass == .regular {
                     columns
+                } else {
+                    phoneBody
                 }
             }
             if let book = dragging {
@@ -88,14 +91,15 @@ struct PlanningScreen: View {
                 ForEach(model.phases) { phase in
                     let count = model.books(in: phase.key).count
                     let target = lit == phase.key
-                    Button { withAnimation(.snappy) { scrollTarget = phase.key } } label: {
+                    let chosen = sizeClass == .regular ? nil : currentPhaseKey
+                    Button { select(phase) } label: {
                         HStack(spacing: 5) {
                             Text(phase.title).font(.footnote.weight(.semibold))
                             if count > 0 { Text("\(count)").font(.caption2.weight(.bold)).padding(.horizontal, 5).padding(.vertical, 1)
                                 .background(theme.accent.opacity(0.18), in: .capsule).foregroundStyle(theme.accent) }
                         }
                         .padding(.horizontal, 12).padding(.vertical, 8)
-                        .foregroundStyle(target ? theme.accent : theme.text)
+                        .foregroundStyle(target || chosen == phase.key ? theme.accent : theme.text)
                     }
                     .buttonStyle(.plain)
                     .glassEffect(.regular.tint(target ? theme.accent.opacity(0.25) : nil).interactive(), in: .capsule)
@@ -104,6 +108,66 @@ struct PlanningScreen: View {
             }
             .padding(.horizontal, pad).padding(.vertical, 4)
         }
+    }
+
+    // MARK: the phone: one phase at a time, the rest listed beneath
+
+    /// The phase on show on a phone: the author's pick, else the first phase that has a book.
+    private var currentPhaseKey: String? {
+        selectedPhase ?? model.phases.first(where: { !model.books(in: $0.key).isEmpty })?.key ?? model.phases.first?.key
+    }
+
+    private func select(_ phase: PlanningBoard.Phase) {
+        if sizeClass == .regular { withAnimation(.snappy) { scrollTarget = phase.key } }
+        else { withAnimation(.snappy) { selectedPhase = phase.key } }
+    }
+
+    private var phoneBody: some View {
+        let key = currentPhaseKey ?? ""
+        let here = model.books(in: key)
+        let others = model.phases.filter { $0.key != key && !model.books(in: $0.key).isEmpty }
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                if let phase = model.phases.first(where: { $0.key == key }) {
+                    HStack {
+                        Text(phase.title).font(.title3.weight(.semibold)).foregroundStyle(theme.text)
+                        Spacer()
+                        Text("\(here.count)").font(.footnote).foregroundStyle(theme.muted)
+                    }
+                }
+                if here.isEmpty {
+                    Text("No books in this phase.").font(.footnote).foregroundStyle(theme.faint).padding(.vertical, 20)
+                }
+                ForEach(here) { book in interactive(book) }
+                if dragging != nil {
+                    Text("Drop on a phase above to move it").font(.footnote).foregroundStyle(theme.muted)
+                        .frame(maxWidth: .infinity).padding(.top, 8)
+                }
+                if !others.isEmpty {
+                    Text("OTHER PHASES WITH BOOKS").font(.caption.weight(.semibold)).tracking(0.8)
+                        .foregroundStyle(theme.muted).padding(.top, 14)
+                    ForEach(others) { phase in
+                        Button { select(phase) } label: {
+                            HStack(spacing: 4) {
+                                Text(phase.title).font(.footnote.weight(.semibold))
+                                Image(systemName: "chevron.right").font(.caption2.weight(.bold))
+                            }.foregroundStyle(theme.muted)
+                        }.buttonStyle(.plain)
+                        ForEach(model.books(in: phase.key)) { book in interactive(book) }
+                    }
+                }
+            }
+            .padding(.horizontal, pad).padding(.bottom, 90)
+        }
+        .scrollDisabled(dragging != nil)
+    }
+
+    /// A card that opens its details on a tap and is held to be dragged.
+    private func interactive(_ book: PlanningBoard.Book) -> some View {
+        PlanningCard(book: book, client: client, lifted: false)
+            .opacity(dragging?.id == book.id ? 0.3 : 1)
+            .onTapGesture { openDetails(book) }
+            .gesture(dragGesture(for: book))
     }
 
     // MARK: the columns
