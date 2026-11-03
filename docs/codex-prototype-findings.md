@@ -60,6 +60,18 @@ portrait navigation is better than the iPad's. Changes:
 - New observation: the menu is long (nine type rows plus series plus tools) and scrolls on a phone; the series choices
   could become a submenu or move to the scope row.
 
+## Update 3: landscape keeps the portrait menu on the left, panel on the right (iPad and iPhone)
+
+Author direction: turning to landscape keeps the same menu on the left and the working panel on the right, on both devices.
+Landscape (width > height) is now one layout everywhere: the portrait navigation (search, series, Recent, Browse by type,
+drill into a type list) in a 360 pt left column, the entry panel on the right; selecting a row fills the panel instead of
+pushing. Portrait stays the drill-down. The old two-pane list and the iPad portrait switch are gone. Screenshots:
+ipad-landscape-03-menu-left-panel-right, phone-landscape-01-menu-left-panel-right.
+Open points: the entry's ⋯ menu is still top right and will clash with the Settings gear (move it into the bar or the
+filter menu); the Panels tray overflows the top of an iPhone in landscape (it is the real app's tray design, 428 pt tall
+screen); on the phone in landscape the left column is short, so the glass bar covers its lower rows; Find missing and Ask
+Godric push inside the left column in landscape.
+
 ## What the screenshots show
 
 | File | Shows |

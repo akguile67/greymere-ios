@@ -15,43 +15,52 @@ struct CodexRoot: View {
     @Environment(CodexStore.self) private var store
     var body: some View {
         GeometryReader { geo in
-            let portrait = geo.size.height > geo.size.width
-            let pad = UIDevice.current.userInterfaceIdiom == .pad
-            if pad && !(portrait && store.ipadPortraitDrill) { SplitLayout().onAppear { store.split = true } }
-            else { PhoneLayout().onAppear { store.split = false } }
+            let landscape = geo.size.width > geo.size.height
+            Group {
+                if landscape { LandscapeLayout() } else { PhoneLayout() }
+            }
+            .onAppear { store.landscape = landscape }
+            .onChange(of: landscape) { _, l in store.landscape = l }
         }
     }
 }
 
-// MARK: iPad — list left, entry right (landscape and portrait)
-
-struct SplitLayout: View {
+/// Landscape (iPad and iPhone): the same menu as portrait stays on the left, the working panel (the entry) on the right.
+struct LandscapeLayout: View {
     @Environment(CodexStore.self) private var store
-    @State private var selection: Int?
-    @State private var query = ""
-    @State private var type: EType?
-    @State private var sheet: ToolSheet?
-
     var body: some View {
-        NavigationSplitView(columnVisibility: .constant(.all)) {
-            EntryList(query: $query, type: $type, selection: $selection)
-                .navigationTitle("Codex")
-                .navigationSplitViewColumnWidth(min: 290, ideal: 330, max: 380)
-                .searchable(text: $query, prompt: "Search names, aliases, text")
-                .toolbar { ToolbarItem(placement: .topBarLeading) { FilterMenu(sheet: $sheet, current: type) { type = $0 } } }
-                .onChange(of: store.newToken) { _, _ in sheet = .newEntry }
-        } detail: {
-            if let id = selection {
-                NavigationStack {
-                    EntryView(id: id)
-                        .navigationDestination(for: Route.self) { r in if case .entry(let i) = r { EntryView(id: i) } }
+        HStack(spacing: 0) {
+            PhoneLayout().frame(width: 360)
+            Divider()
+            Group {
+                if let id = store.selection, store.entry(id) != nil {
+                    NavigationStack {
+                        EntryView(id: id)
+                            .navigationDestination(for: Route.self) { r in if case .entry(let i) = r { EntryView(id: i) } }
+                    }
+                    .id(id)
+                } else {
+                    ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
                 }
-                .id(id)
-            } else {
-                ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search by name or alias, or browse by type."))
             }
+            .frame(maxWidth: .infinity)
         }
-        .sheet(item: $sheet) { ToolSheetView(kind: $0, open: { selection = $0 }) }
+    }
+}
+
+/// A row that opens an entry: pushes in portrait, selects into the right-hand panel in landscape.
+struct EntryLink<Label: View>: View {
+    @Environment(CodexStore.self) private var store
+    let id: Int
+    @ViewBuilder var label: () -> Label
+    var body: some View {
+        if store.landscape {
+            Button { store.selection = id; store.touch(id) } label: { HStack { label(); Spacer(minLength: 0) } .contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+                .listRowBackground(store.selection == id ? Color.accentColor.opacity(0.15) : nil)
+        } else {
+            NavigationLink(value: Route.entry(id), label: label)
+        }
     }
 }
 
@@ -96,7 +105,6 @@ struct FilterMenu: View {
                 Button { sheet = .find } label: { Label("Find missing", systemImage: "magnifyingglass") }
                 Button { sheet = .ask } label: { Label("Ask Godric about the Codex", systemImage: "bubble.left.and.text.bubble.right") }
             }
-            Toggle("Prototype: iPad portrait drill-down", isOn: $s.ipadPortraitDrill)
         } label: { Image(systemName: current == nil ? "line.3.horizontal.decrease" : "line.3.horizontal.decrease.circle.fill") }
         .accessibilityLabel("Filter and tools")
     }
@@ -109,56 +117,6 @@ struct ScopeMenu: View {
             Text("All series").tag("All series")
             ForEach(DummyCodex.series, id: \.name) { Text($0.name).tag($0.name) }
         }
-    }
-}
-
-/// The iPad list column: chip strip, then recents, then rows. Rows select; the detail pane follows.
-struct EntryList: View {
-    @Environment(CodexStore.self) private var store
-    @Binding var query: String
-    @Binding var type: EType?
-    @Binding var selection: Int?
-
-    var body: some View {
-        let hits = store.list(type: type, query: query)
-        List(selection: $selection) {
-            if query.isEmpty, type == nil, !store.recents.isEmpty {
-                Section("Recent") {
-                    ForEach(store.recents.compactMap(store.entry), id: \.id) { EntryRow(hit: Hit(entry: $0, why: .name)).tag($0.id) }
-                }
-            }
-            Section(type?.title ?? "All entries") {
-                ForEach(hits) { EntryRow(hit: $0, showWhy: !query.isEmpty).tag($0.id) }
-            }
-            if type == .location || type == nil, !store.showContained, query.isEmpty {
-                Text("\(store.inScope.filter { $0.type == .location && $0.parent != nil }.count) rooms and floors are inside their building. Switch on \"Show contained places\" in ⋯ to list them.")
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
-        }
-        .listStyle(.sidebar)
-        .onChange(of: selection) { _, new in if let new { store.touch(new) } }
-    }
-}
-
-struct TypeChips: View {
-    @Environment(CodexStore.self) private var store
-    @Binding var type: EType?
-    var query: String
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                chip("All", nil)
-                ForEach(EType.allCases) { chip($0.title, $0) }
-            }
-        }
-    }
-    private func n(_ t: EType?) -> Int { query.isEmpty ? store.count(t) : store.search(query, type: t).count }
-    private func chip(_ title: String, _ t: EType?) -> some View {
-        Button { type = t } label: {
-            Text("\(title) \(n(t))").font(.footnote).padding(.horizontal, 10).padding(.vertical, 5)
-                .background(type == t ? Color.accentColor : Color(.secondarySystemFill), in: Capsule())
-                .foregroundStyle(type == t ? Color.white : Color.primary)
-        }.buttonStyle(.plain)
     }
 }
 
@@ -211,7 +169,7 @@ struct PhoneLayout: View {
                     }
                 }
         }
-        .sheet(item: $sheet) { ToolSheetView(kind: $0, open: { path.append(.entry($0)) }) }
+        .sheet(item: $sheet) { ToolSheetView(kind: $0, open: { if store.landscape { store.selection = $0 } else { path.append(.entry($0)) } }) }
     }
 }
 
@@ -234,7 +192,7 @@ struct PhoneHome: View {
                 }
                 Section("Recent") {
                     ForEach(store.recents.compactMap(store.entry), id: \.id) { e in
-                        NavigationLink(value: Route.entry(e.id)) { EntryRow(hit: Hit(entry: e, why: .name)) }
+                        EntryLink(id: e.id) { EntryRow(hit: Hit(entry: e, why: .name)) }
                     }
                 }
                 Section("Browse by type · \(store.count(nil)) in scope") {
@@ -245,7 +203,7 @@ struct PhoneHome: View {
             } else {
                 let hits = store.search(query, type: chip)
                 Section("\(hits.count) results" + (chip.map { " in \($0.title)" } ?? "")) {
-                    ForEach(hits) { h in NavigationLink(value: Route.entry(h.id)) { EntryRow(hit: h, showWhy: true) } }
+                    ForEach(hits) { h in EntryLink(id: h.id) { EntryRow(hit: h, showWhy: true) } }
                 }
                 Section { NavigationLink(value: Route.ask(query)) { Label("Ask Godric: “\(query)”", systemImage: "bubble.left.and.text.bubble.right") } }
             }
@@ -278,7 +236,7 @@ struct PhoneTypeList: View {
                     }
                 }
             }
-            ForEach(hits) { h in NavigationLink(value: Route.entry(h.id)) { EntryRow(hit: h, showWhy: !query.isEmpty) } }
+            ForEach(hits) { h in EntryLink(id: h.id) { EntryRow(hit: h, showWhy: !query.isEmpty) } }
         }
         .navigationTitle(type.title)
         .searchable(text: $query, prompt: "Filter \(type.title.lowercased())")

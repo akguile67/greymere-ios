@@ -33,7 +33,8 @@ final class CodexStore {
     var editToken = 0
     var newToken = 0
     var ipadPortraitDrill = true
-    var split = false
+    var landscape = false
+    var selection: Int?
     var nextID = 10_000
 
     func index(_ id: Int) -> Int? { entries.firstIndex { $0.id == id } }
