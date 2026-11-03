@@ -383,6 +383,13 @@ private struct TaskDetail: View {
     let onDefer: () -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(ConnectionModel.self) private var connection
+    /// The sheet holds the task as it was when opened, so the chosen size is kept here to show the tap at once.
+    @State private var size: String
+
+    init(task: TaskRow, editable: Bool, onSize: @escaping (String) -> Void, onDone: @escaping () -> Void, onDefer: @escaping () -> Void) {
+        self.task = task; self.editable = editable; self.onSize = onSize; self.onDone = onDone; self.onDefer = onDefer
+        _size = State(initialValue: task.size ?? "")
+    }
 
     var body: some View {
         NavigationStack {
@@ -395,7 +402,7 @@ private struct TaskDetail: View {
                 }
                 .font(.subheadline).foregroundStyle(connection.theme.muted)
                 if editable {
-                    Picker("Size", selection: Binding(get: { task.size ?? "" }, set: { if !$0.isEmpty { onSize($0) } })) {
+                    Picker("Size", selection: Binding(get: { size }, set: { if !$0.isEmpty { size = $0; onSize($0) } })) {
                         ForEach(["S", "M", "L", "XL"], id: \.self) { Text($0).tag($0) }
                     }
                     .pickerStyle(.segmented)
