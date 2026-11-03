@@ -78,8 +78,11 @@ struct CreationBeat: Decodable, Sendable, Identifiable, Equatable {
     let dismissedRefs: [String]?
     /// The paragraph of the manuscript this beat goes in front of; nil is the end of the chapter.
     let position: Int?
-    /// A generated draft waiting for Accept. Read-only in 0.6.0 Sprint 2.
+    /// The draft waiting for Accept: the working text, which the author may have edited (0.57.0).
     let proposal: String?
+    /// What the model wrote. Nil on rows from before 0.57.0, which read as unedited.
+    let proposalGenerated: String?
+    let proposalEdited: Bool?
     let continuity: Continuity?
 
     /// Godric's confirmed list, or his proposal when nothing is confirmed (as the desktop shows it).
@@ -92,6 +95,8 @@ struct CreationBeat: Decodable, Sendable, Identifiable, Equatable {
         let skip = Set(dismissed.map { $0.lowercased() })
         return shownRefs.filter { !skip.contains($0.name.lowercased()) }
     }
+    /// The text the draft is compared with to tell whether the author changed it (trimmed, as the desktop does).
+    var generatedBaseline: String { (proposalGenerated ?? proposal ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
     var openContinuity: Continuity? {
         guard let c = continuity, let note = c.note, !note.isEmpty, c.acceptedAt == nil else { return nil }
         return c
@@ -101,7 +106,7 @@ struct CreationBeat: Decodable, Sendable, Identifiable, Equatable {
         return c.acceptedAt != nil
     }
 
-    static func == (a: CreationBeat, b: CreationBeat) -> Bool { a.id == b.id && a.whatHappens == b.whatHappens && a.position == b.position && a.targetWords == b.targetWords && a.number == b.number && a.refs == b.refs && a.proposedRefs == b.proposedRefs && a.dismissed == b.dismissed && a.proposal == b.proposal && a.continuity == b.continuity }
+    static func == (a: CreationBeat, b: CreationBeat) -> Bool { a.id == b.id && a.whatHappens == b.whatHappens && a.position == b.position && a.targetWords == b.targetWords && a.number == b.number && a.refs == b.refs && a.proposedRefs == b.proposedRefs && a.dismissed == b.dismissed && a.proposal == b.proposal && a.proposalGenerated == b.proposalGenerated && a.proposalEdited == b.proposalEdited && a.continuity == b.continuity }
 }
 
 struct CreationBrief: Decodable, Sendable, Equatable {
@@ -257,6 +262,9 @@ final class CreationModel {
     /// The last Accept, kept for this session so Undo can put things back.
     var lastAccept: AcceptResult?
     var generating: Set<Int> = []
+    /// Draft text typed on a beat and not yet confirmed saved (0.57.0); the box shows this over the server's draft.
+    var draftEdits: [Int: String] = [:]
+    private var draftTimers: [Int: Task<Void, Never>] = [:]
     var stops: [Int: GenerationStop] = [:]
     var notes: [DraftingNote] = []
     var noteQuote: String?
@@ -781,6 +789,7 @@ extension CreationModel {
 
     func generate(_ beat: CreationBeat) async {
         guard let client, !generating.contains(beat.id), requireSaved() else { return }
+        if draftEdits[beat.id] != nil { draftEdits[beat.id] = nil; draftTimers[beat.id]?.cancel() }
         generating.insert(beat.id); defer { generating.remove(beat.id) }
         stops[beat.id] = nil
         banner = nil
@@ -807,11 +816,63 @@ extension CreationModel {
         if stops[beat.id]?.gaps.isEmpty == true { stops[beat.id] = nil }
     }
 
+    // MARK: editing the draft (0.57.0, #317)
+
+    /// The text the box shows for a beat: what the author typed, else the server's draft.
+    func draftText(_ beat: CreationBeat) -> String { draftEdits[beat.id] ?? beat.proposal ?? "" }
+
+    /// Edited while the text differs from what the model wrote (trimmed compare; no generated text reads as unedited).
+    func draftIsEdited(_ beat: CreationBeat) -> Bool {
+        draftText(beat).trimmingCharacters(in: .whitespacesAndNewlines) != beat.generatedBaseline
+    }
+
+    /// A keystroke: kept in memory and saved after a pause of about 1.2 s.
+    func setDraft(_ beat: CreationBeat, _ text: String) {
+        guard !isLocked, draftText(beat) != text else { return }
+        draftEdits[beat.id] = text
+        draftTimers[beat.id]?.cancel()
+        draftTimers[beat.id] = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1.2))
+            guard !Task.isCancelled else { return }
+            _ = await self?.saveDraft(beat.id)
+        }
+    }
+
+    /// PUT the typed text on the beat (the pause, or leaving the box). It touches nothing in the chapter. An empty box is not saved.
+    @discardableResult
+    func saveDraft(_ beatId: Int) async -> Bool {
+        draftTimers[beatId]?.cancel(); draftTimers[beatId] = nil
+        guard let client, let typed = draftEdits[beatId] else { return true }
+        let server = doc?.beats.first { $0.id == beatId }?.proposal ?? ""
+        if typed.trimmingCharacters(in: .whitespacesAndNewlines) == server.trimmingCharacters(in: .whitespacesAndNewlines) {
+            draftEdits[beatId] = nil; return true
+        }
+        guard !typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            banner = Banner(text: "The draft cannot be empty. Use Discard instead.", isError: true); return false
+        }
+        do {
+            let _: CreationBeat = try await client.put("/api/creation/beats/\(beatId)/proposal", body: DraftBody(text: typed))
+            await reloadChapter()
+            if draftEdits[beatId] == typed { draftEdits[beatId] = nil }
+            return true
+        } catch {
+            fail("Your edit to the draft wasn't saved, and it is still on screen", error)
+            return false
+        }
+    }
+
     func acceptDraft(_ beat: CreationBeat) async {
         guard let client, !working, requireSaved() else { return }
+        let text = draftText(beat)
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            banner = Banner(text: "The draft is empty. Type something or use Discard.", isError: true); return
+        }
+        draftTimers[beat.id]?.cancel(); draftTimers[beat.id] = nil
         working = true; defer { working = false }
         do {
-            let r: AcceptResult = try await client.post("/api/creation/beats/\(beat.id)/accept", body: EmptyBody())
+            // The on-screen text goes with Accept, so a last keystroke is never lost.
+            let r: AcceptResult = try await client.post("/api/creation/beats/\(beat.id)/accept", body: DraftBody(text: text))
+            draftEdits[beat.id] = nil
             lastAccept = r
             await reloadChapter()
             banner = Banner(text: "The draft is in the chapter. Undo last draft is available until you save an edit.")
@@ -820,9 +881,11 @@ extension CreationModel {
 
     func discardDraft(_ beat: CreationBeat) async {
         guard let client, !working, requireUnlocked() else { return }
+        draftTimers[beat.id]?.cancel(); draftTimers[beat.id] = nil
         working = true; defer { working = false }
         do {
             let _: CreationBeat = try await client.post("/api/creation/beats/\(beat.id)/discard-proposal", body: EmptyBody())
+            draftEdits[beat.id] = nil
             await reloadChapter()
         } catch { fail("The draft wasn't discarded", error) }
     }
@@ -895,4 +958,5 @@ extension CreationModel {
     }
 }
 
+private struct DraftBody: Encodable, Sendable { let text: String }
 private struct LockBody: Encodable, Sendable { let locked: Bool; let accept: Bool? }

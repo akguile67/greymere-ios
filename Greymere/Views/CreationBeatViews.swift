@@ -11,6 +11,9 @@ struct BeatCard: View {
     @Environment(ConnectionModel.self) private var connection
     @State private var confirmDelete = false
     @State private var proposalOpen = true
+    @State private var confirm: DraftConfirm?
+    @FocusState private var draftFocused: Bool
+    private enum DraftConfirm { case regenerate, discard }
 
     private var busy: Bool { model.busyBeats.contains(beat.id) }
 
@@ -60,7 +63,7 @@ struct BeatCard: View {
             referencesBlock
 
             stopBlock
-            if let draft = beat.proposal, !draft.isEmpty { draftBlock(draft) } else { generateRow }
+            if let draft = beat.proposal, !draft.isEmpty { draftBlock() } else { generateRow }
             if model.isLocked {
                 Label(CreationModel.lockedWords, systemImage: "lock.fill").font(.caption).foregroundStyle(connection.theme.muted)
             }
@@ -214,22 +217,39 @@ struct BeatCard: View {
         }
     }
 
-    private func draftBlock(_ draft: String) -> some View {
-        let words = draft.split(whereSeparator: \.isWhitespace).count
+    private func draftBlock() -> some View {
+        let text = model.draftText(beat)
+        let words = text.split(whereSeparator: \.isWhitespace).count
+        let edited = model.draftIsEdited(beat)
+        let binding = Binding(get: { model.draftText(beat) }, set: { model.setDraft(beat, $0) })
         return VStack(alignment: .leading, spacing: 8) {
             Button { withAnimation(.snappy) { proposalOpen.toggle() } } label: {
-                Label("Draft — \(words.formatted()) words. Read it; nothing is in the chapter until you accept.", systemImage: proposalOpen ? "chevron.down" : "chevron.right")
-                    .font(.footnote.weight(.semibold)).foregroundStyle(connection.theme.muted).multilineTextAlignment(.leading)
+                HStack(spacing: 6) {
+                    Image(systemName: proposalOpen ? "chevron.down" : "chevron.right")
+                    Text("Draft — \(words.formatted()) words.")
+                    if edited { Text("Edited").font(.caption2.weight(.semibold)).padding(.horizontal, 6).padding(.vertical, 2).background(connection.theme.muted.opacity(0.18), in: Capsule()) }
+                    Spacer(minLength: 0)
+                }
+                .font(.footnote.weight(.semibold)).foregroundStyle(connection.theme.muted)
             }
             .buttonStyle(.plain)
             if proposalOpen {
-                Text(draft).font(.callout).foregroundStyle(connection.theme.text).textSelection(.enabled)
+                Text("Edit it here if you like; nothing is in the chapter until you accept.").font(.caption).foregroundStyle(connection.theme.muted)
+                TextEditor(text: binding)
+                    .font(.callout).foregroundStyle(connection.theme.text)
+                    .scrollContentBackground(.hidden).scrollDisabled(true)
+                    .focused($draftFocused)
+                    .frame(minHeight: 160)
+                    .padding(6)
+                    .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .disabled(model.isLocked || generating)
+                    .onChange(of: draftFocused) { _, focused in if !focused { Task { await model.saveDraft(beat.id) } } }
                 HStack(spacing: 8) {
                     Button { Task { await model.acceptDraft(beat) } } label: { Label("Accept into the chapter", systemImage: "checkmark") }
                         .buttonStyle(.glassProminent).disabled(model.working || generating || model.isLocked)
-                    Button { Task { await model.generate(beat) } } label: { Label(generating ? "Drafting…" : "Regenerate", systemImage: "arrow.clockwise") }
+                    Button { if edited { confirm = .regenerate } else { Task { await model.generate(beat) } } } label: { Label(generating ? "Drafting…" : "Regenerate", systemImage: "arrow.clockwise") }
                         .buttonStyle(.glass).disabled(!canGenerate)
-                    Button("Discard") { Task { await model.discardDraft(beat) } }
+                    Button("Discard") { if edited { confirm = .discard } else { Task { await model.discardDraft(beat) } } }
                         .buttonStyle(.glass).disabled(model.working || generating || model.isLocked)
                 }
                 .font(.footnote)
@@ -238,6 +258,16 @@ struct BeatCard: View {
         }
         .padding(10).frame(maxWidth: .infinity, alignment: .leading)
         .background(connection.theme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .confirmationDialog(confirm == .regenerate ? "Replace this draft?" : "Discard this draft?", isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }), titleVisibility: .visible) {
+            if confirm == .regenerate {
+                Button("Replace it", role: .destructive) { Task { await model.generate(beat) } }
+            } else {
+                Button("Discard", role: .destructive) { Task { await model.discardDraft(beat) } }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(confirm == .regenerate ? "Regenerate replaces this draft, including the changes you made to it." : "This discards the draft, including the changes you made to it. The chapter is unchanged.")
+        }
     }
 }
 
