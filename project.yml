@@ -9,7 +9,7 @@ settings:
     SWIFT_VERSION: "6.0"
     DEVELOPMENT_TEAM: D25P46655T
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "0.7.0"
+    MARKETING_VERSION: "0.8.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1,2"
 targetTemplates:
@@ -70,8 +70,8 @@ targets:
       properties:
         UIAppFonts: [EBGaramond-Regular.ttf, EBGaramond-SemiBold.ttf]
         NSMicrophoneUsageDescription: Greymere listens while you dictate. Audio is sent to your own Greymere server and is not stored.
-        # The dev server runs on the MacBook Pro (npm start, port 3005), reached over Tailscale.
-        GreymereDefaultServerURL: http://100.87.110.63:3005
+        # The dev server runs on the MacBook Pro (the Godric Client (Dev) app starts it on port 3001), reached over Tailscale.
+        GreymereDefaultServerURL: http://100.87.110.63:3001
         NSAppTransportSecurity:
           NSExceptionDomains:
             100.87.110.63:

@@ -12,7 +12,7 @@ enum APIError: Error {
         case .http(let code, let body):
             if let data = body.data(using: .utf8),
                let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let text = obj["error"] as? String, !text.isEmpty { return text }
+               let text = (obj["error"] as? String) ?? (obj["message"] as? String), !text.isEmpty { return text }
             return "Server error \(code)"
         case .unreachable: return "Could not reach the server. Check that Tailscale is on."
         case .badStatus(let code): return "Server error \(code)"

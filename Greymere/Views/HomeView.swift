@@ -175,6 +175,7 @@ private struct HomeContent: View {
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 40)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .scrollDismissesKeyboard(.interactively)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.width }) { width = $0 }
         .topBand(showsBar)
         .glassBar(isOpen: chatIsOpen) { onGodric?() }

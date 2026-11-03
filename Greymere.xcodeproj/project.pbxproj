@@ -40,6 +40,9 @@
 		3828AD822FCBE001D7D9BDB8 /* IdeationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E049D442FE007392E81DB030 /* IdeationScreen.swift */; };
 		382C498A39628FB1BF51F4C1 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
 		3AE755B08D555579190FDF81 /* IdeationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E049D442FE007392E81DB030 /* IdeationScreen.swift */; };
+		3D19900311A76CFCF612ECC5 /* PlanningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E463D0CFF57EE0109888187 /* PlanningModel.swift */; };
+		3E760DAA60DE47C6A15B77FF /* PlanningScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */; };
+		3FCA6FDA9B96299E814A6B90 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		4356C399F4A98CEFC40F81A5 /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
 		46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
 		46E61A0173B8D14F2B674856 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
@@ -49,6 +52,7 @@
 		4D0C18C05169E900737E29C5 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
 		4DB3199C3961F6ABB4DC14C9 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		4E91DF172BB3B7D2AAEA8677 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
+		4F7113320437B95C8FF266E2 /* PlanningScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */; };
 		51220948C6BED549CE35985A /* Info-PreProd.plist in Resources */ = {isa = PBXBuildFile; fileRef = 42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */; };
 		520F9F94B3E088B20399C764 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		525361C9125FE5D8A153037E /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
@@ -59,6 +63,7 @@
 		5CB02AFD9752911270B9AB21 /* CreationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C417B077DAD4D6E1ECF78D /* CreationModel.swift */; };
 		5D1B0057D5E9B13B4CA10EF7 /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B0C488211E5B4F6280E3E7 /* Dictation.swift */; };
 		5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
+		61939F32AA42A309A8556D4A /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */; };
 		6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
 		651888C670EDE5A6C7E463B3 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
 		665DA12BC46BE3EC573211E5 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05104EB8902965BD219D23B /* Shell.swift */; };
@@ -95,24 +100,31 @@
 		B5C094E404334BA2E476D07E /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		B63270938C6D73F20C90581D /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05104EB8902965BD219D23B /* Shell.swift */; };
 		B6A37204529A7E1334B273CD /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
+		B980E034384047A6A94FF51B /* PlanningScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */; };
 		BAB4DB81E33A31B3FCD496AA /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */; };
 		BCD5A5AA53BD56C527BDEDE8 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
 		BD36A4B4DD2648D8787E2A02 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
 		BECF7CE1991576710AFF31C0 /* CreationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF1334D54A055964A887194 /* CreationScreen.swift */; };
 		C1A41A98CC7723BD284F802D /* CreationBeatViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */; };
 		C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
+		C4E47F4375A5CF60673DFF92 /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */; };
 		C5400965AD89424C3CE29EB5 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
+		C5ABF3724DD631BCEB7FCC06 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		C8D4DB342526D8DFCD1A9DB2 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		C98974D694DA4F765111A21F /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
 		C9BFEDE241B071C7C6F3F3A8 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
+		CE9E9DAFEBD309002B4CA031 /* PlanningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E463D0CFF57EE0109888187 /* PlanningModel.swift */; };
 		CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		D0635CF02071F017F64B4DD6 /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
+		D46FA9A8536D836F7D507DDB /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */; };
 		D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
+		D96916CAC9F69541489E3FBA /* PlanningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E463D0CFF57EE0109888187 /* PlanningModel.swift */; };
 		E138CC54ECC8248A951F203D /* GodricChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FDFE72D51DD4458C46567C /* GodricChatView.swift */; };
 		E23B5758D86FE9D96F77633B /* CreationBeatViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */; };
 		E43ABBDF8BC9D1622CDD3F15 /* IdeationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FCA4871968FB71E4F811E /* IdeationModel.swift */; };
 		E67F46C38727A245E699F064 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
+		EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 /* End PBXBuildFile section */
@@ -129,12 +141,15 @@
 		3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreymereApp.swift; sourceTree = "<group>"; };
 		42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-PreProd.plist"; sourceTree = "<group>"; };
 		4BF8E1132B247929CB788E3D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningScreen.swift; sourceTree = "<group>"; };
 		54AC0B957DEE150ACDE31400 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Dev.plist"; sourceTree = "<group>"; };
+		5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEvents.swift; sourceTree = "<group>"; };
 		5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GodricModel.swift; sourceTree = "<group>"; };
 		65FDFE72D51DD4458C46567C /* GodricChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GodricChatView.swift; sourceTree = "<group>"; };
 		6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 		6F44E434245611A6300096AB /* Info-Prod.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Prod.plist"; sourceTree = "<group>"; };
+		7E463D0CFF57EE0109888187 /* PlanningModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningModel.swift; sourceTree = "<group>"; };
 		81C04A5556A704F3558717E4 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		85CE9FE0EBDFD11B3141D664 /* GreymereDev.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymereDev.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		88B0C488211E5B4F6280E3E7 /* Dictation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dictation.swift; sourceTree = "<group>"; };
@@ -157,6 +172,7 @@
 		EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProseTextView.swift; sourceTree = "<group>"; };
 		EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "EBGaramond-Regular.ttf"; sourceTree = "<group>"; };
 		F38FCA4871968FB71E4F811E /* IdeationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdeationModel.swift; sourceTree = "<group>"; };
+		F5320B6EEC12C775FF9A813D /* TaskCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCards.swift; sourceTree = "<group>"; };
 		FD6AB11F2597837B284FD01B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -184,10 +200,12 @@
 				65FDFE72D51DD4458C46567C /* GodricChatView.swift */,
 				0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */,
 				E049D442FE007392E81DB030 /* IdeationScreen.swift */,
+				4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */,
 				EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */,
 				A3E874CACCA6F59089D34C70 /* Reorder.swift */,
 				FD6AB11F2597837B284FD01B /* RootView.swift */,
 				B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */,
+				F5320B6EEC12C775FF9A813D /* TaskCards.swift */,
 				2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */,
 			);
 			path = Views;
@@ -218,7 +236,9 @@
 				42774B05E5FE11B2E8F8D9C5 /* Info-PreProd.plist */,
 				6F44E434245611A6300096AB /* Info-Prod.plist */,
 				54AC0B957DEE150ACDE31400 /* Models.swift */,
+				7E463D0CFF57EE0109888187 /* PlanningModel.swift */,
 				C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */,
+				5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */,
 				A05104EB8902965BD219D23B /* Shell.swift */,
 				4BF8E1132B247929CB788E3D /* Theme.swift */,
 				276D4C7BBC5996DA6E25D15C /* TodayModel.swift */,
@@ -407,12 +427,16 @@
 				E43ABBDF8BC9D1622CDD3F15 /* IdeationModel.swift in Sources */,
 				3828AD822FCBE001D7D9BDB8 /* IdeationScreen.swift in Sources */,
 				5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */,
+				D96916CAC9F69541489E3FBA /* PlanningModel.swift in Sources */,
+				B980E034384047A6A94FF51B /* PlanningScreen.swift in Sources */,
 				46E61A0173B8D14F2B674856 /* ProseTextView.swift in Sources */,
 				CB1818F8177FD28260FCD132 /* Reorder.swift in Sources */,
 				E67F46C38727A245E699F064 /* RootView.swift in Sources */,
 				6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */,
 				05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */,
+				C4E47F4375A5CF60673DFF92 /* ServerEvents.swift in Sources */,
 				1FF63FB6EEAB8FA15648C4D4 /* Shell.swift in Sources */,
+				EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */,
 				5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */,
 				6B91A7BE07C9EEDD808515A5 /* TodayCard.swift in Sources */,
 				7399F36A0C551E0CCD2FF405 /* TodayModel.swift in Sources */,
@@ -444,12 +468,16 @@
 				A2DAC8533A950EFD15AE97D0 /* IdeationModel.swift in Sources */,
 				3AE755B08D555579190FDF81 /* IdeationScreen.swift in Sources */,
 				B17F2D5BA2A122B7D6BB9007 /* Models.swift in Sources */,
+				3D19900311A76CFCF612ECC5 /* PlanningModel.swift in Sources */,
+				4F7113320437B95C8FF266E2 /* PlanningScreen.swift in Sources */,
 				382C498A39628FB1BF51F4C1 /* ProseTextView.swift in Sources */,
 				A4B69C56E6B20519B4848608 /* Reorder.swift in Sources */,
 				CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */,
 				29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */,
 				2717208BBD8DFA33BC4CC0C4 /* SeedModel.swift in Sources */,
+				61939F32AA42A309A8556D4A /* ServerEvents.swift in Sources */,
 				665DA12BC46BE3EC573211E5 /* Shell.swift in Sources */,
+				3FCA6FDA9B96299E814A6B90 /* TaskCards.swift in Sources */,
 				7028E894AD862CE2A5E0EDEB /* Theme.swift in Sources */,
 				C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */,
 				837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */,
@@ -481,12 +509,16 @@
 				94A7C30FC9C76D30B11337F6 /* IdeationModel.swift in Sources */,
 				667D59CC036A65EFB3587444 /* IdeationScreen.swift in Sources */,
 				BD36A4B4DD2648D8787E2A02 /* Models.swift in Sources */,
+				CE9E9DAFEBD309002B4CA031 /* PlanningModel.swift in Sources */,
+				3E760DAA60DE47C6A15B77FF /* PlanningScreen.swift in Sources */,
 				B6A37204529A7E1334B273CD /* ProseTextView.swift in Sources */,
 				651888C670EDE5A6C7E463B3 /* Reorder.swift in Sources */,
 				08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */,
 				8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */,
 				4D0C18C05169E900737E29C5 /* SeedModel.swift in Sources */,
+				D46FA9A8536D836F7D507DDB /* ServerEvents.swift in Sources */,
 				B63270938C6D73F20C90581D /* Shell.swift in Sources */,
+				C5ABF3724DD631BCEB7FCC06 /* TaskCards.swift in Sources */,
 				D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */,
 				2F6235C324E03A1CE0E56CD5 /* TodayCard.swift in Sources */,
 				A6096346C200249B1D43A0BE /* TodayModel.swift in Sources */,
@@ -573,7 +605,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.7.0;
+				MARKETING_VERSION = 0.8.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -635,7 +667,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.7.0;
+				MARKETING_VERSION = 0.8.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

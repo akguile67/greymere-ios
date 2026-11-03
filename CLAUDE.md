@@ -14,6 +14,7 @@ of the Greymere server, which lives in `~/Code/greymere` (GitHub
 - **iOS 0.7.0** makes a beat's generated draft editable before Accept (server 0.57.0, Bug Hotel #317; minimum server version 0.57.0).
 - **iOS 0.4.0** adds dictation (ADR 0.53.0, server release 0.53.0; minimum server version 0.53.0). A third target,
   **GreymereDev** (`com.greymere.ios.dev`), points at a laptop dev server (its address is in `project.yml`).
+- **iOS 0.8.0** adds the Planning panel (the Kanban with the current step's dates and standing against the baseline; hold-and-drop on an iPad, a Move to menu on an iPhone) and the Home task cards (tick with hours, swipe, reorder, add by typing or dictation). Both stay live with the desktop over `/api/events`. ADR 0.58.0; server 0.58.0 and minimum server version 0.58.0. Wireframes: `docs/wireframes/planning-wireframes.html`. The dev server is the one the Godric Client (Dev) app starts, on port 3001; never run a second server on the same database beside it (they cannot share events).
 - **Builds happen on the MacBook Pro only** (Xcode, Team ID D25P46655T). Two
   bundle IDs, prod and pre-prod, distributed through TestFlight. Connection is
   over Tailscale.
@@ -35,5 +36,5 @@ it directly. Change settings in `project.yml`, never in Xcode's build settings.
   per target); the link itself is Tailscale's encrypted tunnel.
 - Build check: `xcodebuild -project Greymere.xcodeproj -scheme Greymere
   -destination 'platform=iOS Simulator,name=iPad mini (A17 Pro)' build`.
-- Test devices: iPhone 14 Pro (real), iPad mini 7th gen, large iPad Pro
-  (simulators: iPad mini (A17 Pro), iPad Pro 13-inch (M5)).
+- Test devices: iPhone 14 Pro and iPad mini 6th generation (real, installed with `xcrun devicectl`), and the
+  simulators iPad mini (A17 Pro) and iPhone 14 Pro. The iPad Pro is no longer a target (ADR 0.58.0).
