@@ -63,6 +63,7 @@
 		5CB02AFD9752911270B9AB21 /* CreationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C417B077DAD4D6E1ECF78D /* CreationModel.swift */; };
 		5D1B0057D5E9B13B4CA10EF7 /* Dictation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B0C488211E5B4F6280E3E7 /* Dictation.swift */; };
 		5E6EE6D52FAD33E977DCD5C6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AC0B957DEE150ACDE31400 /* Models.swift */; };
+		61939F32AA42A309A8556D4A /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */; };
 		6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
 		651888C670EDE5A6C7E463B3 /* Reorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E874CACCA6F59089D34C70 /* Reorder.swift */; };
 		665DA12BC46BE3EC573211E5 /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05104EB8902965BD219D23B /* Shell.swift */; };
@@ -106,6 +107,7 @@
 		BECF7CE1991576710AFF31C0 /* CreationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF1334D54A055964A887194 /* CreationScreen.swift */; };
 		C1A41A98CC7723BD284F802D /* CreationBeatViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */; };
 		C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
+		C4E47F4375A5CF60673DFF92 /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */; };
 		C5400965AD89424C3CE29EB5 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
 		C5ABF3724DD631BCEB7FCC06 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		C8D4DB342526D8DFCD1A9DB2 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
@@ -115,6 +117,7 @@
 		CE9E9DAFEBD309002B4CA031 /* PlanningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E463D0CFF57EE0109888187 /* PlanningModel.swift */; };
 		CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		D0635CF02071F017F64B4DD6 /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
+		D46FA9A8536D836F7D507DDB /* ServerEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */; };
 		D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
 		D96916CAC9F69541489E3FBA /* PlanningModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E463D0CFF57EE0109888187 /* PlanningModel.swift */; };
 		E138CC54ECC8248A951F203D /* GodricChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65FDFE72D51DD4458C46567C /* GodricChatView.swift */; };
@@ -141,6 +144,7 @@
 		4F140BBC6610B60F53BBD2CC /* PlanningScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningScreen.swift; sourceTree = "<group>"; };
 		54AC0B957DEE150ACDE31400 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Dev.plist"; sourceTree = "<group>"; };
+		5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEvents.swift; sourceTree = "<group>"; };
 		5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GodricModel.swift; sourceTree = "<group>"; };
 		65FDFE72D51DD4458C46567C /* GodricChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GodricChatView.swift; sourceTree = "<group>"; };
 		6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
@@ -234,6 +238,7 @@
 				54AC0B957DEE150ACDE31400 /* Models.swift */,
 				7E463D0CFF57EE0109888187 /* PlanningModel.swift */,
 				C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */,
+				5D3EBD3FC2E96619FF37F03E /* ServerEvents.swift */,
 				A05104EB8902965BD219D23B /* Shell.swift */,
 				4BF8E1132B247929CB788E3D /* Theme.swift */,
 				276D4C7BBC5996DA6E25D15C /* TodayModel.swift */,
@@ -429,6 +434,7 @@
 				E67F46C38727A245E699F064 /* RootView.swift in Sources */,
 				6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */,
 				05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */,
+				C4E47F4375A5CF60673DFF92 /* ServerEvents.swift in Sources */,
 				1FF63FB6EEAB8FA15648C4D4 /* Shell.swift in Sources */,
 				EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */,
 				5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */,
@@ -469,6 +475,7 @@
 				CEEA4DBE0BD1130523D5B3E7 /* RootView.swift in Sources */,
 				29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */,
 				2717208BBD8DFA33BC4CC0C4 /* SeedModel.swift in Sources */,
+				61939F32AA42A309A8556D4A /* ServerEvents.swift in Sources */,
 				665DA12BC46BE3EC573211E5 /* Shell.swift in Sources */,
 				3FCA6FDA9B96299E814A6B90 /* TaskCards.swift in Sources */,
 				7028E894AD862CE2A5E0EDEB /* Theme.swift in Sources */,
@@ -509,6 +516,7 @@
 				08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */,
 				8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */,
 				4D0C18C05169E900737E29C5 /* SeedModel.swift in Sources */,
+				D46FA9A8536D836F7D507DDB /* ServerEvents.swift in Sources */,
 				B63270938C6D73F20C90581D /* Shell.swift in Sources */,
 				C5ABF3724DD631BCEB7FCC06 /* TaskCards.swift in Sources */,
 				D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */,

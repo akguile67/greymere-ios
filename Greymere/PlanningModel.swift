@@ -88,6 +88,23 @@ final class PlanningModel {
     }
     private struct Moved: Decodable, Sendable { let ok: Bool? }
 
+    @ObservationIgnored private var refreshTask: Task<Void, Never>?
+
+    /// Follows the server's change notices (a card moved on the desktop, the plan changed) until cancelled.
+    func listen(client: APIClient) async {
+        for await name in ServerEvents.stream(client: client) {
+            if name == "connected" { await load(client: client) }
+            else if name == "planning.changed" {
+                refreshTask?.cancel()
+                refreshTask = Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(250))
+                    guard !Task.isCancelled, let self else { return }
+                    await self.load(client: client)
+                }
+            }
+        }
+    }
+
     func load(client: APIClient) async {
         do {
             board = try await client.get("/api/planning/board")

@@ -67,6 +67,7 @@ struct PlanningScreen: View {
         .topBand(true, title: "Planning")
         .glassBar(isOpen: false) { model.banner = "Godric isn't on the Planning panel yet." }
         .task { await model.load(client: client) }
+        .task(id: connection.address) { await model.listen(client: client) }
         .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await model.load(client: client) } } }
         .sheet(item: $model.picking) { pick in StepPicker(model: model, client: client, pick: pick) }
         .sheet(item: $model.confirming) { pending in OverrideSheet(model: model, client: client, pending: pending) }
@@ -204,7 +205,7 @@ struct PlanningCard: View {
             }
             if let plan = book.plan {
                 if let step = plan.step {
-                    progressBar(progress: step.progress, expected: step.expected)
+                    progressBar(progress: step.progress, expected: step.expected, tone: tone(step))
                     Text(window(step)).font(.caption2).foregroundStyle(theme.muted)
                 } else {
                     Text("No baseline for this step").font(.caption2).foregroundStyle(theme.faint)
@@ -230,11 +231,11 @@ struct PlanningCard: View {
     }
 
     /// This step's progress, with a tick where it should be today.
-    private func progressBar(progress: Double?, expected: Double?) -> some View {
+    private func progressBar(progress: Double?, expected: Double?, tone: Color) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.primary.opacity(0.1))
-                Capsule().fill(Color.green).frame(width: geo.size.width * CGFloat(min(max(progress ?? 0, 0), 1)))
+                Capsule().fill(tone).frame(width: geo.size.width * CGFloat(min(max(progress ?? 0, 0), 1)))
                 if let e = expected {
                     Rectangle().fill(theme.text).frame(width: 2, height: 10)
                         .offset(x: geo.size.width * CGFloat(min(max(e, 0), 1)) - 1)
@@ -251,14 +252,22 @@ struct PlanningCard: View {
         return a == b ? "Planned \(a)" : "Planned \(a) – \(b)"
     }
 
+    /// The step's standing against its baseline: red when late, amber when behind, green otherwise, grey before it starts.
+    private func tone(_ step: PlanningBoard.Book.Plan.StepWindow) -> Color {
+        if (step.overdueDays ?? 0) > 0 { return .red }
+        if step.status == "backlog" && (step.progress ?? 0) == 0 { return Color.gray.opacity(0.55) }
+        if let d = step.driftDays, d <= -0.5 { return .orange }
+        return .green
+    }
+
+    /// Days against the baseline, signed: "+1.1 d vs baseline" ahead, "−2 d vs baseline" behind.
     @ViewBuilder
     private func drift(_ step: PlanningBoard.Book.Plan.StepWindow) -> some View {
-        if step.status == "backlog" || step.rag == "not_started" {
-            chip("Not started", fill: Color.primary.opacity(0.08), ink: theme.muted)
-        } else if let d = step.driftDays {
-            if d >= 0.5 { chip("\(Fmt.hours(d)) d ahead", fill: Color.green.opacity(0.16), ink: .green) }
-            else if d <= -0.5 { chip("\(Fmt.hours(-d)) d behind", fill: Color.orange.opacity(0.2), ink: .orange) }
-            else { chip("On plan", fill: Color.green.opacity(0.16), ink: .green) }
+        if step.status == "backlog" && (step.progress ?? 0) == 0 { chip("Not started", fill: Color.primary.opacity(0.08), ink: theme.muted) }
+        if let d = step.driftDays {
+            if d >= 0.5 { chip("+\(Fmt.hours(d)) d vs baseline", fill: Color.green.opacity(0.16), ink: .green) }
+            else if d <= -0.5 { chip("\u{2212}\(Fmt.hours(-d)) d vs baseline", fill: Color.orange.opacity(0.2), ink: .orange) }
+            else { chip("On baseline", fill: Color.green.opacity(0.16), ink: .green) }
         }
     }
 

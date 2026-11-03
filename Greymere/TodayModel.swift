@@ -90,37 +90,15 @@ final class TodayModel {
 
     // MARK: live updates (0.8.0): the server says "something changed" over /api/events; the card fetches Today again
 
-    private static let eventSession: URLSession = {
-        let c = URLSessionConfiguration.ephemeral
-        c.timeoutIntervalForRequest = 24 * 3600
-        c.timeoutIntervalForResource = 24 * 3600
-        c.waitsForConnectivity = false
-        return URLSession(configuration: c)
-    }()
     private static let watched: Set<String> = ["home.tasks", "reminder.added", "reminder.updated", "override.applied", "override.removed"]
 
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
 
-    /// Holds the event stream open until cancelled, reconnecting after a drop (and fetching again, since events
-    /// missed while it was down are not replayed).
+    /// Follows the server's change notices until cancelled, fetching Today again on each.
     func listen(client: APIClient) async {
-        guard let url = URL(string: "/api/events", relativeTo: client.baseURL) else { return }
-        while !Task.isCancelled {
-            do {
-                var request = URLRequest(url: url)
-                request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-                let (bytes, response) = try await Self.eventSession.bytes(for: request)
-                guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw APIError.unreachable }
-                await load(client: client)
-                for try await line in bytes.lines {
-                    guard line.hasPrefix("event:") else { continue }
-                    let name = line.dropFirst(6).trimmingCharacters(in: .whitespaces)
-                    if Self.watched.contains(name) { scheduleRefresh(client: client) }
-                }
-            } catch {
-                if Task.isCancelled { return }
-            }
-            try? await Task.sleep(for: .seconds(3))
+        for await name in ServerEvents.stream(client: client) {
+            if name == "connected" { await load(client: client) }
+            else if Self.watched.contains(name) { scheduleRefresh(client: client) }
         }
     }
 
