@@ -72,6 +72,17 @@ filter menu); the Panels tray overflows the top of an iPhone in landscape (it is
 screen); on the phone in landscape the left column is short, so the glass bar covers its lower rows; Find missing and Ask
 Godric push inside the left column in landscape.
 
+## Update 4: entry actions in the bar and the top-left menu; glass pills
+
+- The entry's top-right ⋯ is gone (top right is free for Settings). Its actions (Edit, Dictate an edit, Standardise
+  (locations), Image…, Series/books/scope…, Delete) are now in **both** places: a round **⋯ glass button in the bar**
+  beside Edit and Godric, and a **"This entry" section at the top of the top-left filter menu** while an entry is open.
+  Both call the same code. Bar on a phone in portrait with an entry open: Home, Edit, ⋯, Godric, Panels (fits on the
+  Plus; tight on a smaller phone).
+- The series row, the "Godric is looking at…" row and the Contains / In: chips are now liquid glass (same
+  `glassEffect` and tint as the bar), so the left column matches the rest of the app. The list cards (Recent, Browse by
+  type, results) are still standard grouped-list rows. Screenshots: phone-13, phone-14. Not re-checked on the iPad.
+
 ## What the screenshots show
 
 | File | Shows |

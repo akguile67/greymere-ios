@@ -22,6 +22,8 @@ struct Proposal {
     var origin = "Edit"
 }
 
+enum EntryAction: Hashable { case edit, dictate, standardise, image, books, delete }
+
 @MainActor @Observable
 final class CodexStore {
     var entries: [Entry] = DummyCodex.make()
@@ -30,7 +32,7 @@ final class CodexStore {
     var recents: [Int] = [1, 2]
     var godricContext: Int?
     var currentEntry: Int?
-    var editToken = 0
+    var pendingAction: EntryAction?
     var newToken = 0
     var ipadPortraitDrill = true
     var landscape = false

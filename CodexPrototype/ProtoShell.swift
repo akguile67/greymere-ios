@@ -41,7 +41,12 @@ struct ProtoShell: View {
                 round("house", active: shell.dest == .home && !shell.trayOpen) { withAnimation(.snappy) { shell.trayOpen = false; shell.dest = .home } }
                 // A screen's own action sits in the bar: with an entry open in the Codex, that is Edit.
                 if shell.dest == .codex, store.currentEntry != nil {
-                    pill("Edit", "pencil") { store.editToken += 1 }
+                    pill("Edit", "pencil") { store.pendingAction = .edit }
+                    Menu { EntryActionButtons() } label: {
+                        Image(systemName: "ellipsis").font((regular ? Font.title3 : .body).weight(.semibold))
+                            .foregroundStyle(Color.primary).frame(width: size, height: size).contentShape(Circle())
+                    }
+                    .glassEffect(.regular.tint(glassTintColor).interactive(), in: .circle)
                 } else if shell.dest == .codex {
                     pill("New", "plus") { store.newToken += 1 }
                 }

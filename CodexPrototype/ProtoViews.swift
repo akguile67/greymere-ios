@@ -83,6 +83,21 @@ struct ToolSheetView: View {
     }
 }
 
+/// The entry's actions: in the glass bar's ⋯ and in the top-left menu while an entry is open.
+struct EntryActionButtons: View {
+    @Environment(CodexStore.self) private var store
+    var body: some View {
+        if let id = store.currentEntry, let e = store.entry(id) {
+            Button { store.pendingAction = .edit } label: { Label("Edit", systemImage: "pencil") }
+            Button { store.pendingAction = .dictate } label: { Label("Dictate an edit", systemImage: "mic") }
+            if e.type == .location { Button { store.pendingAction = .standardise } label: { Label("Standardise to template", systemImage: "wand.and.stars") } }
+            Button { store.pendingAction = .image } label: { Label("Image…", systemImage: "photo") }
+            Button { store.pendingAction = .books } label: { Label("Series, books, scope…", systemImage: "books.vertical") }
+            Button(role: .destructive) { store.pendingAction = .delete } label: { Label("Delete entry", systemImage: "trash") }
+        }
+    }
+}
+
 /// One pull-down for everything that is not content: the type filter, series scope, the fold switch and the tools.
 /// It sits top LEFT: the top right belongs to the app's Settings gear. "New" lives in the glass bar.
 struct FilterMenu: View {
@@ -93,6 +108,7 @@ struct FilterMenu: View {
     var body: some View {
         @Bindable var s = store
         Menu {
+            if store.currentEntry != nil { Section("This entry") { EntryActionButtons() } }
             Section("Show") {
                 Button { onType(nil) } label: { Label("All (\(store.count(nil)))", systemImage: current == nil ? "checkmark" : "square.grid.2x2") }
                 ForEach(EType.allCases) { t in
@@ -185,10 +201,17 @@ struct PhoneHome: View {
             if query.isEmpty {
                 if let g = store.godricContext.flatMap(store.entry) {
                     Label("Godric is looking at \(g.name)", systemImage: "eye").font(.footnote)
-                        .swipeActions { Button("Clear") { store.godricContext = nil } }
+                        .padding(.horizontal, 16).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
+                        .glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)), in: .capsule)
+                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 Section {
-                    Menu { ScopeMenu() } label: { HStack { Label(store.scope ?? "All series", systemImage: "books.vertical"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) } }
+                    Menu { ScopeMenu() } label: {
+                        HStack { Label(store.scope ?? "All series", systemImage: "books.vertical"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) }
+                            .padding(.horizontal, 16).padding(.vertical, 12).contentShape(Capsule())
+                            .glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)).interactive(), in: .capsule)
+                    }
+                    .listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 Section("Recent") {
                     ForEach(store.recents.compactMap(store.entry), id: \.id) { e in
@@ -317,18 +340,16 @@ struct EntryView: View {
             .navigationTitle(e.name).navigationBarTitleDisplayMode(.inline)
             .onAppear { store.currentEntry = id; store.godricContext = id }
             .onDisappear { if store.currentEntry == id { store.currentEntry = nil; store.godricContext = nil } }
-            .onChange(of: store.editToken) { _, _ in if store.currentEntry == id { sheet = .edit(dictate: false) } }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button { sheet = .edit(dictate: false) } label: { Label("Edit", systemImage: "pencil") }
-                        Button { sheet = .edit(dictate: true) } label: { Label("Dictate an edit", systemImage: "mic") }
-                        if e.type == .location { Button { sheet = .standardise } label: { Label("Standardise to template", systemImage: "wand.and.stars") } }
-                        Button { sheet = .image } label: { Label("Image…", systemImage: "photo") }
-                        Button { sheet = .books } label: { Label("Series, books, scope…", systemImage: "books.vertical") }
-                        Divider()
-                        Button(role: .destructive) { confirmDelete = true } label: { Label("Delete entry", systemImage: "trash") }
-                    } label: { Image(systemName: "ellipsis.circle") }
+            .onChange(of: store.pendingAction) { _, a in
+                guard store.currentEntry == id, let a else { return }
+                store.pendingAction = nil
+                switch a {
+                case .edit: sheet = .edit(dictate: false)
+                case .dictate: sheet = .edit(dictate: true)
+                case .standardise: sheet = .standardise
+                case .image: sheet = .image
+                case .books: sheet = .books
+                case .delete: confirmDelete = true
                 }
             }
             .confirmationDialog("Delete \(e.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
@@ -350,7 +371,7 @@ struct EntryView: View {
     private func chip(_ t: String, systemImage: String? = nil, accent: Bool = false) -> some View {
         HStack(spacing: 4) { if let systemImage { Image(systemName: systemImage) }; Text(t) }
             .font(.footnote).padding(.horizontal, 10).padding(.vertical, 5)
-            .background(accent ? Color.accentColor.opacity(0.15) : Color(.secondarySystemFill), in: Capsule())
             .foregroundStyle(accent ? Color.accentColor : Color.primary)
+            .glassEffect(.regular.tint(accent ? Color.accentColor.opacity(0.18) : Color(.systemGray).opacity(0.16)).interactive(), in: .capsule)
     }
 }
