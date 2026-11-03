@@ -6,6 +6,8 @@ struct BeatCard: View {
     let model: CreationModel
     let beat: CreationBeat
     let prose: ProseController
+    /// Tells the screen the draft box has (or has lost) the caret, so the top bar's Bold, Italic and Scene break act on it.
+    let draftActive: (Bool) -> Void
     let edit: () -> Void
     let refs: (String?) -> Void
     let fixBrief: () -> Void
@@ -236,17 +238,10 @@ struct BeatCard: View {
             .buttonStyle(.plain)
             if proposalOpen {
                 Text("Edit it here if you like; nothing is in the chapter until you accept.").font(.caption).foregroundStyle(connection.theme.muted)
-                if !model.isLocked {
-                    HStack(spacing: 4) {
-                        Button { prose.format(.bold) } label: { Image(systemName: "bold").padding(2) }.accessibilityLabel("Bold")
-                        Button { prose.format(.italic) } label: { Image(systemName: "italic").padding(2) }.accessibilityLabel("Italic")
-                        Button { prose.format(.sceneBreak) } label: { Image(systemName: "ellipsis").padding(2) }.accessibilityLabel("Scene break")
-                    }
-                    .buttonStyle(.glass)
-                }
                 ProseTextView(text: binding, selection: $draftSelection, editable: !model.isLocked && !generating,
                               trailingBreak: false, controller: prose,
-                              onBlur: { Task { await model.saveDraft(beat.id) } })
+                              onFocus: { draftActive(true) },
+                              onBlur: { draftActive(false); Task { await model.saveDraft(beat.id) } })
                     .padding(.horizontal, 6)
                     .frame(minHeight: 160, alignment: .topLeading)
                     .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
