@@ -59,6 +59,7 @@ struct TaskRow: Decodable, Sendable, Identifiable {
     let deferReason: String?
     let done: Bool
     let sourceLabel: String?
+    let sourceKey: String?
     let needsScoping: Bool?
     let scopingPrompt: String?
 }
@@ -83,6 +84,7 @@ struct Capacity: Decodable, Sendable {
 struct Studio: Decodable, Sendable {
     struct Area: Decodable, Sendable, Identifiable {
         struct Item: Decodable, Sendable {
+            let key: String
             let title: String
             let source: String?
             let reason: String?

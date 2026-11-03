@@ -88,7 +88,8 @@ struct TaskCardsBlock: View {
         .sheet(item: $detail) { t in
             TaskDetail(task: t, editable: editable && !t.done,
                        onSize: { size in Task { await model.setSize(t.id, size: size, client: client) } },
-                       onDone: { detail = nil; startTick(t) }, onDefer: { detail = nil; deferring = t })
+                       onDone: { detail = nil; startTick(t) }, onDefer: { detail = nil; deferring = t },
+                       onBack: t.sourceKey?.hasPrefix("studio.") == true ? { detail = nil; Task { await model.sendBack(t.id, client: client) } } : nil)
                 .presentationDetents([.medium])
         }
     }
@@ -389,13 +390,14 @@ private struct TaskDetail: View {
     let onSize: (String) -> Void
     let onDone: () -> Void
     let onDefer: () -> Void
+    var onBack: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @Environment(ConnectionModel.self) private var connection
     /// The sheet holds the task as it was when opened, so the chosen size is kept here to show the tap at once.
     @State private var size: String
 
-    init(task: TaskRow, editable: Bool, onSize: @escaping (String) -> Void, onDone: @escaping () -> Void, onDefer: @escaping () -> Void) {
-        self.task = task; self.editable = editable; self.onSize = onSize; self.onDone = onDone; self.onDefer = onDefer
+    init(task: TaskRow, editable: Bool, onSize: @escaping (String) -> Void, onDone: @escaping () -> Void, onDefer: @escaping () -> Void, onBack: (() -> Void)? = nil) {
+        self.task = task; self.editable = editable; self.onSize = onSize; self.onDone = onDone; self.onDefer = onDefer; self.onBack = onBack
         _size = State(initialValue: task.size ?? "")
     }
 
@@ -418,6 +420,10 @@ private struct TaskDetail: View {
                         Button { onDone() } label: { Label("Done", systemImage: "checkmark").frame(maxWidth: .infinity) }
                             .buttonStyle(.glassProminent)
                         Button { onDefer() } label: { Label("Defer", systemImage: "calendar.badge.clock").frame(maxWidth: .infinity) }
+                            .buttonStyle(.glass)
+                    }
+                    if let onBack {
+                        Button { onBack() } label: { Label("Back to offers", systemImage: "arrow.uturn.backward").frame(maxWidth: .infinity) }
                             .buttonStyle(.glass)
                     }
                 }
