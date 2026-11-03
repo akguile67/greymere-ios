@@ -19,6 +19,7 @@ struct PlanningBoard: Decodable, Sendable {
                 let name: String; let status: String?
                 let baselineStart: String?; let baselineEnd: String?
                 let overdueDays: Int?; let rag: String?
+                let progress: Double?; let expected: Double?; let driftDays: Double?
             }
             let progress: Double?
             let expected: Double?

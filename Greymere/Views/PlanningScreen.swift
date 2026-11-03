@@ -31,6 +31,9 @@ struct PlanningScreen: View {
         return nil
     }
 
+    /// The phase lit as a drop target: the one under the finger, but never the phase the card already sits in.
+    private var lit: String? { hover == dragging?.currentPhase ? nil : hover }
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 10) {
@@ -71,6 +74,7 @@ struct PlanningScreen: View {
             if let figures = item.detail {
                 BookDetailView(item: item, figures: figures, client: client, showsBar: false, onClose: { detail = nil })
                     .presentationDetents([.large])
+                    .presentationBackground(connection.theme.background)
             }
         }
     }
@@ -82,7 +86,7 @@ struct PlanningScreen: View {
             HStack(spacing: 6) {
                 ForEach(model.phases) { phase in
                     let count = model.books(in: phase.key).count
-                    let target = hover == phase.key
+                    let target = lit == phase.key
                     Button { withAnimation(.snappy) { scrollTarget = phase.key } } label: {
                         HStack(spacing: 5) {
                             Text(phase.title).font(.footnote.weight(.semibold))
@@ -124,7 +128,7 @@ struct PlanningScreen: View {
 
     private func column(_ phase: PlanningBoard.Phase) -> some View {
         let books = model.books(in: phase.key)
-        let target = hover == phase.key
+        let target = lit == phase.key
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(phase.title).font(.subheadline.weight(.semibold)).foregroundStyle(theme.text)
@@ -199,14 +203,18 @@ struct PlanningCard: View {
                 }
             }
             if let plan = book.plan {
-                progressBar(plan)
-                Text(window(plan)).font(.caption2).foregroundStyle(theme.muted)
+                if let step = plan.step {
+                    progressBar(progress: step.progress, expected: step.expected)
+                    Text(window(step)).font(.caption2).foregroundStyle(theme.muted)
+                } else {
+                    Text("No baseline for this step").font(.caption2).foregroundStyle(theme.faint)
+                }
                 if let publish = PlanningFmt.short(book.publishDate) { Text("Publishes \(publish)").font(.caption2).foregroundStyle(theme.muted) }
                 FlowLayout(spacing: 6) {
-                    drift(plan)
-                    if let p = plan.progress { chip("\(Int((p * 100).rounded()))%", fill: Color.primary.opacity(0.08), ink: theme.muted) }
-                    if let step = plan.step, (step.overdueDays ?? 0) > 0 {
-                        chip("\(step.overdueDays!) d late", fill: Color.red.opacity(0.16), ink: .red)
+                    if let step = plan.step {
+                        drift(step)
+                        if let p = step.progress { chip("\(Int((p * 100).rounded()))%", fill: Color.primary.opacity(0.08), ink: theme.muted) }
+                        if (step.overdueDays ?? 0) > 0 { chip("\(step.overdueDays!) d late", fill: Color.red.opacity(0.16), ink: .red) }
                     }
                 }
             } else {
@@ -221,30 +229,33 @@ struct PlanningCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    /// Done so far, with a tick where it should be.
-    private func progressBar(_ plan: PlanningBoard.Book.Plan) -> some View {
+    /// This step's progress, with a tick where it should be today.
+    private func progressBar(progress: Double?, expected: Double?) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.primary.opacity(0.1))
-                Capsule().fill(Color.green).frame(width: geo.size.width * CGFloat(min(max(plan.progress ?? 0, 0), 1)))
-                if let e = plan.expected {
+                Capsule().fill(Color.green).frame(width: geo.size.width * CGFloat(min(max(progress ?? 0, 0), 1)))
+                if let e = expected {
                     Rectangle().fill(theme.text).frame(width: 2, height: 10)
                         .offset(x: geo.size.width * CGFloat(min(max(e, 0), 1)) - 1)
                 }
             }
         }
         .frame(height: 6)
-        .accessibilityLabel("Progress \(Int(((plan.progress ?? 0) * 100).rounded())) per cent, expected \(Int(((plan.expected ?? 0) * 100).rounded()))")
+        .accessibilityLabel("Progress \(Int(((progress ?? 0) * 100).rounded())) per cent, expected \(Int(((expected ?? 0) * 100).rounded()))")
     }
 
-    private func window(_ plan: PlanningBoard.Book.Plan) -> String {
-        guard let a = PlanningFmt.short(plan.window.start), let b = PlanningFmt.short(plan.window.end) else { return "Baseline not set" }
-        return "Baseline \(a) – \(b)"
+    /// The dates this step is planned to run, from the baseline.
+    private func window(_ step: PlanningBoard.Book.Plan.StepWindow) -> String {
+        guard let a = PlanningFmt.short(step.baselineStart), let b = PlanningFmt.short(step.baselineEnd) else { return "Baseline not set" }
+        return a == b ? "Planned \(a)" : "Planned \(a) – \(b)"
     }
 
     @ViewBuilder
-    private func drift(_ plan: PlanningBoard.Book.Plan) -> some View {
-        if let d = plan.driftDays {
+    private func drift(_ step: PlanningBoard.Book.Plan.StepWindow) -> some View {
+        if step.status == "backlog" || step.rag == "not_started" {
+            chip("Not started", fill: Color.primary.opacity(0.08), ink: theme.muted)
+        } else if let d = step.driftDays {
             if d >= 0.5 { chip("\(Fmt.hours(d)) d ahead", fill: Color.green.opacity(0.16), ink: .green) }
             else if d <= -0.5 { chip("\(Fmt.hours(-d)) d behind", fill: Color.orange.opacity(0.2), ink: .orange) }
             else { chip("On plan", fill: Color.green.opacity(0.16), ink: .green) }
@@ -299,10 +310,12 @@ private struct StepPicker: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
             .navigationTitle("Move \(pick.book.title) to \(pick.phase.title)").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(connection.theme.background)
     }
 }
 
@@ -344,5 +357,6 @@ private struct OverrideSheet: View {
             .navigationTitle("Skip steps?").navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium])
+        .presentationBackground(connection.theme.background)
     }
 }
