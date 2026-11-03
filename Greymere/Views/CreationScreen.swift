@@ -431,7 +431,7 @@ private struct CreationChapterView: View {
                 ForEach(0...beats.count, id: \.self) { i in
                     segmentView(i, of: segs)
                     if i < beats.count {
-                        BeatCard(model: model, beat: beats[i],
+                        BeatCard(model: model, beat: beats[i], prose: prose,
                                  edit: { model.beatSheet = .edit(beats[i]) },
                                  refs: { linking in refsFor = RefsTarget(beatId: beats[i].id, linking: linking) },
                                  fixBrief: { briefOpen = true; model.beginBriefEdit() })

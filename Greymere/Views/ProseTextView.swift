@@ -24,6 +24,7 @@ struct ProseTextView: UIViewRepresentable {
     var trailingBreak = false
     var controller: ProseController?
     var onFocus: () -> Void = {}
+    var onBlur: () -> Void = {}
     var onSelectedQuote: (String?) -> Void = { _ in }
 
     func makeUIView(context: Context) -> UITextView {
@@ -145,6 +146,8 @@ struct ProseTextView: UIViewRepresentable {
                 self.format(kind, in: textView)
             }
         }
+
+        func textViewDidEndEditing(_ textView: UITextView) { parent.onBlur() }
 
         func textViewDidChange(_ textView: UITextView) {
             guard !updating else { return }

@@ -5,6 +5,7 @@ import SwiftUI
 struct BeatCard: View {
     let model: CreationModel
     let beat: CreationBeat
+    let prose: ProseController
     let edit: () -> Void
     let refs: (String?) -> Void
     let fixBrief: () -> Void
@@ -12,7 +13,7 @@ struct BeatCard: View {
     @State private var confirmDelete = false
     @State private var proposalOpen = true
     @State private var confirm: DraftConfirm?
-    @FocusState private var draftFocused: Bool
+    @State private var draftSelection: TextSelection?
     private enum DraftConfirm { case regenerate, discard }
 
     private var busy: Bool { model.busyBeats.contains(beat.id) }
@@ -235,15 +236,12 @@ struct BeatCard: View {
             .buttonStyle(.plain)
             if proposalOpen {
                 Text("Edit it here if you like; nothing is in the chapter until you accept.").font(.caption).foregroundStyle(connection.theme.muted)
-                TextEditor(text: binding)
-                    .font(.callout).foregroundStyle(connection.theme.text)
-                    .scrollContentBackground(.hidden).scrollDisabled(true)
-                    .focused($draftFocused)
-                    .frame(minHeight: 160)
-                    .padding(6)
+                ProseTextView(text: binding, selection: $draftSelection, editable: !model.isLocked && !generating,
+                              trailingBreak: false, controller: prose,
+                              onBlur: { Task { await model.saveDraft(beat.id) } })
+                    .padding(.horizontal, 6)
+                    .frame(minHeight: 160, alignment: .topLeading)
                     .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .disabled(model.isLocked || generating)
-                    .onChange(of: draftFocused) { _, focused in if !focused { Task { await model.saveDraft(beat.id) } } }
                 HStack(spacing: 8) {
                     Button { Task { await model.acceptDraft(beat) } } label: { Label("Accept into the chapter", systemImage: "checkmark") }
                         .buttonStyle(.glassProminent).disabled(model.working || generating || model.isLocked)
