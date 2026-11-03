@@ -5,7 +5,7 @@ import SwiftUI
 struct CodexProtoApp: App {
     @State private var store = CodexStore()
     var body: some Scene {
-        WindowGroup { CodexRoot().environment(store) }
+        WindowGroup { ProtoShell().environment(store) }
     }
 }
 
@@ -192,7 +192,7 @@ struct PhoneLayout: View {
         NavigationStack(path: $path) {
             PhoneHome(query: $query, path: $path)
                 .navigationTitle("Codex")
-                .searchable(text: $query, prompt: "Search names, aliases, text")
+                .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search names, aliases, text")
                 .toolbar { CodexMenu(sheet: $sheet) }
                 .navigationDestination(for: Route.self) { r in
                     switch r {
@@ -348,6 +348,9 @@ struct EntryView: View {
                 .padding()
             }
             .navigationTitle(e.name).navigationBarTitleDisplayMode(.inline)
+            .onAppear { store.currentEntry = id; store.godricContext = id }
+            .onDisappear { if store.currentEntry == id { store.currentEntry = nil; store.godricContext = nil } }
+            .onChange(of: store.editToken) { _, _ in if store.currentEntry == id { sheet = .edit(dictate: false) } }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
@@ -359,13 +362,6 @@ struct EntryView: View {
                         Divider()
                         Button(role: .destructive) { confirmDelete = true } label: { Label("Delete entry", systemImage: "trash") }
                     } label: { Image(systemName: "ellipsis.circle") }
-                }
-                ToolbarItemGroup(placement: .bottomBar) {
-                    Button { store.godricContext = store.godricContext == id ? nil : id } label: {
-                        Label(store.godricContext == id ? "Godric is looking at this" : "Show Godric this", systemImage: store.godricContext == id ? "eye.fill" : "eye")
-                    }.labelStyle(.titleAndIcon).tint(store.godricContext == id ? .accentColor : .secondary)
-                    Spacer()
-                    Button { sheet = .edit(dictate: false) } label: { Label("Edit", systemImage: "pencil") }.labelStyle(.titleAndIcon)
                 }
             }
             .confirmationDialog("Delete \(e.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {

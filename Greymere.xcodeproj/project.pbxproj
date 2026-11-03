@@ -88,6 +88,7 @@
 		83AC58A95882242F736BFCC0 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 81C04A5556A704F3558717E4 /* OFL.txt */; };
 		8AE3CCB77E3EE14ADD5BABA0 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */; };
 		8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */; };
+		922BEC62D2E36E8B2C9E6011 /* ProtoShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 977336C11BC085B96DDC500D /* ProtoShell.swift */; };
 		926CC6BE90BE03BD91AC57A2 /* GodricModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E8426CC60612D5DEAC6AF4F /* GodricModel.swift */; };
 		94A7C30FC9C76D30B11337F6 /* IdeationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FCA4871968FB71E4F811E /* IdeationModel.swift */; };
 		980B483D2674F976577394BC /* DiffText.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB09C190A5D6C555959CE60D /* DiffText.swift */; };
@@ -168,6 +169,7 @@
 		8A30A3447B9AC1CED1FECC32 /* GreymereCodexProto.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreymereCodexProto.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		901A2EB047E4FF0A1128484A /* Format.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Format.swift; sourceTree = "<group>"; };
 		92659DC9336D02EA668C9D49 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		977336C11BC085B96DDC500D /* ProtoShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoShell.swift; sourceTree = "<group>"; };
 		A05104EB8902965BD219D23B /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		A27D197DD55701F7DBFEED0B /* Greymere.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Greymere.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A3CCFFA219A47C320A78B75B /* HomeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeModel.swift; sourceTree = "<group>"; };
@@ -282,6 +284,7 @@
 			children = (
 				1F19D6312633685B5A5F6072 /* ProtoData.swift */,
 				D509E0A1BD9E0B34FCB9A12F /* ProtoSheets.swift */,
+				977336C11BC085B96DDC500D /* ProtoShell.swift */,
 				88B49499FDB9BF860CB4E76C /* ProtoStore.swift */,
 				47BB9A4D168949DCA255002B /* ProtoViews.swift */,
 				92659DC9336D02EA668C9D49 /* README.md */,
@@ -554,6 +557,7 @@
 			files = (
 				FA546BCA458A9F935B2A2869 /* ProtoData.swift in Sources */,
 				7D6BF2799E001EC7862C1700 /* ProtoSheets.swift in Sources */,
+				922BEC62D2E36E8B2C9E6011 /* ProtoShell.swift in Sources */,
 				475BFF9F5F42194A7F1DBFAD /* ProtoStore.swift in Sources */,
 				7A722EBB87BAAB5C0B5B483C /* ProtoViews.swift in Sources */,
 			);

@@ -29,6 +29,8 @@ final class CodexStore {
     var showContained = false
     var recents: [Int] = [1, 2]
     var godricContext: Int?
+    var currentEntry: Int?
+    var editToken = 0
     var ipadPortraitDrill = false
     var split = false
     var nextID = 10_000

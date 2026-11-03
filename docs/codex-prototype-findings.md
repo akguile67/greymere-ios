@@ -37,6 +37,15 @@ iOS 27.0 runtime** (428×926 pt). The existing "iPhone 14 pro" sim is not a Plus
   per series), Standardise (lands on the same proposal screen), Find missing (book picker, scan, open/created/dismissed,
   Develop, Dismiss, Link… as a search picker), Ask Godric (dummy answer with citation chips opening entries), New entry.
 
+## Update: glass bar always present (author requirement)
+
+The prototype now runs inside a stub shell (`ProtoShell.swift`) that imitates the real app's floating glass bar and workflow
+tray: Home, Ask Godric, Panels, on every Codex screen, iPhone and iPad. Panels → Codex enters the panel (Codex is the only live
+tile). With an entry open the bar gains an **Edit** pill and Ask Godric becomes **Godric**, taking the open entry as context
+(the old eye toggle and bottom toolbar are gone). Phone search moved to the top. Screenshots: phone-09-shell-tray,
+phone-10-shell-entry-bar; iPad portrait shows the bar on the stub Home. The bar floats over list content (rows scroll under
+it), as in the real app. Home and Godric are stubs.
+
 ## What the screenshots show
 
 | File | Shows |
