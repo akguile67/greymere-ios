@@ -66,6 +66,12 @@ struct TaskCardsBlock: View {
                 }
             }
         }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { addFocused = false }
+            }
+        }
         .task(id: connection.address) { await dictation.check(client: client) }
         .onChange(of: draft) { _, new in dictation.textChanged(to: new) }
         .onDisappear { dictation.settle(); dictation.end() }
@@ -168,7 +174,8 @@ struct TaskCardsBlock: View {
             HStack(spacing: 8) {
                 Image(systemName: "plus").foregroundStyle(theme.muted)
                 TextField("Add a task", text: $draft, selection: $selection, axis: .vertical)
-                    .focused($addFocused).submitLabel(.done).onSubmit(submitAdd)
+                    .focused($addFocused).submitLabel(.done)
+                    .onSubmit { if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { addFocused = false } else { submitAdd() } }
                 if !draft.isEmpty {
                     Menu {
                         ForEach(["S", "M", "L", "XL"], id: \.self) { s in Button(s) { newSize = s } }
@@ -202,6 +209,7 @@ struct TaskCardsBlock: View {
         guard !title.isEmpty else { return }
         dictation.settle(); dictation.end()
         draft = ""; selection = nil
+        addFocused = false
         let size = newSize
         newSize = "M"
         Task { await model.add(title: title, size: size, client: client) }
