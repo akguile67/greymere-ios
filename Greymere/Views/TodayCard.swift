@@ -32,6 +32,7 @@ struct TodayCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassEffect(.regular, in: .rect(cornerRadius: 20))
         .task { await model.load(client: client) }
+        .task(id: connection.address) { await model.listen(client: client) }
     }
 
     // MARK: header with day arrows

@@ -87,4 +87,50 @@ final class TodayModel {
     func reorder(_ ids: [Int], client: APIClient) async {
         await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/reorder", body: ReorderBody(orderedIds: ids, on: iso)) }
     }
+
+    // MARK: live updates (0.8.0): the server says "something changed" over /api/events; the card fetches Today again
+
+    private static let eventSession: URLSession = {
+        let c = URLSessionConfiguration.ephemeral
+        c.timeoutIntervalForRequest = 24 * 3600
+        c.timeoutIntervalForResource = 24 * 3600
+        c.waitsForConnectivity = false
+        return URLSession(configuration: c)
+    }()
+    private static let watched: Set<String> = ["home.tasks", "reminder.added", "reminder.updated", "override.applied", "override.removed"]
+
+    @ObservationIgnored private var refreshTask: Task<Void, Never>?
+
+    /// Holds the event stream open until cancelled, reconnecting after a drop (and fetching again, since events
+    /// missed while it was down are not replayed).
+    func listen(client: APIClient) async {
+        guard let url = URL(string: "/api/events", relativeTo: client.baseURL) else { return }
+        while !Task.isCancelled {
+            do {
+                var request = URLRequest(url: url)
+                request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+                let (bytes, response) = try await Self.eventSession.bytes(for: request)
+                guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw APIError.unreachable }
+                await load(client: client)
+                for try await line in bytes.lines {
+                    guard line.hasPrefix("event:") else { continue }
+                    let name = line.dropFirst(6).trimmingCharacters(in: .whitespaces)
+                    if Self.watched.contains(name) { scheduleRefresh(client: client) }
+                }
+            } catch {
+                if Task.isCancelled { return }
+            }
+            try? await Task.sleep(for: .seconds(3))
+        }
+    }
+
+    /// A burst of changes is one fetch.
+    private func scheduleRefresh(client: APIClient) {
+        refreshTask?.cancel()
+        refreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled, let self else { return }
+            await self.load(client: client)
+        }
+    }
 }
