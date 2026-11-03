@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Greymere iOS — Planning panel and Home task cards wireframes</title>
+<style>
+:root{--bg:#f4f4f6;--ink:#222;--mute:#777;--line:#bbb;--box:#fff;--soft:#ececf0;--blue:#3a6fd0;--blue-bg:#e3ecfb;--green:#2f7d3a;--green-bg:#e2f2e3;--amber:#8a5a00;--amber-bg:#fbefd2}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1c1f;--ink:#eee;--mute:#999;--line:#555;--box:#2a2a2e;--soft:#34343a;--blue:#8fb2f0;--blue-bg:#25344f;--green:#8fd29a;--green-bg:#22392a;--amber:#e6b34a;--amber-bg:#3d3320}}
+*{box-sizing:border-box}body{margin:0;padding:24px 16px 60px;background:var(--bg);color:var(--ink);font:14px/1.4 -apple-system,system-ui,sans-serif}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:36px 0 4px}p.n{color:var(--mute);margin:0 0 14px;max-width:760px}
+.row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.dev{border:2px solid var(--line);border-radius:28px;padding:12px}.phone{width:310px}.ipad{width:440px;border-radius:22px}
+.notes{max-width:340px;font-size:13px}.notes p{margin:0 0 9px}
+.cap{background:var(--box);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:10px}
+.bar{height:8px;border-radius:4px;background:var(--soft);display:flex;overflow:hidden;margin:6px 0}.bar i{background:var(--blue)}
+.lbl{font-size:11px;color:var(--mute);margin:10px 2px 5px;display:flex;justify-content:space-between}
+.card{background:var(--box);border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:7px;display:flex;gap:9px;align-items:flex-start}
+.tick{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);flex:none}.tick.on{background:var(--green-bg);border-color:var(--green);color:var(--green);text-align:center;line-height:21px}
+.t{font-size:14px;font-weight:600;margin:0}.m{font-size:11px;color:var(--mute);margin:3px 0 0}
+.chip{font-size:11px;padding:1px 6px;border-radius:6px;background:var(--soft);border:1px solid var(--line);color:var(--mute);margin-right:4px}
+.chip.a{background:var(--amber-bg);color:var(--amber)}.chip.g{background:var(--green-bg);color:var(--green)}.chip.i{background:var(--blue-bg);color:var(--blue)}
+.add{border:1px dashed var(--line);border-radius:12px;padding:9px 11px;color:var(--mute);font-size:14px;display:flex;justify-content:space-between}
+.fold{font-size:13px;color:var(--mute);padding:8px 2px;border-top:1px solid var(--line)}
+.rail{display:flex;gap:4px;margin-bottom:10px}.ph{font-size:11px;padding:5px 8px;border-radius:12px;background:var(--box);border:1px solid var(--line);color:var(--mute)}
+.ph.on{background:var(--ink);color:var(--bg)}.ph.tgt{border:1.5px dashed var(--blue);background:var(--blue-bg);color:var(--blue)}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.col{background:var(--box);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:240px}
+.col.drop{border:1.5px dashed var(--blue);background:var(--blue-bg)}.ch{font-size:12px;font-weight:600;margin:0 0 8px}
+.bk{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px}.bk.lift{border-color:var(--blue);outline:1.5px solid var(--blue)}
+.cov{width:30px;height:44px;border-radius:3px;background:var(--box);border:1px solid var(--line);flex:none}
+.pb{height:6px;border-radius:3px;background:var(--box);border:1px solid var(--line);margin:8px 0 4px;position:relative;overflow:hidden}.pb i{display:block;height:100%;background:var(--green)}.pb u{position:absolute;top:-1px;bottom:-1px;width:2px;background:var(--ink)}
+.sheet{margin-top:10px;background:var(--box);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px}.opt{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);color:var(--mute)}.opt.sel{color:var(--ink);font-weight:600}
+</style></head><body>
+<h1>Planning panel and Home task cards</h1>
+<p class="n">Wireframes for the release built from ADR 0.58.0 (docs/adrs in the Greymere repo). All four were approved by the author on 3 Nov 2026. Sample content is invented; the fields are the real ones from /api/home/tasks, /api/schedule/daily-list and /api/planning/board. Tap on a card opens its detail; swipe left defers; swipe right marks done.</p>
+
+<h2>1. Home task cards — iPad mini</h2>
+<div class="row"><div class="dev ipad">
+<div class="cap"><b>Today, Tue 3 Nov</b> <span style="float:right;color:var(--mute)">1.2h of 6h</span><div class="bar"><i style="width:20%"></i></div><small style="color:var(--mute)">Plan 1.2h · Tasks 0h · 4.8h free</small></div>
+<div class="lbl"><span>From the plan</span><span>due today</span></div>
+<div class="card"><div class="tick"></div><div><p class="t">Edit: Pass 2, Act 2</p><p class="m">The Route <span class="chip">1.2h</span><span class="chip a">1 day late</span></p></div></div>
+<div class="lbl"><span>Your tasks</span><span>drag to reorder</span></div>
+<div class="card"><div class="tick"></div><div><p class="t">Finalise wireframes</p><p class="m"><span class="chip">M · 2h</span>Added 3 days ago</p></div><span style="margin-left:auto;color:var(--mute)">⋮⋮</span></div>
+<div class="card"><div class="tick"></div><div><p class="t">Supplier invoices for October</p><p class="m"><span class="chip">S · 1h</span><span class="chip i">Finance → Close the month</span></p></div><span style="margin-left:auto;color:var(--mute)">⋮⋮</span></div>
+<div class="card"><div class="tick"></div><div><p class="t">Plan the Goodreads giveaway</p><p class="m"><span class="chip a">Needs a size</span>Added today</p></div><span style="margin-left:auto;color:var(--mute)">⋮⋮</span></div>
+<div class="card" style="opacity:.7"><div class="tick on">✓</div><div><p class="t" style="text-decoration:line-through">Check backup</p><p class="m"><span class="chip">S · took 0.5h</span></p></div></div>
+<div class="add"><span>+ Add a task</span><span>mic</span></div>
+<div class="lbl"><span>On offer from the studio</span><span>3</span></div><div class="fold">Backlog, Bug Hotel, Money, Studio admin</div><div class="fold">7 deferred</div>
+</div><div class="notes"><p>Plan-step cards carry no size or grip: the plan owns them. Tick asks the hours taken, Keep estimate by default. An unsized task shows "Needs a size"; tapping it picks S, M, L or XL. Studio offers and Deferred expand in place; Deferred keeps Bring back.</p></div></div>
+
+<h2>2. Home task cards — iPhone 14 Plus</h2>
+<div class="row"><div class="dev phone">
+<div class="cap"><b>Today, Tue 3 Nov</b> <span style="float:right;color:var(--mute)">1.2h of 6h</span><div class="bar"><i style="width:20%"></i></div><small style="color:var(--mute)">Plan 1.2h · Tasks 0h · 4.8h free</small></div>
+<div class="lbl"><span>From the plan</span><span>due today</span></div>
+<div class="card"><div class="tick"></div><div><p class="t">Edit: Pass 2, Act 2</p><p class="m">The Route <span class="chip">1.2h</span><span class="chip a">1 day late</span></p></div></div>
+<div class="lbl"><span>Your tasks</span><span>hold to reorder</span></div>
+<div class="card"><div class="tick"></div><div><p class="t">Finalise wireframes</p><p class="m"><span class="chip">M · 2h</span>3 days</p></div></div>
+<div class="card"><div class="tick"></div><div><p class="t">Supplier invoices for October</p><p class="m"><span class="chip">S · 1h</span><span class="chip i">Finance</span></p></div></div>
+<div class="card"><div class="tick"></div><div><p class="t">Plan the Goodreads giveaway</p><p class="m"><span class="chip a">Needs a size</span>today</p></div></div>
+<div class="add"><span>+ Add a task</span><span>mic</span></div>
+<div class="fold">On offer from the studio (3)</div><div class="fold">7 deferred</div>
+</div><div class="notes"><p>No grip: reorder by press and hold. Ages and source labels shorten. Studio offers and Deferred push a screen. Same swipes as iPad mini.</p></div></div>
+
+<h2>3. Planning Kanban — iPad mini</h2>
+<div class="row"><div class="dev ipad">
+<div class="rail"><span class="ph on">Idea ●</span><span class="ph on">Draft</span><span class="ph on">Edit</span><span class="ph">Proof</span><span class="ph">Prod</span><span class="ph">Pre</span><span class="ph">Mkt</span><span class="ph">Pub ●</span><span class="ph">Rev</span></div>
+<div class="cols">
+<div class="col"><p class="ch">Ideation · 1</p><div class="bk lift"><div style="display:flex;gap:7px"><div class="cov"></div><div><p class="t" style="font-size:13px">The Route</p><p class="m">World and Character</p></div></div><div class="pb"><i style="width:5%"></i><u style="left:3.8%"></u></div><p class="m">29 Oct – 30 Mar · pub 28 Feb</p><span class="chip g">+1.1 d ahead</span><span class="chip">5%</span></div></div>
+<div class="col drop"><p class="ch">Drafting · 0</p><p class="m" style="text-align:center;margin-top:60px">Drop here</p></div>
+<div class="col"><p class="ch">Editing · 0</p></div></div>
+<div class="sheet"><b>Move The Route to Drafting</b><div class="opt sel"><span>Outline and structure</span><span>●</span></div><div class="opt"><span>Chapter drafting</span><span></span></div><div class="opt"><span>Draft complete</span><span></span></div><p class="m">Skips 2 steps and 1 gate. Needs your confirmation.</p></div>
+</div><div class="notes"><p>Columns are phases, three at a time, swiping for the rest. The rail shows all nine with a dot where a book sits. Card: cover, title, current step, progress against expected (the tick), baseline window and publish date, drift chip, percent. Press and hold lifts a card; dropping on a phase opens a step picker; a move that skips steps or a gate asks first and logs the override as the desktop does. Closed books are hidden.</p></div></div>
+
+<h2>4. Planning Kanban — iPhone 14 Plus</h2>
+<div class="row"><div class="dev phone">
+<div class="rail"><span class="ph on">Ideation 1</span><span class="ph tgt">Drafting 0</span><span class="ph">Editing</span><span class="ph">Proof</span></div>
+<div class="bk lift"><div style="display:flex;gap:9px"><div class="cov" style="width:36px;height:54px"></div><div><p class="t">The Route</p><p class="m">World and Character Development</p></div></div><div class="pb"><i style="width:5%"></i><u style="left:3.8%"></u></div><p class="m">Baseline 29 Oct – 30 Mar · pub 28 Feb</p><span class="chip g">+1.1 d ahead</span><span class="chip">5% done</span></div>
+<p class="m" style="text-align:center;margin:14px 0 6px">Drag onto a phase above to move it</p>
+<div class="fold">Other phases with books</div>
+<div class="bk" style="display:flex;gap:9px"><div class="cov" style="height:40px"></div><div><p class="t">The House</p><p class="m">Publish · Post-release campaign</p></div></div>
+</div><div class="notes"><p>One phase at a time; the rail is a scrolling row of chips with counts. Books in other phases are listed beneath. Drag a lifted card onto a chip; the same step picker and gate confirmation follow. Press and hold also offers "Move to…".</p></div></div>
+</body></html>

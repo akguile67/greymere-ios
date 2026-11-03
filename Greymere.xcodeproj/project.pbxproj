@@ -40,6 +40,7 @@
 		3828AD822FCBE001D7D9BDB8 /* IdeationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E049D442FE007392E81DB030 /* IdeationScreen.swift */; };
 		382C498A39628FB1BF51F4C1 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
 		3AE755B08D555579190FDF81 /* IdeationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E049D442FE007392E81DB030 /* IdeationScreen.swift */; };
+		3FCA6FDA9B96299E814A6B90 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		4356C399F4A98CEFC40F81A5 /* TodayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C749C683F83148085FE97A29 /* TodayModels.swift */; };
 		46C8B2EF0B0667501B36DEC7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F5BA4FF7D4CA48A02BB2F6B /* Components.swift */; };
 		46E61A0173B8D14F2B674856 /* ProseTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */; };
@@ -102,6 +103,7 @@
 		C1A41A98CC7723BD284F802D /* CreationBeatViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */; };
 		C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */; };
 		C5400965AD89424C3CE29EB5 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
+		C5ABF3724DD631BCEB7FCC06 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		C8D4DB342526D8DFCD1A9DB2 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		C98974D694DA4F765111A21F /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
 		C9BFEDE241B071C7C6F3F3A8 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A7175A3DB8CCEF791ACBCB /* API.swift */; };
@@ -113,6 +115,7 @@
 		E23B5758D86FE9D96F77633B /* CreationBeatViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCDECCEE76E5B8867E5B8E7 /* CreationBeatViews.swift */; };
 		E43ABBDF8BC9D1622CDD3F15 /* IdeationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38FCA4871968FB71E4F811E /* IdeationModel.swift */; };
 		E67F46C38727A245E699F064 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
+		EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
 		F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 /* End PBXBuildFile section */
@@ -157,6 +160,7 @@
 		EB951EDCBC38BE2E58D842E0 /* ProseTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProseTextView.swift; sourceTree = "<group>"; };
 		EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "EBGaramond-Regular.ttf"; sourceTree = "<group>"; };
 		F38FCA4871968FB71E4F811E /* IdeationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdeationModel.swift; sourceTree = "<group>"; };
+		F5320B6EEC12C775FF9A813D /* TaskCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCards.swift; sourceTree = "<group>"; };
 		FD6AB11F2597837B284FD01B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -188,6 +192,7 @@
 				A3E874CACCA6F59089D34C70 /* Reorder.swift */,
 				FD6AB11F2597837B284FD01B /* RootView.swift */,
 				B8E7D44BC207B30834EBCD5D /* SeedDetailView.swift */,
+				F5320B6EEC12C775FF9A813D /* TaskCards.swift */,
 				2FFA7153B7BAB699F9BE7C32 /* TodayCard.swift */,
 			);
 			path = Views;
@@ -413,6 +418,7 @@
 				6266B1283FE29F1C0235C3C2 /* SeedDetailView.swift in Sources */,
 				05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */,
 				1FF63FB6EEAB8FA15648C4D4 /* Shell.swift in Sources */,
+				EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */,
 				5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */,
 				6B91A7BE07C9EEDD808515A5 /* TodayCard.swift in Sources */,
 				7399F36A0C551E0CCD2FF405 /* TodayModel.swift in Sources */,
@@ -450,6 +456,7 @@
 				29348649EBDDB8FEE7B1B4A5 /* SeedDetailView.swift in Sources */,
 				2717208BBD8DFA33BC4CC0C4 /* SeedModel.swift in Sources */,
 				665DA12BC46BE3EC573211E5 /* Shell.swift in Sources */,
+				3FCA6FDA9B96299E814A6B90 /* TaskCards.swift in Sources */,
 				7028E894AD862CE2A5E0EDEB /* Theme.swift in Sources */,
 				C353BAE8D4FDD8FE392A27A2 /* TodayCard.swift in Sources */,
 				837C2B05EAE8E95E3D0713C0 /* TodayModel.swift in Sources */,
@@ -487,6 +494,7 @@
 				8EAD2BE28ABC3ED74EB85856 /* SeedDetailView.swift in Sources */,
 				4D0C18C05169E900737E29C5 /* SeedModel.swift in Sources */,
 				B63270938C6D73F20C90581D /* Shell.swift in Sources */,
+				C5ABF3724DD631BCEB7FCC06 /* TaskCards.swift in Sources */,
 				D66BE38AEBD1BB2524358DBA /* Theme.swift in Sources */,
 				2F6235C324E03A1CE0E56CD5 /* TodayCard.swift in Sources */,
 				A6096346C200249B1D43A0BE /* TodayModel.swift in Sources */,

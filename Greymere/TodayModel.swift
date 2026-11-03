@@ -43,4 +43,48 @@ final class TodayModel {
             failed = true
         }
     }
+
+    // MARK: writes (0.8.0): the same routes the desktop Today list calls
+
+    /// Why the last write failed, in the server's words; the card shows it until the next write.
+    var actionError: String?
+
+    private struct DoneBody: Encodable { let hoursToday: Double?
+        enum CodingKeys: String, CodingKey { case hoursToday = "hours_today" } }
+    private struct DeferBody: Encodable { let until: String; let reason: String? }
+    private struct AddBody: Encodable { let title: String; let size: String? }
+    private struct SizeBody: Encodable { let size: String }
+    private struct ReorderBody: Encodable { let orderedIds: [Int]; let on: String
+        enum CodingKeys: String, CodingKey { case orderedIds = "ordered_ids", on } }
+    struct Ack: Decodable, Sendable {}
+
+    private func write(client: APIClient, _ call: () async throws -> Void) async {
+        do { try await call(); actionError = nil }
+        catch let e as APIError { actionError = e.message }
+        catch { actionError = "That didn't go through." }
+        await load(client: client)
+    }
+
+    /// Ticks a task, with the hours it took (nil keeps the estimate).
+    func done(_ id: Int, hours: Double?, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/\(id)/done", body: DoneBody(hoursToday: hours)) }
+    }
+    func reopen(_ id: Int, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/\(id)/reopen", body: EmptyBody()) }
+    }
+    func defer_(_ id: Int, until: String, reason: String?, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/\(id)/defer", body: DeferBody(until: until, reason: reason)) }
+    }
+    func undefer(_ id: Int, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/\(id)/undefer", body: EmptyBody()) }
+    }
+    func add(title: String, size: String?, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks", body: AddBody(title: title, size: size)) }
+    }
+    func setSize(_ id: Int, size: String, client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/\(id)/hours", body: SizeBody(size: size)) }
+    }
+    func reorder(_ ids: [Int], client: APIClient) async {
+        await write(client: client) { let _: Ack = try await client.post("/api/home/tasks/reorder", body: ReorderBody(orderedIds: ids, on: iso)) }
+    }
 }

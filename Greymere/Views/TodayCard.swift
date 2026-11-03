@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Today, read-only: what the day owes, what could be pulled forward, the task list, what the studio offers
-/// and how full the day is. Nothing here can be ticked, deferred or added from the phone yet.
+/// Today: how full the day is, what the plan owes (read-only), your tasks as cards that can be ticked, deferred,
+/// reordered and added to (0.8.0, `TaskCards.swift`), and what the studio offers.
 struct TodayCard: View {
     let model: TodayModel
     let client: APIClient
@@ -19,11 +19,11 @@ struct TodayCard: View {
             } else if model.failed && model.tasks == nil {
                 Text("Today couldn't be loaded.").foregroundStyle(theme.muted)
             } else if let tasks = model.tasks, let daily = model.daily {
+                if let cap = tasks.capacity { capacity(cap, view: tasks.view) }
                 ForEach(model.flags) { flag in flagRow(flag) }
                 dayItems(daily)
-                taskList(tasks)
+                TaskCardsBlock(model: model, client: client, tasks: tasks)
                 if let studio = tasks.studio, tasks.view == "today" { studioBlock(studio) }
-                if let cap = tasks.capacity { capacity(cap, view: tasks.view) }
             } else {
                 ProgressView().frame(maxWidth: .infinity)
             }
@@ -127,6 +127,9 @@ struct TodayCard: View {
             }
             Text(parts).font(.footnote).foregroundStyle(theme.muted)
         }
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func availableBlock(_ items: [DayItem]) -> some View {
@@ -147,55 +150,6 @@ struct TodayCard: View {
                 }
             }
         }
-    }
-
-    // MARK: tasks
-
-    @ViewBuilder
-    private func taskList(_ t: HomeTasks) -> some View {
-        if !t.tasks.isEmpty {
-            let open = t.tasks.filter { !$0.done }.count, done = t.tasks.count - open
-            let label = t.view == "projected" ? "Projected task list" : t.view == "past" ? "Completed that day" : "Task list"
-            let count = t.view == "projected" ? "\(open) waiting\(t.deferred.isEmpty ? "" : " · \(t.deferred.count) deferred beyond")"
-                : t.view == "past" ? "\(t.tasks.count) done"
-                : "\(open) to do" + (done > 0 ? " · \(done) done today" : "")
-            VStack(alignment: .leading, spacing: 10) {
-                HStack { SectionLabel(title: label, count: nil); Spacer(); Text(count).font(.caption).foregroundStyle(theme.muted) }
-                ForEach(t.tasks) { task in taskRow(task, date: model.iso) }
-            }
-        }
-        if !t.deferred.isEmpty { DeferredList(items: t.deferred) }
-    }
-
-    private func taskRow(_ t: TaskRow, date: String) -> some View {
-        let hours = t.estHours.map { est -> String in
-            (t.done && t.hoursToday != nil && t.hoursToday != est) ? "\(Fmt.hours(t.hoursToday))h of \(Fmt.hours(est))h" : "\(Fmt.hours(est))h"
-        } ?? "—"
-        let pushedHere = t.deferredUntil != nil && t.deferredUntil == date
-        return HStack(alignment: .top, spacing: 10) {
-            Image(systemName: t.done ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(t.done ? Color.green : theme.faint).font(.title3)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(t.title).font(.subheadline).foregroundStyle(theme.text).strikethrough(t.done)
-                    .fixedSize(horizontal: false, vertical: true)
-                FlowLayout(spacing: 8) {
-                    Text(t.size ?? "?").font(.caption2.weight(.semibold)).padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(.quaternary, in: .capsule)
-                    Text(hours).font(.caption).foregroundStyle(theme.muted)
-                    Text(t.sourceLabel.map { "from \($0)" } ?? (t.origin == "author" ? "you asked" : "studio raised"))
-                        .font(.caption).foregroundStyle(theme.muted)
-                    if pushedHere {
-                        Text("deferred to here" + (t.deferReason.map { " — \($0)" } ?? "")).font(.caption).foregroundStyle(.orange)
-                    } else if let g = t.generatedDate, g != date {
-                        Text("since \(g)").font(.caption).foregroundStyle(theme.muted)
-                    }
-                }
-                if t.needsScoping == true, !t.done, let p = t.scopingPrompt {
-                    Text(p).font(.caption).foregroundStyle(.orange)
-                }
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: studio offers, capacity, flags
@@ -270,34 +224,5 @@ struct TodayCard: View {
     private func pill(_ text: String) -> some View {
         Text(text).font(.caption2.weight(.semibold)).padding(.horizontal, 7).padding(.vertical, 2)
             .background(theme.accent.opacity(0.15), in: .capsule).foregroundStyle(theme.accent)
-    }
-}
-
-/// "5 deferred", closed until tapped, as on the desktop.
-private struct DeferredList: View {
-    let items: [DeferredRow]
-    @State private var open = false
-    @Environment(ConnectionModel.self) private var connection
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Button { withAnimation(.snappy) { open.toggle() } } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: open ? "chevron.down" : "chevron.right").font(.caption.weight(.semibold))
-                    Text("\(items.count) deferred").font(.subheadline)
-                }
-                .foregroundStyle(connection.theme.muted)
-            }
-            .buttonStyle(.plain)
-            if open {
-                ForEach(items) { d in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(d.title).font(.footnote).foregroundStyle(connection.theme.text)
-                        Text("back \(d.deferredUntil ?? "")" + (d.deferReason.map { " — \($0)" } ?? ""))
-                            .font(.caption).foregroundStyle(connection.theme.muted)
-                    }
-                }
-            }
-        }
     }
 }
