@@ -33,6 +33,18 @@ struct ProtoShell: View {
         .safeAreaInset(edge: .bottom, spacing: 0) { bar }
         .animation(.snappy, value: shell.trayOpen)
         .sheet(isPresented: $godric) { GodricStub() }
+        .onAppear {
+            // Test hook for recordings: -startCodex opens Codex with Harrow Hall selected; -autoToggle flips full screen.
+            let a = ProcessInfo.processInfo.arguments
+            guard a.contains("-startCodex") else { return }
+            shell.dest = .codex; store.selection = 2
+            if a.contains("-autoToggle") {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(3)); store.fullScreen = true
+                    try? await Task.sleep(for: .seconds(3)); store.fullScreen = false
+                }
+            }
+        }
     }
 
     private var bar: some View {
