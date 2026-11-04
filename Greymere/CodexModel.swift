@@ -260,6 +260,9 @@ final class CodexModel {
         catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
     }
 
+    /// A server image path made into an address, for the list thumbnails.
+    func imageURL(_ path: String?) -> URL? { client?.asset(path) }
+
     func loadBooks() async {
         guard let client, books.isEmpty, let b: [CodexBook] = try? await client.get("/api/books") else { return }
         books = b

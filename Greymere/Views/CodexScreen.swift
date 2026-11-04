@@ -221,8 +221,7 @@ private struct CodexRow: View {
     var body: some View {
         let e = hit.entry
         HStack(spacing: 10) {
-            Image(systemName: e.type.symbol).frame(width: 30, height: 30)
-                .background(Color(.secondarySystemFill), in: RoundedRectangle(cornerRadius: 7)).foregroundStyle(connection.theme.muted)
+            thumbnail(e)
             VStack(alignment: .leading, spacing: 2) {
                 Text(e.name).font(.body.weight(.semibold)).foregroundStyle(connection.theme.text).lineLimit(1)
                 Text(subtitle(e)).font(.caption).foregroundStyle(connection.theme.muted).lineLimit(1)
@@ -236,6 +235,19 @@ private struct CodexRow: View {
             }
             Spacer(minLength: 0)
         }
+    }
+
+    /// The entry's own image when it has one (and it was not rejected), else its type's symbol.
+    @ViewBuilder private func thumbnail(_ e: CodexEntry) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        let symbol = Image(systemName: e.type.symbol).frame(width: 40, height: 40)
+            .background(Color(.secondarySystemFill), in: shape).foregroundStyle(connection.theme.muted)
+        if e.portraitStatus != "rejected", let url = model.imageURL(e.portraitPath) {
+            AsyncImage(url: url) { p in
+                if let i = p.image { i.resizable().scaledToFill() } else { symbol }
+            }
+            .frame(width: 40, height: 40).clipShape(shape)
+        } else { symbol }
     }
 
     private func subtitle(_ e: CodexEntry) -> String {
@@ -472,7 +484,13 @@ private struct CodexEntryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(alignment: .top, spacing: 12) {
-                        Button { imaging = true } label: { portrait(detail?.portraitPath ?? e.portraitPath, type: e.type) }.buttonStyle(.plain).accessibilityLabel("Image")
+                        Button { imaging = true } label: {
+                            portrait(detail?.portraitPath ?? e.portraitPath, type: e.type)
+                                .overlay(alignment: .bottomTrailing) {
+                                    Image(systemName: "camera.fill").font(.caption.weight(.semibold)).foregroundStyle(connection.theme.text)
+                                        .frame(width: 30, height: 30).glassEffect(.regular, in: .circle).padding(5)
+                                }
+                        }.buttonStyle(.plain).accessibilityLabel("Image")
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(alignment: .top) {
                                 Text(e.name).font(.serif(26)).foregroundStyle(connection.theme.text)
