@@ -68,11 +68,10 @@ struct LandscapeLayout: View {
                 }
                 .buttonStyle(.plain).glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)).interactive(), in: .circle)
                 .accessibilityLabel(store.fullScreen ? "Show the menu" : "Full screen")
-                .offset(x: store.fullScreen ? 14 : 0)
                 Spacer()
-            }.padding(.top, 60)
+            }.padding(.top, 14)
         }
-        .frame(width: 22).contentShape(Rectangle())
+        .frame(width: 42).background(Color(.systemBackground).opacity(0.6)).contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 2)
             .onChanged { v in
                 guard !store.fullScreen else { return }
