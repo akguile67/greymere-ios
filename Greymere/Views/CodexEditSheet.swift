@@ -5,7 +5,9 @@ import SwiftUI
 struct CodexEditSheet: View {
     @Bindable var model: CodexModel
     let client: APIClient
-    let id: Int
+    /// nil = a new entry.
+    let id: Int?
+    var onCreated: (Int) -> Void = { _ in }
     @Environment(\.dismiss) private var dismiss
     @Environment(ConnectionModel.self) private var connection
 
@@ -24,12 +26,14 @@ struct CodexEditSheet: View {
     @State private var message: String?
     @State private var dictation = DictationModel()
     @State private var prose = ProseController()
+    @State private var newType: CodexType = .characters
+    private var isNew: Bool { id == nil }
 
     private var theme: ThemeStore { connection.theme }
     private var nameChanged: Bool { name.trimmingCharacters(in: .whitespaces) != baseName }
     private var aliasesChanged: Bool { Self.parse(aliasText) != Self.parse(baseAliases) }
     private var bodyChanged: Bool { bodyText != baseBody }
-    private var changed: Bool { nameChanged || aliasesChanged || bodyChanged }
+    private var changed: Bool { isNew ? !name.trimmingCharacters(in: .whitespaces).isEmpty : (nameChanged || aliasesChanged || bodyChanged) }
 
     private static func parse(_ s: String) -> [String] { s.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
 
@@ -37,7 +41,7 @@ struct CodexEditSheet: View {
         NavigationStack {
             Group { if step == .edit { editor } else { review } }
                 .background(theme.background.ignoresSafeArea())
-                .navigationTitle(step == .edit ? "Edit entry" : "Review the change")
+                .navigationTitle(step == .edit ? (isNew ? "New entry" : "Edit entry") : (isNew ? "Review the new entry" : "Review the change"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -56,7 +60,9 @@ struct CodexEditSheet: View {
     }
 
     private func load() {
-        guard baseStamp == nil, let d = model.details[id], let e = model.entry(id) else { return }
+        guard baseStamp == nil else { return }
+        guard let id else { baseStamp = ""; return }
+        guard let d = model.details[id], let e = model.entry(id) else { return }
         fill(name: d.name, aliases: d.aliases ?? e.allAliases, body: d.body ?? e.snippet, stamp: d.updatedAt, keepDrafts: false)
     }
 
@@ -70,6 +76,12 @@ struct CodexEditSheet: View {
     private var editor: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if isNew {
+                    field("Type") {
+                        Picker("Type", selection: $newType) { ForEach(CodexType.allCases) { Text($0.single).tag($0) } }
+                            .pickerStyle(.menu).labelsHidden().frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
                 field("Name") { TextField("Name", text: $name).textInputAutocapitalization(.words) }
                 field("Also known as (separate with commas)") { TextField("Aliases", text: $aliasText, axis: .vertical).textInputAutocapitalization(.never).autocorrectionDisabled() }
                 VStack(alignment: .leading, spacing: 6) {
@@ -134,6 +146,7 @@ struct CodexEditSheet: View {
             VStack(alignment: .leading, spacing: 16) {
                 if let message { Text(message).font(.footnote).foregroundStyle(.orange).padding(12).frame(maxWidth: .infinity, alignment: .leading).glassEffect(.regular, in: .rect(cornerRadius: 14)) }
                 if !changed { Text("Nothing has changed.").foregroundStyle(theme.muted) }
+                if isNew { Text("Type: \(newType.single)").font(.footnote).foregroundStyle(theme.muted) }
                 if nameChanged { block("Name", before: baseName, after: name.trimmingCharacters(in: .whitespaces)) }
                 if aliasesChanged { block("Also known as", before: baseAliases, after: Self.parse(aliasText).joined(separator: ", ")) }
                 if bodyChanged { block("Body", before: baseBody, after: bodyText) }
@@ -157,6 +170,11 @@ struct CodexEditSheet: View {
 
     private func apply() async {
         saving = true; defer { saving = false }
+        guard let id else {
+            if let newId = await model.create(name: name.trimmingCharacters(in: .whitespaces), type: newType, aliases: Self.parse(aliasText), body: bodyText, client: client) { dismiss(); onCreated(newId) }
+            else { message = "The entry could not be created." }
+            return
+        }
         let result = await model.apply(id: id, name: name.trimmingCharacters(in: .whitespaces), aliases: Self.parse(aliasText), body: bodyText, baseStamp: baseStamp ?? "", client: client)
         switch result {
         case .saved: dismiss()

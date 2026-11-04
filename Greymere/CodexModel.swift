@@ -106,6 +106,11 @@ private struct CodexSave: Encodable {
     private enum CodingKeys: String, CodingKey { case name, body, aliases, baseUpdatedAt = "base_updated_at" }
 }
 private struct CodexSaved: Decodable { let id: Int }
+private struct CodexNew: Encodable {
+    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?
+    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id" }
+}
+private struct CodexDeleted: Decodable { let ok: Bool? }
 
 enum CodexApplyResult { case saved, stale(CodexDetail), failed(String) }
 
@@ -188,6 +193,27 @@ final class CodexModel {
             if let now: CodexDetail = try? await client.get("/api/codex/\(id)") { details[id] = now; return .stale(now) }
             return .failed("This entry changed since you opened it.")
         } catch let e as APIError { return .failed(e.message) } catch { return .failed("The change could not be saved.") }
+    }
+
+    /// Creates an entry in the series being viewed (or none, when every series is shown). Returns its id.
+    func create(name: String, type: CodexType, aliases: [String], body: String, client: APIClient) async -> Int? {
+        do {
+            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: seriesId))
+            await reload()
+            return saved.id
+        } catch { return nil }
+    }
+
+    /// Deletes an entry for good (the server removes its aliases, links and image) and forgets it here.
+    func delete(_ id: Int, client: APIClient) async -> Bool {
+        do {
+            let _: CodexDeleted = try await client.delete("/api/codex/\(id)")
+            entries.removeAll { $0.id == id }; details[id] = nil
+            recents.removeAll { $0 == id }; UserDefaults.standard.set(recents, forKey: Self.recentsKey)
+            if selection == id { selection = nil }
+            menuPath.removeAll { $0 == .entry(id) }
+            return true
+        } catch { return false }
     }
 
     // MARK: reading the list

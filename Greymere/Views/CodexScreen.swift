@@ -257,7 +257,7 @@ private struct CodexPhone: View {
         CodexStack(path: $model.menuPath, title: { r in
             switch r { case .entry(let id): model.entry(id)?.name ?? ""; case .type(let t): t.title }
         }) {
-            CodexHome(model: model, query: $model.query)
+            CodexHome(model: model, client: client, query: $model.query)
         } page: { r in
             switch r {
             case .entry(let id): CodexEntryView(model: model, client: client, id: id)
@@ -270,9 +270,11 @@ private struct CodexPhone: View {
 
 private struct CodexHome: View {
     @Bindable var model: CodexModel
+    let client: APIClient
     @Binding var query: String
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
+    @State private var creating = false
     @FocusState private var searchFocused: Bool
     /// A phone on its side with the keyboard up has a few lines of height: the search row tightens so results show.
     private var compact: Bool { model.landscape && searchFocused }
@@ -309,6 +311,10 @@ private struct CodexHome: View {
                             ForEach(recent, id: \.id) { e in CodexLink(model: model, id: e.id) { CodexRow(model: model, hit: CodexHit(entry: e, why: .name)) } }
                         }
                     }
+                    Section {
+                        Button { creating = true } label: { Label("New entry", systemImage: "plus").frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle()) }
+                            .buttonStyle(.plain).codexRow()
+                    }
                     Section("Browse by type · \(model.count(nil)) in scope") {
                         ForEach(CodexType.allCases) { t in
                             Button { push(.type(t)) } label: {
@@ -325,6 +331,12 @@ private struct CodexHome: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .sheet(isPresented: $creating) {
+                CodexEditSheet(model: model, client: client, id: nil) { newId in
+                    model.touch(newId)
+                    if model.landscape { model.selection = newId } else { push(.entry(newId)) }
+                }
+            }
             .scrollDismissesKeyboard(.interactively)
             .overlay { if model.loading && model.entries.isEmpty { ProgressView() } }
             .refreshable { await model.reload() }
@@ -432,6 +444,7 @@ private struct CodexEntryView: View {
     let id: Int
     @State private var showAllChildren = false
     @State private var editing = false
+    @State private var confirmDelete = false
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
 
@@ -478,11 +491,20 @@ private struct CodexEntryView: View {
                         }
                     }
                     CodexBody(text: detail?.body ?? e.snippet)
+                    Button(role: .destructive) { confirmDelete = true } label: {
+                        Label("Delete entry", systemImage: "trash").font(.footnote.weight(.medium))
+                            .padding(.horizontal, 14).padding(.vertical, 8).glassEffect(.regular.interactive(), in: .capsule)
+                    }
+                    .buttonStyle(.plain).foregroundStyle(.red).padding(.top, 12)
                 }
                 .padding()
             }
             .background(connection.theme.background)
             .task(id: id) { await model.loadDetail(id) }
+            .confirmationDialog("Delete \(e.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                Button("Delete for good", role: .destructive) { Task { _ = await model.delete(id, client: client) } }
+                Button("Keep it", role: .cancel) {}
+            } message: { Text("Its aliases and image go with it, and any Find missing item it filled reopens. This can't be undone.") }
             .sheet(isPresented: $editing) { CodexEditSheet(model: model, client: client, id: id) }
         } else {
             ContentUnavailableView("Entry not found", systemImage: "questionmark.folder")
