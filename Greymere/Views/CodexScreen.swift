@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The Codex panel (ADR 0.59.0). Portrait: a drill-down (search and series, Recent, browse by type, then an entry).
 /// Landscape, on both devices: the same menu on the left and the entry on the right, a draggable strip between
@@ -7,11 +8,21 @@ struct CodexScreen: View {
     @Bindable var model: CodexModel
     let client: APIClient
     @Environment(ConnectionModel.self) private var connection
+    /// Orientation read from a probe that ignores the keyboard. The keyboard shrinks the panel's own height, and a phone
+    /// held upright with the keyboard up is then wider than it is tall: it flipped to the landscape layout, rebuilt the
+    /// search field, and dropped its focus a moment after the tap.
+
+    /// The window's own shape: it does not change when the keyboard comes up (the panel's does).
+    private func windowLandscape(fallback: Bool) -> Bool {
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive } ?? UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        guard let b = scene?.keyWindow?.bounds ?? scene?.windows.first?.bounds else { return fallback }
+        return b.width > b.height
+    }
 
     var body: some View {
         VStack(spacing: 0) {
         GeometryReader { geo in
-            let landscape = geo.size.width > geo.size.height
+            let landscape = windowLandscape(fallback: geo.size.width > geo.size.height)
             ZStack(alignment: .top) {
                 Group { if landscape { CodexLandscape(model: model, client: client) } else { CodexPhone(model: model, client: client) } }
                     .onAppear { model.landscape = landscape }
