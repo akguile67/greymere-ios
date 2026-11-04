@@ -324,17 +324,20 @@ private struct CodexHome: View {
                                 .padding(.vertical, 6).contentShape(Rectangle())
                         }.codexRow()
                     }
+                    Section {
+                        HStack(spacing: 10) {
+                            Button { creating = true } label: { Label("New entry", systemImage: "plus").frame(maxWidth: .infinity).padding(.vertical, 6).contentShape(Rectangle()) }
+                                .buttonStyle(.plain)
+                            Divider().frame(height: 22)
+                            Button { finding = true } label: { Label("Find missing", systemImage: "doc.text.magnifyingglass").frame(maxWidth: .infinity).padding(.vertical, 6).contentShape(Rectangle()) }
+                                .buttonStyle(.plain)
+                        }.font(.subheadline.weight(.medium)).codexRow()
+                    }
                     let recent = model.recents.compactMap(model.entry)
                     if !recent.isEmpty {
                         Section("Recent") {
                             ForEach(recent, id: \.id) { e in CodexLink(model: model, id: e.id) { CodexRow(model: model, hit: CodexHit(entry: e, why: .name)) } }
                         }
-                    }
-                    Section {
-                        Button { creating = true } label: { Label("New entry", systemImage: "plus").frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle()) }
-                            .buttonStyle(.plain).codexRow()
-                        Button { finding = true } label: { Label("Find missing", systemImage: "doc.text.magnifyingglass").frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle()) }
-                            .buttonStyle(.plain).codexRow()
                     }
                     Section("Browse by type · \(model.count(nil)) in scope") {
                         ForEach(CodexType.allCases) { t in
