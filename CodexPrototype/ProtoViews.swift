@@ -44,15 +44,15 @@ struct LandscapeLayout: View {
                 Group {
                     if let id = store.selection, store.entry(id) != nil {
                         NavigationStack {
-                            EntryView(id: id)
-                                .toolbar { fullScreenItem }
+                            panelRoot(title: store.entry(id)?.name ?? "") { EntryView(id: id) }
                                 .navigationDestination(for: Route.self) { r in if case .entry(let i) = r { EntryView(id: i) } }
                         }
                         .id(id)
                     } else {
                         NavigationStack {
-                            ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
-                                .toolbar { fullScreenItem }
+                            panelRoot(title: "") {
+                                ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
+                            }
                         }
                     }
                 }
@@ -64,16 +64,27 @@ struct LandscapeLayout: View {
         .animation(.snappy, value: store.fullScreen)
     }
 
-    /// Inline in the panel's top bar, left-aligned with the entry picture; same size as the search icon.
-    @ToolbarContentBuilder private var fullScreenItem: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
-            Button { store.fullScreen.toggle() } label: {
-                Image(systemName: store.fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                    .font(.callout.weight(.medium)).foregroundStyle(.primary).offset(x: -5)
+    /// The panel's top row is plain SwiftUI, not the UIKit nav bar: the nav bar re-applies the iPhone's side safe
+    /// area a beat after the panel reaches the screen edge, which showed up as a late jump to the left. Pushed
+    /// screens (a chip opening another entry) still use the nav bar and its back button.
+    private func panelRoot<C: View>(title: String, @ViewBuilder content: () -> C) -> some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Text(title).font(.headline).lineLimit(1).padding(.horizontal, 56)
+                HStack {
+                    Button { store.fullScreen.toggle() } label: {
+                        Image(systemName: store.fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                            .font(.callout.weight(.medium)).foregroundStyle(.primary)
+                            .frame(width: 44, height: 44, alignment: .leading).contentShape(Rectangle())
+                    }
+                    .accessibilityLabel(store.fullScreen ? "Show the menu" : "Full screen")
+                    Spacer()
+                }
             }
-            .accessibilityLabel(store.fullScreen ? "Show the menu" : "Full screen")
+            .padding(.horizontal, 16).frame(height: 48)
+            content().frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .sharedBackgroundVisibility(.hidden)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     /// Drag the strip to resize the left column; double tap toggles full screen.
