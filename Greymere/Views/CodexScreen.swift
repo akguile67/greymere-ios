@@ -263,6 +263,8 @@ private struct CodexHome: View {
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
     @FocusState private var searchFocused: Bool
+    /// A phone on its side with the keyboard up has a few lines of height: the search row tightens so results show.
+    private var compact: Bool { model.landscape && searchFocused }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -270,14 +272,14 @@ private struct CodexHome: View {
                 CodexFilterMenu(model: model) { t in if let t { push(.type(t)) } }
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(connection.theme.muted)
-                    TextField("Search names, aliases, text", text: $query).textInputAutocapitalization(.never).autocorrectionDisabled().focused($searchFocused)
+                    TextField("Search names, aliases, text", text: $query).textInputAutocapitalization(.never).autocorrectionDisabled().focused($searchFocused).submitLabel(.search).onSubmit { searchFocused = false }
                     if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(connection.theme.muted) }.buttonStyle(.plain) }
                 }
-                .padding(.horizontal, 14).frame(height: 44)
+                .padding(.horizontal, 14).frame(height: compact ? 34 : 44)
                 .glassEffect(.regular.tint(connection.theme.glassTint), in: .capsule)
                 .contentShape(Capsule()).onTapGesture { searchFocused = true }
             }
-            .padding(.horizontal, 16).padding(.vertical, 6)
+            .padding(.horizontal, 16).padding(.vertical, compact ? 2 : 6)
 
             List {
                 if let error = model.loadError, model.entries.isEmpty {
@@ -312,6 +314,7 @@ private struct CodexHome: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .overlay { if model.loading && model.entries.isEmpty { ProgressView() } }
             .refreshable { await model.reload() }
         }
