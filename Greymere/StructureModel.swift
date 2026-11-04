@@ -147,6 +147,10 @@ final class StructureModel {
     var edits: [Int: [BriefField: String]] = [:]
     /// Chapters Godric staged a brief on and the author has not committed.
     var staged: Set<Int> = []
+    /// Where each chapter is in Creation ("drafting", "draft_one"), read from the Creation book so a card can say so.
+    var creationStatus: [Int: String] = [:]
+    /// The "Ch N" / "Prologue" badge Creation gives each card.
+    var badges: [Int: String] = [:]
     let godric = GodricModel(thread: .structure)
 
     private var client: APIClient?
@@ -189,6 +193,12 @@ final class StructureModel {
             let d: StructureDoc = try await client.get("/api/structure/books/\(bookId)")
             doc = d
             loadError = nil
+            if let c: CreationBookDoc = try? await client.get("/api/creation/books/\(bookId)") {
+                var m: [Int: String] = [:]
+                for a in c.acts { for ch in a.chapters { if let st = ch.creationStatus, st == "drafting" || st == "draft_one" { m[ch.id] = st } } }
+                creationStatus = m
+                badges = CreationModel.badges(c.acts)
+            }
             if openAct == nil { openAct = d.acts.first { !$0.chapters.isEmpty && !$0.locked }?.id ?? d.acts.first { !$0.chapters.isEmpty }?.id }
             if let c = chapterId, chapter(c) == nil { chapterId = nil }
             for (id, _) in edits where chapter(id) == nil { edits[id] = nil }

@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The Structure panel (ADR 0.60.0): the book's acts, the chapter cards inside them, the six-field briefing on a card,
-/// and Godric. iPad landscape is a split (board left, card right) with Godric docked as a third column; everywhere else
-/// the board and the card take turns on one screen, and Godric rises as a sheet on a phone.
+/// The Structure panel (ADR 0.60.0): the book's acts with their chapter cards, as Creation lays them out; touching a card
+/// brings up its briefing in place of the board, with a way back. Godric docks beside it on an iPad and rises as a sheet on
+/// a phone.
 struct StructureScreen: View {
     @Bindable var model: StructureModel
     let home: HomeModel
@@ -21,22 +21,12 @@ struct StructureScreen: View {
 
     var body: some View {
         GeometryReader { geo in
-            let split = sizeClass == .regular && geo.size.width > geo.size.height
             HStack(spacing: 0) {
                 Group {
-                    if split {
-                        HStack(spacing: 0) {
-                            StructureBoard(model: model, home: home, client: client, activeBookId: $activeBookId, split: true).frame(width: 380)
-                            Divider()
-                            Group {
-                                if let c = model.chapter { StructureCard(model: model, chapter: c, showsBack: false) }
-                                else { ContentUnavailableView("Open a chapter", systemImage: "rectangle.on.rectangle", description: Text("Choose a chapter card on the left.")) }
-                            }.frame(maxWidth: .infinity)
-                        }
-                    } else if let c = model.chapter {
-                        StructureCard(model: model, chapter: c, showsBack: true)
+                    if let c = model.chapter {
+                        StructureCard(model: model, chapter: c)
                     } else {
-                        StructureBoard(model: model, home: home, client: client, activeBookId: $activeBookId, split: false)
+                        StructureBoard(model: model, home: home, client: client, activeBookId: $activeBookId)
                     }
                 }
                 if docked && chatOpen, let chatBook {
@@ -125,7 +115,6 @@ private struct StructureBoard: View {
     let home: HomeModel
     let client: APIClient
     @Binding var activeBookId: Int
-    let split: Bool
     @Environment(ConnectionModel.self) private var connection
     @Environment(ShellModel.self) private var shell
 
@@ -189,39 +178,29 @@ private struct StructureActCard: View {
     @Bindable var model: StructureModel
     let act: StructureAct
     @Environment(ConnectionModel.self) private var connection
-    private var isOpen: Bool { model.openAct == act.id }
     private var synopsisOpen: Bool { model.openActSynopsis.contains(act.id) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button { model.toggleAct(act.id) } label: {
-                HStack {
-                    Text(act.title == act.label || act.title.isEmpty ? act.label : "\(act.label) · \(act.title)").font(.headline).foregroundStyle(connection.theme.text)
-                    Spacer()
-                    Pill(text: act.badge, tint: act.badge == "Drafted" ? .green : act.badge == "In progress" ? connection.theme.accent : connection.theme.muted)
-                    Image(systemName: isOpen ? "chevron.up" : "chevron.down").font(.caption).foregroundStyle(connection.theme.muted)
-                }
-            }.buttonStyle(.plain)
-            HStack(spacing: 5) {
-                Pill(text: "\(act.chapterCount) ch", tint: connection.theme.muted)
-                Pill(text: act.wordTarget.map { "\(Int($0 / 1000))k" } ?? "n/a", tint: connection.theme.muted)
-                Pill(text: "briefed \(act.briefedCount)/\(act.chapterCount)", tint: connection.theme.muted)
-                Pill(text: "drafted \(act.draftedCount)/\(act.chapterCount)", tint: connection.theme.muted)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(act.title == act.label || act.title.isEmpty ? act.label : "\(act.label) · \(act.title)").font(.headline).foregroundStyle(connection.theme.text)
+                Pill(text: act.badge, tint: act.badge == "Drafted" ? .green : act.badge == "In progress" ? connection.theme.accent : connection.theme.muted)
+                Spacer(minLength: 8)
+                Text("\(act.draftedCount)/\(act.chapterCount) drafted · \(act.briefedCount) briefed\(act.wordTarget.map { " · \(Int($0 / 1000))k words" } ?? "")")
+                    .font(.caption).foregroundStyle(connection.theme.faint).lineLimit(1)
             }
             if let o = act.outstandingLine { Text("Outstanding: **\(o.0)** — \(o.1)").font(.caption).foregroundStyle(connection.theme.muted) }
-            if isOpen {
-                synopsis
+            synopsis
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
                 ForEach(act.chapters) { StructureChapterRow(model: model, chapter: $0) }
                 Button { model.sheet = .add(act.id) } label: {
-                    Label("Add chapter to \(act.label)", systemImage: "plus").font(.subheadline).frame(maxWidth: .infinity).padding(.vertical, 10)
-                        .foregroundStyle(connection.theme.text)
-                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(connection.theme.faint, style: StrokeStyle(lineWidth: 1, dash: [4])))
+                    Label("Add chapter to \(act.label)", systemImage: "plus").font(.subheadline).frame(maxWidth: .infinity, minHeight: 84)
+                        .foregroundStyle(connection.theme.muted)
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(connection.theme.faint, style: StrokeStyle(lineWidth: 1, dash: [4])))
                 }.buttonStyle(.plain)
             }
         }
-        .padding(12)
-        .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(isOpen ? connection.theme.accent.opacity(0.6) : connection.theme.faint.opacity(0.4)))
+        .padding(.bottom, 8)
         .dropDestination(for: String.self) { items, _ in
             if let id = items.first.flatMap({ Int($0) }) { model.refuseDrop(id, onAct: act.id) }
             return true
@@ -231,7 +210,7 @@ private struct StructureActCard: View {
     /// The act's synopsis: closed until asked for, read-only, with its lock state. It is changed in Ideation.
     private var synopsis: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Button { model.toggleSynopsis(act.id) } label: {
+            Button { withAnimation(.snappy) { model.toggleSynopsis(act.id) } } label: {
                 HStack {
                     Text("Synopsis").font(.subheadline)
                     Pill(text: act.synopsisLocked ? "locked & synced" : "not locked", tint: act.synopsisLocked ? .green : .orange)
@@ -245,7 +224,7 @@ private struct StructureActCard: View {
                     .font(.footnote).foregroundStyle(connection.theme.muted).textSelection(.enabled)
             }
         }
-        .padding(10).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(10).background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
@@ -258,6 +237,7 @@ struct Pill: View {
     }
 }
 
+/// A chapter as a card in the act's grid, in Creation's manner. Touch opens its briefing; hold and drag moves it within the act.
 private struct StructureChapterRow: View {
     let model: StructureModel
     let chapter: StructureChapter
@@ -265,26 +245,27 @@ private struct StructureChapterRow: View {
     @State private var targeted = false
 
     var body: some View {
-        let tint: Color = chapter.isBriefed ? .green : chapter.isActive ? connection.theme.accent : connection.theme.muted
+        let stage = model.creationStatus[chapter.id]
         Button { Task { await model.open(chapter.id) } } label: {
-            HStack(alignment: .top, spacing: 10) {
-                Text("\(chapter.number)").font(.caption.weight(.bold)).frame(width: 26, height: 26)
-                    .background(connection.theme.faint.opacity(0.25), in: Circle())
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Text(chapter.title).font(.subheadline.weight(.semibold)).lineLimit(2)
-                        if chapter.codexWarning?.isEmpty == false {
-                            Image(systemName: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange).accessibilityLabel("Codex entries missing")
-                        }
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text(model.badges[chapter.id] ?? "Ch \(chapter.number)").font(.caption.weight(.semibold)).foregroundStyle(connection.theme.muted)
+                    Spacer(minLength: 6)
+                    if chapter.codexWarning?.isEmpty == false {
+                        Image(systemName: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
+                            .accessibilityLabel("Codex gap: \(chapter.codexWarning!.map(\.name).joined(separator: ", "))")
                     }
-                    Text(chapter.summary?.isEmpty == false ? chapter.summary! : "Brief this chapter").font(.caption).foregroundStyle(connection.theme.muted).lineLimit(1)
-                }.foregroundStyle(connection.theme.text)
-                Spacer(minLength: 4)
-                Pill(text: chapter.stateLabel, tint: tint)
+                    StructureStateChip(chapter: chapter, creation: stage)
+                }
+                Text(chapter.title).font(.body.weight(.medium)).foregroundStyle(connection.theme.text)
+                    .multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                Text(chapter.summary?.isEmpty == false ? chapter.summary! : "Brief this chapter").font(.caption).foregroundStyle(connection.theme.muted).lineLimit(2)
+                    .multilineTextAlignment(.leading)
             }
-            .padding(10).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(targeted ? connection.theme.accent : (model.chapterId == chapter.id ? connection.theme.accent.opacity(0.6) : .clear), lineWidth: 2))
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+            .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(targeted ? connection.theme.accent : .clear, lineWidth: 2))
         }
         .buttonStyle(.plain)
         .draggable(String(chapter.id))
@@ -295,13 +276,24 @@ private struct StructureChapterRow: View {
     }
 }
 
+/// Where a chapter stands: Drafted or Drafting once Creation has it, otherwise its briefing state.
+struct StructureStateChip: View {
+    let chapter: StructureChapter
+    let creation: String?
+    @Environment(ConnectionModel.self) private var connection
+    var body: some View {
+        if creation == "draft_one" { Pill(text: "Drafted", tint: .green) }
+        else if creation == "drafting" { Pill(text: "Drafting", tint: .orange) }
+        else { Pill(text: chapter.stateLabel, tint: chapter.isBriefed ? connection.theme.accent : chapter.isActive ? .blue : connection.theme.muted) }
+    }
+}
+
 // MARK: card
 
 /// A chapter card: the summary headline on top, the other five briefing fields as sections that open and close.
 private struct StructureCard: View {
     @Bindable var model: StructureModel
     let chapter: StructureChapter
-    let showsBack: Bool
     @Environment(ConnectionModel.self) private var connection
     @State private var expanded: Set<BriefField> = []
     @FocusState private var focus: BriefField?
@@ -309,12 +301,10 @@ private struct StructureCard: View {
     var body: some View {
         let ro = chapter.isBriefed
         VStack(spacing: 0) {
-            if showsBack {
-                HStack {
-                    Button { Task { await model.save(chapter.id) }; model.chapterId = nil } label: { Label(model.act(of: chapter.id)?.label ?? "Board", systemImage: "chevron.left") }
-                    Spacer()
-                }.padding(.horizontal, 16).padding(.vertical, 6)
-            }
+            HStack {
+                Button { Task { await model.save(chapter.id) }; model.chapterId = nil } label: { Label(model.act(of: chapter.id)?.label ?? "Board", systemImage: "chevron.left") }
+                Spacer()
+            }.padding(.horizontal, 16).padding(.vertical, 6)
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
                     if model.staged.contains(chapter.id) && !ro {
@@ -324,7 +314,7 @@ private struct StructureCard: View {
                     }
                     HStack(spacing: 6) {
                         Text("Chapter \(chapter.number)").font(.caption).foregroundStyle(connection.theme.muted)
-                        Pill(text: chapter.stateLabel, tint: ro ? .green : chapter.isActive ? connection.theme.accent : connection.theme.muted)
+                        StructureStateChip(chapter: chapter, creation: model.creationStatus[chapter.id])
                         Spacer()
                     }
                     Text(chapter.title).font(.serif(26))
@@ -364,17 +354,25 @@ private struct StructureCard: View {
 
     private func section(_ f: BriefField, _ ro: Bool) -> some View {
         let value = model.text(chapter, f)
-        return DisclosureGroup(isExpanded: Binding(get: { expanded.contains(f) }, set: { if $0 { expanded.insert(f) } else { expanded.remove(f) } })) {
-            if ro { Text(value.isEmpty ? "—" : value).font(.callout).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4).textSelection(.enabled) }
-            else {
-                TextField(f.title, text: binding(f), axis: .vertical).lineLimit(2...10).focused($focus, equals: f)
-                    .padding(8).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)).padding(.top, 4)
+        let open = expanded.contains(f)
+        return VStack(alignment: .leading, spacing: 0) {
+            Button { withAnimation(.snappy) { if open { expanded.remove(f) } else { expanded.insert(f) } } } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(f.title).font(.subheadline.weight(.semibold)).foregroundStyle(connection.theme.text)
+                    if !open, !value.isEmpty { Text(value).font(.caption).foregroundStyle(connection.theme.muted).lineLimit(1) }
+                    Spacer(minLength: 4)
+                    Image(systemName: open ? "chevron.down" : "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(connection.theme.muted)
+                }
+                .contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            if open {
+                if ro { Text(value.isEmpty ? "—" : value).font(.callout).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8).textSelection(.enabled) }
+                else {
+                    TextField(f.title, text: binding(f), axis: .vertical).lineLimit(2...10).focused($focus, equals: f)
+                        .padding(8).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)).padding(.top, 8)
+                }
             }
-        } label: {
-            HStack { Text(f.title).font(.subheadline.weight(.semibold)).foregroundStyle(connection.theme.text)
-                if !expanded.contains(f), !value.isEmpty { Text(value).font(.caption).foregroundStyle(connection.theme.muted).lineLimit(1) } }
         }
-        .tint(connection.theme.muted)
         .padding(10).background(connection.theme.surface.opacity(ro ? 1 : 0.7), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
