@@ -221,7 +221,7 @@ private struct StructureActCard: View {
             }.buttonStyle(.plain)
             if synopsisOpen {
                 Text(act.synopsis?.isEmpty == false ? act.synopsis! : "No synopsis text for this act.")
-                    .font(.footnote).foregroundStyle(connection.theme.muted).textSelection(.enabled)
+                    .font(.footnote).foregroundStyle(connection.theme.muted)
             }
         }
         .padding(10).background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -366,7 +366,7 @@ private struct StructureCard: View {
                 .contentShape(Rectangle())
             }.buttonStyle(.plain)
             if open {
-                if ro { Text(value.isEmpty ? "—" : value).font(.callout).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8).textSelection(.enabled) }
+                if ro { Text(value.isEmpty ? "—" : value).font(.callout).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8) }
                 else {
                     TextField(f.title, text: binding(f), axis: .vertical).lineLimit(2...10).focused($focus, equals: f)
                         .padding(8).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)).padding(.top, 8)
