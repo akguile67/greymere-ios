@@ -19,7 +19,7 @@
 | 6.3 | Dictation into the editor | |
 | 3.1 | Rename an entry (AK Guile to AK Guile Man), seen on all three screens | |
 | 5.3 | Develop an item from Find missing opens the same New entry form, pre-filled | |
-| Sync | Devices follow each other within about 15 seconds while the panel is open | A polling stop-gap, see below |
+| Sync | Devices follow each other at once (server 0.59.0 announces `codex.changed`); the app also looks again every 15 seconds as a fallback | Seen on pre-production: an edit on the MacBook appeared on the iPad mini and iPhone straight away |
 
 ## Built, not run by the author
 
@@ -33,19 +33,22 @@
 |---|---|
 | Camera as an image source | Needs a permission string and a camera picker; Photos only for now |
 | Change an entry's type while editing | Type is chosen when the entry is created |
-| Search by alias; Contains and "In:" chips for rooms inside buildings | Needs the server to send aliases and parent ids in the list |
-| Server-side stale-edit guard | The app checks before writing; a second device saving in the same instant could still slip through |
-| Live updates instead of the 15-second look | Needs the server to announce `codex.changed` |
 | Archive controls, World map, tappable references, appears-in-chapters | Decided out (D4, D2); the map is being retired on the desktop |
 | Standardise for characters and the batch Standardise | Bug Hotel #326 |
 
-## Server work owed (brief: `server-brief-codex-list.md` in the notes folder)
+## Server work, done in server 0.59.0
 
-1. Aliases and `parent_id` in `GET /api/codex`.
+1. Aliases and `parent_id` in `GET /api/codex` (alias search and the Contains and "In:" chips depend on it).
 2. Optional `base_updated_at` guard on `PUT /api/codex/:id` (409 `{error:'stale', current}`).
-3. Publish `codex.changed` after Codex writes.
+3. `codex.changed` published after Codex writes.
 
-The app tolerates all three being absent. The desktop Codex panel is untouched.
+The app still tolerates all three being absent. The desktop Codex panel is untouched. Server 0.59.0 is on dev, pre-production and production.
+
+## Seen on pre-production (server 0.59.0, iOS 0.9.0), 4 Nov
+
+Edit and Apply with the live update on the other device; new entry; making an image with Godric, using and approving it; delete; rename; replacing an image from Photos and approving it; Find missing (scan, Develop, Link); Ask the Codex; Godric drafting a change to an open entry and Apply. Ask the Codex is read-only by design: asking it to add a scar says it cannot, and the edit is made from the open entry's Godric chat.
+
+Not yet seen on a device: search by alias, and the "In:" and Contains chips for rooms.
 
 ## Housekeeping done
 

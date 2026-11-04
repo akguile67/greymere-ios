@@ -1,6 +1,6 @@
 # Release iOS 0.9.0: the Codex panel
 
-*ADR 0.59.0 (platform card 0.59.0; iOS 0.8.0 is skipped on purpose). Written from the build, 4 November 2026. Needs server 0.59.0 (the app refuses an older one). Installed on the iPhone 14 Pro and iPad mini as Greymere Dev; not yet released to production or pre-production.*
+*ADR 0.59.0 (platform card 0.59.0; iOS 0.8.0 is skipped on purpose). Written from the build, 4 November 2026. Needs server 0.59.0 (the app refuses an older one). Installed on the iPhone 14 Pro and iPad mini as Greymere Dev and as the pre-production app; checked on pre-production on 4 November. Server 0.59.0 is on production.*
 
 ## What it does
 
@@ -15,12 +15,12 @@
 ## Differences from the plan
 
 - The navigation was built and approved on a throwaway prototype first (`docs/codex-prototype-findings.md`).
-- Devices follow each other by looking every 15 seconds while the panel is open. The server cannot yet announce Codex changes.
+- Devices follow each other at once through server 0.59.0's `codex.changed` notice, with a 15-second look as a fallback.
 
 ## Not in this release
 
-Camera as an image source, changing an entry's type, alias search and room-in-building chips (server), the batch Standardise (Bug Hotel #326). See `docs/codex-exit-checklist.md`.
+Camera as an image source, changing an entry's type, the batch Standardise (Bug Hotel #326). See `docs/codex-exit-checklist.md`.
 
 ## Not tested
 
-Photos upload; image approve, reject and delete as separate buttons; the app against a production server (production is on 0.58.0).
+Search by alias and the room chips on a device; the production iOS build.
