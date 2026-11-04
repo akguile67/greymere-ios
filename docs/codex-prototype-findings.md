@@ -97,6 +97,21 @@ Godric push inside the left column in landscape.
 - Observation: the full-screen button sits near the search field's right end; it may want to move once Settings and the
   real top bar exist.
 
+## Update 6: landscape full screen and column width (design agreed by the author)
+
+Landscape (iPad and iPhone): the menu on the left, the entry panel on the right. A thin strip between them drags the
+column width (260 pt up to 60% of the screen); an inline icon at the top-left of the panel, left-aligned with the entry
+picture, toggles full screen (the panel only). List rows, the series row and the Godric row are liquid-glass cards.
+Notes for the real build, learned the hard way (screen-recorded on the iPhone 14 Plus):
+- **Do not use the UIKit nav bar for the panel's top row on iPhone.** It re-applies the notch's side safe area a beat
+  after the panel reaches the screen edge, so the title and icon jump left about 0.3 s after the animation. A plain
+  SwiftUI header moves with the layout. (The iPad has no side inset, so it never showed.) Pushed screens still use the nav bar.
+- **Keep the menu alive in full screen** (collapse and fade it, panel slides over it) instead of removing and rebuilding
+  it: its drill-down position, scroll and search then come back untouched.
+- Prototype-only launch flags `-startCodex` and `-autoToggle` exist so the timing can be screen-recorded
+  (`xcrun simctl io <device> recordVideo`).
+- Not verified: full screen with a pushed entry open; iPad after the last change; real-device timing.
+
 ## What the screenshots show
 
 | File | Shows |
