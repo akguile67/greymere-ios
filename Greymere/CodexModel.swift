@@ -115,6 +115,9 @@ final class CodexModel {
     var leftWidth: CGFloat = 360
     var fullScreen = false
     var landscape = false
+    /// The menu's drill-down and search live here, not in the view, so turning the device keeps them.
+    var menuPath: [CodexRoute] = []
+    var query = ""
 
     private var client: APIClient?
     private static let seriesKey = "greymere.codexSeriesId"
@@ -203,6 +206,18 @@ final class CodexModel {
             }
         }
         return scored.enumerated().sorted { ($0.element.0, $0.offset) < ($1.element.0, $1.offset) }.map(\.element.1)
+    }
+
+    /// Turning the device swaps the portrait drill-down for the split view. An entry open in one is carried to the other:
+    /// full screen in landscape becomes the entry page in portrait, and an entry page in portrait becomes the selection.
+    func rotated(toLandscape l: Bool) {
+        landscape = l
+        if l {
+            if case .entry(let id)? = menuPath.last { selection = id; menuPath.removeLast() }
+        } else if fullScreen {
+            fullScreen = false
+            if let id = selection, entry(id) != nil, menuPath.last != .entry(id) { menuPath.append(.entry(id)) }
+        }
     }
 
     func touch(_ id: Int) {

@@ -15,7 +15,7 @@ struct CodexScreen: View {
             ZStack(alignment: .top) {
                 Group { if landscape { CodexLandscape(model: model, client: client) } else { CodexPhone(model: model, client: client) } }
                     .onAppear { model.landscape = landscape }
-                    .onChange(of: landscape) { _, l in model.landscape = l }
+                    .onChange(of: landscape) { _, l in model.rotated(toLandscape: l) }
                 if let text = model.banner {
                     Text(text).font(.footnote).padding(.horizontal, 14).padding(.vertical, 8)
                         .glassEffect(.regular, in: .capsule)
@@ -241,21 +241,19 @@ private struct CodexRow: View {
 private struct CodexPhone: View {
     @Bindable var model: CodexModel
     let client: APIClient
-    @State private var path: [CodexRoute] = []
-    @State private var query = ""
 
     var body: some View {
-        CodexStack(path: $path, title: { r in
+        CodexStack(path: $model.menuPath, title: { r in
             switch r { case .entry(let id): model.entry(id)?.name ?? ""; case .type(let t): t.title }
         }) {
-            CodexHome(model: model, query: $query)
+            CodexHome(model: model, query: $model.query)
         } page: { r in
             switch r {
             case .entry(let id): CodexEntryView(model: model, client: client, id: id)
             case .type(let t): CodexTypeList(model: model, type: t)
             }
         }
-        .onChange(of: path) { _, p in if case .entry(let id)? = p.last { model.touch(id) } }
+        .onChange(of: model.menuPath) { _, p in if case .entry(let id)? = p.last { model.touch(id) } }
     }
 }
 
@@ -264,6 +262,7 @@ private struct CodexHome: View {
     @Binding var query: String
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
+    @FocusState private var searchFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -271,11 +270,12 @@ private struct CodexHome: View {
                 CodexFilterMenu(model: model) { t in if let t { push(.type(t)) } }
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").foregroundStyle(connection.theme.muted)
-                    TextField("Search names, aliases, text", text: $query).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField("Search names, aliases, text", text: $query).textInputAutocapitalization(.never).autocorrectionDisabled().focused($searchFocused)
                     if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(connection.theme.muted) }.buttonStyle(.plain) }
                 }
                 .padding(.horizontal, 14).frame(height: 44)
                 .glassEffect(.regular.tint(connection.theme.glassTint), in: .capsule)
+                .contentShape(Capsule()).onTapGesture { searchFocused = true }
             }
             .padding(.horizontal, 16).padding(.vertical, 6)
 
