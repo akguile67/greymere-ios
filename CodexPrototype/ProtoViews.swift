@@ -34,9 +34,11 @@ struct LandscapeLayout: View {
             let maxW = max(300, geo.size.width * 0.6)
             let w = min(max(store.leftWidth, 260), maxW)
             HStack(spacing: 0) {
-                if !store.fullScreen {
-                    PhoneLayout().frame(width: w).transition(.move(edge: .leading))
-                }
+                // The menu keeps its own width and is clipped away, so the panel slides over in one motion
+                // instead of the menu re-laying out while it leaves.
+                PhoneLayout().frame(width: w, alignment: .leading)
+                    .frame(width: store.fullScreen ? 0 : w, alignment: .leading)
+                    .allowsHitTesting(!store.fullScreen)
                 handle(maxW: maxW)
                 Group {
                     if let id = store.selection, store.entry(id) != nil {
@@ -54,9 +56,11 @@ struct LandscapeLayout: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .background(Color(.systemBackground))
+                .zIndex(1)
             }
         }
-        .animation(.snappy, value: store.fullScreen)
+        .animation(.smooth(duration: 0.3), value: store.fullScreen)
     }
 
     /// Inline in the panel's top bar, left-aligned with the entry picture; same size as the search icon.
