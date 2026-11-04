@@ -253,17 +253,15 @@ struct PhoneHome: View {
             if query.isEmpty {
                 if let g = store.godricContext.flatMap(store.entry) {
                     Label("Godric is looking at \(g.name)", systemImage: "eye").font(.footnote)
-                        .padding(.horizontal, 16).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
-                        .glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)), in: .capsule)
-                        .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                        .padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
+                        .glassRows()
                 }
                 Section {
                     Menu { ScopeMenu() } label: {
                         HStack { Label(store.scope ?? "All series", systemImage: "books.vertical"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) }
-                            .padding(.horizontal, 16).padding(.vertical, 12).contentShape(Capsule())
-                            .glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)).interactive(), in: .capsule)
+                            .padding(.vertical, 6).contentShape(Rectangle())
                     }
-                    .listRowBackground(Color.clear).listRowSeparator(.hidden)
+                    .glassRows()
                 }
                 Section("Recent") {
                     ForEach(store.recents.compactMap(store.entry), id: \.id) { e in
