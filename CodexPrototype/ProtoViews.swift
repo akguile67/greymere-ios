@@ -28,23 +28,75 @@ struct CodexRoot: View {
 /// Landscape (iPad and iPhone): the same menu as portrait stays on the left, the working panel (the entry) on the right.
 struct LandscapeLayout: View {
     @Environment(CodexStore.self) private var store
+    @State private var base: CGFloat?
     var body: some View {
-        HStack(spacing: 0) {
-            PhoneLayout().frame(width: 360)
-            Divider()
-            Group {
-                if let id = store.selection, store.entry(id) != nil {
-                    NavigationStack {
-                        EntryView(id: id)
-                            .navigationDestination(for: Route.self) { r in if case .entry(let i) = r { EntryView(id: i) } }
-                    }
-                    .id(id)
-                } else {
-                    ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
+        GeometryReader { geo in
+            let maxW = max(300, geo.size.width * 0.6)
+            let w = min(max(store.leftWidth, 260), maxW)
+            HStack(spacing: 0) {
+                if !store.fullScreen {
+                    PhoneLayout().frame(width: w).transition(.move(edge: .leading))
                 }
+                handle(maxW: maxW)
+                Group {
+                    if let id = store.selection, store.entry(id) != nil {
+                        NavigationStack {
+                            EntryView(id: id)
+                                .navigationDestination(for: Route.self) { r in if case .entry(let i) = r { EntryView(id: i) } }
+                        }
+                        .id(id)
+                    } else {
+                        ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
+                    }
+                }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
         }
+        .animation(.snappy, value: store.fullScreen)
+    }
+
+    /// Drag the strip to resize the left column; the button (or a double tap on the strip) toggles full screen.
+    private func handle(maxW: CGFloat) -> some View {
+        ZStack {
+            Rectangle().fill(Color(.separator)).frame(width: 0.5)
+            Capsule().fill(Color(.tertiaryLabel)).frame(width: 5, height: 44)
+                .opacity(store.fullScreen ? 0 : 1)
+            VStack {
+                Button { store.fullScreen.toggle() } label: {
+                    Image(systemName: store.fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                        .font(.footnote.weight(.semibold)).foregroundStyle(.primary).frame(width: 34, height: 34).contentShape(Circle())
+                }
+                .buttonStyle(.plain).glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)).interactive(), in: .circle)
+                .accessibilityLabel(store.fullScreen ? "Show the menu" : "Full screen")
+                .offset(x: store.fullScreen ? 14 : 0)
+                Spacer()
+            }.padding(.top, 60)
+        }
+        .frame(width: 22).contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 2)
+            .onChanged { v in
+                guard !store.fullScreen else { return }
+                if base == nil { base = store.leftWidth }
+                store.leftWidth = min(max((base ?? 360) + v.translation.width, 260), maxW)
+            }
+            .onEnded { _ in base = nil })
+        .onTapGesture(count: 2) { store.fullScreen.toggle() }
+    }
+}
+
+/// Liquid-glass background for list rows (and a tint when selected).
+struct GlassRow: View {
+    var selected = false
+    var body: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.clear)
+            .glassEffect(.regular.tint(selected ? Color.accentColor.opacity(0.28) : Color(.systemGray).opacity(0.16)), in: .rect(cornerRadius: 18))
+            .padding(.vertical, 2)
+    }
+}
+extension View {
+    func glassRows(selected: Bool = false) -> some View {
+        self.listRowBackground(GlassRow(selected: selected)).listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
     }
 }
 
@@ -57,9 +109,9 @@ struct EntryLink<Label: View>: View {
         if store.landscape {
             Button { store.selection = id; store.touch(id) } label: { HStack { label(); Spacer(minLength: 0) } .contentShape(Rectangle()) }
                 .buttonStyle(.plain)
-                .listRowBackground(store.selection == id ? Color.accentColor.opacity(0.15) : nil)
+                .glassRows(selected: store.selection == id)
         } else {
-            NavigationLink(value: Route.entry(id), label: label)
+            NavigationLink(value: Route.entry(id), label: label).glassRows()
         }
     }
 }
@@ -220,7 +272,7 @@ struct PhoneHome: View {
                 }
                 Section("Browse by type · \(store.count(nil)) in scope") {
                     ForEach(EType.allCases) { t in
-                        NavigationLink(value: Route.type(t)) { HStack { Label(t.title, systemImage: t.symbol); Spacer(); Text("\(store.count(t))").foregroundStyle(.secondary) } }
+                        NavigationLink(value: Route.type(t)) { HStack { Label(t.title, systemImage: t.symbol); Spacer(); Text("\(store.count(t))").foregroundStyle(.secondary) } }.glassRows()
                     }
                 }
             } else {
@@ -228,7 +280,7 @@ struct PhoneHome: View {
                 Section("\(hits.count) results" + (chip.map { " in \($0.title)" } ?? "")) {
                     ForEach(hits) { h in EntryLink(id: h.id) { EntryRow(hit: h, showWhy: true) } }
                 }
-                Section { NavigationLink(value: Route.ask(query)) { Label("Ask Godric: “\(query)”", systemImage: "bubble.left.and.text.bubble.right") } }
+                Section { NavigationLink(value: Route.ask(query)) { Label("Ask Godric: “\(query)”", systemImage: "bubble.left.and.text.bubble.right") }.glassRows() }
             }
         }
         .toolbar {

@@ -37,6 +37,8 @@ final class CodexStore {
     var ipadPortraitDrill = true
     var landscape = false
     var selection: Int?
+    var fullScreen = false
+    var leftWidth: CGFloat = 360
     var nextID = 10_000
 
     func index(_ id: Int) -> Int? { entries.firstIndex { $0.id == id } }

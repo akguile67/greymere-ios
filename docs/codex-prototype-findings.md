@@ -83,6 +83,20 @@ Godric push inside the left column in landscape.
   `glassEffect` and tint as the bar), so the left column matches the rest of the app. The list cards (Recent, Browse by
   type, results) are still standard grouped-list rows. Screenshots: phone-13, phone-14. Not re-checked on the iPad.
 
+## Update 5: glass list rows; landscape full screen and a draggable column
+
+- The Recent, Browse by type, type-list and result rows are now liquid-glass cards (same glass and tint as the bar; the
+  selected row in landscape takes an accent tint), not flat grouped-list rows.
+- Landscape (iPad and iPhone): a thin **drag strip** between the menu and the panel resizes the left column (260 pt up to
+  60% of the width, default 360). A round glass button on the strip toggles **full screen** (panel only, menu hidden); the
+  button stays at the left edge to bring the menu back. Double-tapping the strip does the same. The width is kept while the
+  app runs (not saved across launches).
+- Verified: iPad mini landscape (drag 360 to about 430 pt; full screen on Harrow Hall) and iPhone 14 Plus landscape (glass
+  rows, strip, button). Not verified: dragging on the iPhone, restoring from full screen after the last nudge of the button,
+  rotating while in full screen. Screenshots: ipad-landscape-04, ipad-landscape-05, phone-landscape-02.
+- Observation: the full-screen button sits near the search field's right end; it may want to move once Settings and the
+  real top bar exist.
+
 ## What the screenshots show
 
 | File | Shows |
