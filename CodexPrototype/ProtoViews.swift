@@ -55,6 +55,10 @@ struct LandscapeLayout: View {
                         }
                     }
                 }
+                // A fresh panel per mode: UIKit's nav bar re-lays itself out late (a visible jump) when its width
+                // changes under it, so the old panel fades out and a panel already at the final size fades in.
+                .id(store.fullScreen)
+                .transition(.opacity)
                 .frame(maxWidth: .infinity)
                 .background(Color(.systemBackground))
                 .zIndex(1)
