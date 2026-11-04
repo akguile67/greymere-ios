@@ -533,7 +533,7 @@ private struct CodexEntryView: View {
 }
 
 /// The entry's Markdown body: headings, bullets and paragraphs, with bold and italic inside them.
-private struct CodexBody: View {
+struct CodexBody: View {
     let text: String
     @Environment(ConnectionModel.self) private var connection
 

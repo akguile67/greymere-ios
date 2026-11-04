@@ -17,6 +17,9 @@ struct ProseTextView: UIViewRepresentable {
     var highlights: [String] = []
     var highlightColor: UIColor = UIColor.systemYellow.withAlphaComponent(0.35)
     var focusOnAppear = false
+    /// Markdown headings (`## Title`) drawn as headings, their `#` marks hidden until the caret is on the line. Off for the
+    /// manuscript, which has none.
+    var headings = false
     /// While dictating the keyboard is put away but the text keeps focus, so the caret stays in sight.
     var hideKeyboard = false
     /// False for the last segment of the chapter: a scene break at the end of any other one has to leave the blank line
@@ -99,6 +102,23 @@ struct ProseTextView: UIViewRepresentable {
                 storage.addAttributes([.paragraphStyle: style, .kern: 6.0, .foregroundColor: UIColor.secondaryLabel], range: run.range)
             }
         }
+        if headings {
+            ns.enumerateSubstrings(in: all, options: [.byLines]) { _, line, _, _ in
+                var n = 0
+                while n < 6, line.location + n < ns.length, ns.character(at: line.location + n) == 35 { n += 1 }
+                guard n > 0, line.location + n < ns.length, ns.character(at: line.location + n) == 32 else { return }
+                let mark = NSRange(location: line.location, length: n + 1)
+                let style: UIFont.TextStyle = n == 1 ? .title2 : (n == 2 ? .title3 : .headline)
+                let f = UIFont.preferredFont(forTextStyle: style)
+                let bold = f.fontDescriptor.withSymbolicTraits(.traitBold).map { UIFont(descriptor: $0, size: f.pointSize) } ?? f
+                storage.addAttribute(.font, value: bold, range: line)
+                if NSLocationInRange(sel.location, NSRange(location: line.location, length: line.length + 1)) {
+                    storage.addAttribute(.foregroundColor, value: UIColor.tertiaryLabel, range: mark)
+                } else {
+                    storage.addAttributes([.foregroundColor: UIColor.clear, .font: UIFont.systemFont(ofSize: 0.01)], range: mark)
+                }
+            }
+        }
         for quote in highlights {
             if let r = NoteAnchor.range(of: quote, in: storage.string) {
                 storage.addAttribute(.backgroundColor, value: highlightColor, range: NSRange(r, in: storage.string))
@@ -123,6 +143,9 @@ struct ProseTextView: UIViewRepresentable {
         var updating = false
         /// The spans whose markers are showing (by where they start), so a caret move restyles only when that changes.
         var revealed = Set<Int>()
+        var headingKey = -1
+        /// The start of the line the caret is on, so a heading's marks come and go as the caret moves between lines.
+        func headingRevealKey(_ v: UITextView) -> Int { ((v.text ?? "") as NSString).lineRange(for: v.selectedRange).location }
         init(_ parent: ProseTextView) { self.parent = parent }
 
         /// Bold, italic and scene break, written as the Markdown the manuscript is stored in. Only the characters that
@@ -161,7 +184,8 @@ struct ProseTextView: UIViewRepresentable {
             guard let range = Range(textView.selectedRange, in: text) else { return }
             parent.selection = TextSelection(range: range)
             if textView.markedTextRange == nil,
-               ProseMarkdown.touchedSpans(in: textView.text as NSString, selection: textView.selectedRange) != revealed {
+               (ProseMarkdown.touchedSpans(in: textView.text as NSString, selection: textView.selectedRange) != revealed || (parent.headings && headingRevealKey(textView) != headingKey)) {
+                headingKey = headingRevealKey(textView)
                 revealed = parent.restyle(textView)
             }
             let picked = textView.selectedRange.length > 0

@@ -35,6 +35,12 @@ struct CodexEditSheet: View {
     private var bodyChanged: Bool { bodyText != baseBody }
     private var changed: Bool { isNew ? !name.trimmingCharacters(in: .whitespaces).isEmpty : (nameChanged || aliasesChanged || bodyChanged) }
 
+    /// The words with their Markdown marks taken off, for reading what changed.
+    private static func plain(_ s: String) -> String {
+        s.replacingOccurrences(of: "(?m)^#{1,6}[ \\t]+", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "\\*+", with: "", options: .regularExpression)
+    }
+
     private static func parse(_ s: String) -> [String] { s.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
 
     var body: some View {
@@ -85,28 +91,31 @@ struct CodexEditSheet: View {
                 field("Name") { TextField("Name", text: $name).textInputAutocapitalization(.words) }
                 field("Also known as (separate with commas)") { TextField("Aliases", text: $aliasText, axis: .vertical).textInputAutocapitalization(.never).autocorrectionDisabled() }
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Body").font(.footnote).foregroundStyle(theme.muted)
-                        Spacer()
-                        micButton
-                    }
+                    Text("Body").font(.footnote).foregroundStyle(theme.muted)
                     // The manuscript's own editor: bold and italic show as bold and italic, the markers are hidden until the
                     // caret touches them.
                     ProseTextView(text: $bodyText, selection: $selection, editable: true,
-                                  hideKeyboard: dictation.state == .listening || dictation.state == .starting,
+                                  headings: true, hideKeyboard: dictation.state == .listening || dictation.state == .starting,
                                   trailingBreak: false, controller: prose)
                         .frame(maxWidth: .infinity, minHeight: 320, alignment: .topLeading)
                         .padding(10).glassEffect(.regular, in: .rect(cornerRadius: 16))
                     if let notice = dictation.notice { Text(notice).font(.caption).foregroundStyle(.orange).onTapGesture { dictation.notice = nil } }
-                    HStack(spacing: 10) {
-                        formatButton("bold", "Bold") { prose.format(.bold) }
-                        formatButton("italic", "Italic") { prose.format(.italic) }
-                    }
                 }
             }
             .padding()
         }
         .scrollDismissesKeyboard(.interactively)
+        // Pinned above the keyboard (or the bottom edge), so it is in reach while you edit however long the body is.
+        .safeAreaInset(edge: .bottom) {
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 10) {
+                    formatButton("bold", "Bold") { prose.format(.bold) }
+                    formatButton("italic", "Italic") { prose.format(.italic) }
+                    micButton
+                }
+            }
+            .padding(.vertical, 8)
+        }
     }
 
     private func field<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
@@ -149,7 +158,16 @@ struct CodexEditSheet: View {
                 if isNew { Text("Type: \(newType.single)").font(.footnote).foregroundStyle(theme.muted) }
                 if nameChanged { block("Name", before: baseName, after: name.trimmingCharacters(in: .whitespaces)) }
                 if aliasesChanged { block("Also known as", before: baseAliases, after: Self.parse(aliasText).joined(separator: ", ")) }
-                if bodyChanged { block("Body", before: baseBody, after: bodyText) }
+                if bodyChanged {
+                    let b = Self.plain(baseBody), a = Self.plain(bodyText)
+                    if a == b { Text("Body: formatting only (bold, italic or headings), no words changed.").font(.footnote).foregroundStyle(theme.muted) }
+                    else { block("Body: words changed", before: b, after: a) }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("How the body will read").font(.footnote).foregroundStyle(theme.muted)
+                        CodexBody(text: bodyText).frame(maxWidth: .infinity, alignment: .leading).padding(14)
+                            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+                    }
+                }
                 Text("Apply writes this to the Codex. If the entry changed elsewhere since you started, nothing is written and you can review again.")
                     .font(.caption).foregroundStyle(theme.faint)
             }
