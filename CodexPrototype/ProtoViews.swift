@@ -42,11 +42,15 @@ struct LandscapeLayout: View {
                     if let id = store.selection, store.entry(id) != nil {
                         NavigationStack {
                             EntryView(id: id)
+                                .toolbar { fullScreenItem }
                                 .navigationDestination(for: Route.self) { r in if case .entry(let i) = r { EntryView(id: i) } }
                         }
                         .id(id)
                     } else {
-                        ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
+                        NavigationStack {
+                            ContentUnavailableView("Pick an entry", systemImage: "book.closed", description: Text("Search, or browse by type on the left."))
+                                .toolbar { fullScreenItem }
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -55,23 +59,26 @@ struct LandscapeLayout: View {
         .animation(.snappy, value: store.fullScreen)
     }
 
-    /// Drag the strip to resize the left column; the button (or a double tap on the strip) toggles full screen.
+    /// Inline in the panel's top bar, left-aligned with the entry picture; same size as the search icon.
+    @ToolbarContentBuilder private var fullScreenItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button { store.fullScreen.toggle() } label: {
+                Image(systemName: store.fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                    .font(.callout.weight(.medium)).foregroundStyle(.primary).offset(x: -5)
+            }
+            .accessibilityLabel(store.fullScreen ? "Show the menu" : "Full screen")
+        }
+        .sharedBackgroundVisibility(.hidden)
+    }
+
+    /// Drag the strip to resize the left column; double tap toggles full screen.
     private func handle(maxW: CGFloat) -> some View {
         ZStack {
             Rectangle().fill(Color(.separator)).frame(width: 0.5)
             Capsule().fill(Color(.tertiaryLabel)).frame(width: 5, height: 44)
                 .opacity(store.fullScreen ? 0 : 1)
-            VStack {
-                Button { store.fullScreen.toggle() } label: {
-                    Image(systemName: store.fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                        .font(.footnote.weight(.semibold)).foregroundStyle(.primary).frame(width: 34, height: 34).contentShape(Circle())
-                }
-                .buttonStyle(.plain).glassEffect(.regular.tint(Color(.systemGray).opacity(0.16)).interactive(), in: .circle)
-                .accessibilityLabel(store.fullScreen ? "Show the menu" : "Full screen")
-                Spacer()
-            }.padding(.top, 14)
         }
-        .frame(width: 42).background(Color(.systemBackground).opacity(0.6)).contentShape(Rectangle())
+        .frame(width: store.fullScreen ? 0 : 22).contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 2)
             .onChanged { v in
                 guard !store.fullScreen else { return }
