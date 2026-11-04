@@ -27,13 +27,26 @@ struct CodexEditSheet: View {
     @State private var dictation = DictationModel()
     @State private var prose = ProseController()
     @State private var newType: CodexType = .characters
+    @State private var seriesChoice: Int?
+    @State private var baseSeries: Int?
+    @State private var bookSel: Set<Int> = []
+    @State private var baseBooks: Set<Int> = []
     private var isNew: Bool { id == nil }
 
     private var theme: ThemeStore { connection.theme }
     private var nameChanged: Bool { name.trimmingCharacters(in: .whitespaces) != baseName }
     private var aliasesChanged: Bool { Self.parse(aliasText) != Self.parse(baseAliases) }
     private var bodyChanged: Bool { bodyText != baseBody }
-    private var changed: Bool { isNew ? !name.trimmingCharacters(in: .whitespaces).isEmpty : (nameChanged || aliasesChanged || bodyChanged) }
+    private var seriesChanged: Bool { seriesChoice != baseSeries }
+    private var booksChanged: Bool { bookSel != baseBooks }
+    private var entryType: CodexType { isNew ? newType : (id.flatMap { model.entry($0)?.type } ?? .other) }
+    private var showsBooks: Bool { entryType == .characters || entryType == .locations }
+    private var changed: Bool { isNew ? !name.trimmingCharacters(in: .whitespaces).isEmpty : (nameChanged || aliasesChanged || bodyChanged || seriesChanged || (showsBooks && booksChanged)) }
+    private func seriesName(_ id: Int?) -> String { id.flatMap { i in model.series.first { $0.id == i }?.name } ?? "No series" }
+    private func bookNames(_ ids: Set<Int>) -> String {
+        let names = model.books.filter { ids.contains($0.id) }.map(\.title)
+        return names.isEmpty ? "None" : names.joined(separator: ", ")
+    }
 
     /// The words with their Markdown marks taken off, for reading what changed.
     private static func plain(_ s: String) -> String {
@@ -60,6 +73,7 @@ struct CodexEditSheet: View {
                 }
         }
         .onAppear(perform: load)
+        .task { await model.loadBooks() }
         .task(id: connection.address) { await dictation.check(client: client) }
         .onChange(of: bodyText) { _, new in dictation.textChanged(to: new) }
         .onDisappear { dictation.settle(); dictation.end() }
@@ -67,9 +81,11 @@ struct CodexEditSheet: View {
 
     private func load() {
         guard baseStamp == nil else { return }
-        guard let id else { baseStamp = ""; return }
+        guard let id else { baseStamp = ""; seriesChoice = model.seriesId ?? model.series.first?.id; baseSeries = nil; return }
         guard let d = model.details[id], let e = model.entry(id) else { return }
         fill(name: d.name, aliases: d.aliases ?? e.allAliases, body: d.body ?? e.snippet, stamp: d.updatedAt, keepDrafts: false)
+        baseSeries = d.seriesId; seriesChoice = d.seriesId
+        baseBooks = Set(d.bookIds ?? []); bookSel = baseBooks
     }
 
     private func fill(name n: String, aliases: [String], body b: String, stamp: String?, keepDrafts: Bool) {
@@ -90,6 +106,14 @@ struct CodexEditSheet: View {
                 }
                 field("Name") { TextField("Name", text: $name).textInputAutocapitalization(.words) }
                 field("Also known as (separate with commas)") { TextField("Aliases", text: $aliasText, axis: .vertical).textInputAutocapitalization(.never).autocorrectionDisabled() }
+                field("Series") {
+                    Picker("Series", selection: $seriesChoice) {
+                        Text("No series").tag(Int?.none)
+                        ForEach(model.series) { Text($0.name).tag(Int?.some($0.id)) }
+                    }
+                    .pickerStyle(.menu).labelsHidden().frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if showsBooks { booksField }
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Body").font(.footnote).foregroundStyle(theme.muted)
                     // The manuscript's own editor: bold and italic show as bold and italic, the markers are hidden until the
@@ -115,6 +139,30 @@ struct CodexEditSheet: View {
                 }
             }
             .padding(.vertical, 8)
+        }
+    }
+
+    /// "Appears in": the books this character or place features in, grouped by series.
+    private var booksField: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Appears in").font(.footnote).foregroundStyle(theme.muted)
+            VStack(alignment: .leading, spacing: 4) {
+                let groups = Dictionary(grouping: model.books, by: { $0.seriesName ?? "No series" })
+                ForEach(groups.keys.sorted(), id: \.self) { g in
+                    Text(g).font(.caption).foregroundStyle(theme.faint).padding(.top, 4)
+                    ForEach((groups[g] ?? []).sorted { ($0.number ?? 0) < ($1.number ?? 0) }) { b in
+                        Button { if bookSel.contains(b.id) { bookSel.remove(b.id) } else { bookSel.insert(b.id) } } label: {
+                            HStack {
+                                Image(systemName: bookSel.contains(b.id) ? "checkmark.circle.fill" : "circle").foregroundStyle(bookSel.contains(b.id) ? theme.accent : theme.muted)
+                                Text(b.number.map { "\($0). \(b.title)" } ?? b.title).foregroundStyle(theme.text)
+                                Spacer()
+                            }.padding(.vertical, 6).contentShape(Rectangle())
+                        }.buttonStyle(.plain)
+                    }
+                }
+                if model.books.isEmpty { Text("Loading books…").font(.footnote).foregroundStyle(theme.muted) }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 8).glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
     }
 
@@ -157,6 +205,8 @@ struct CodexEditSheet: View {
                 if !changed { Text("Nothing has changed.").foregroundStyle(theme.muted) }
                 if isNew { Text("Type: \(newType.single)").font(.footnote).foregroundStyle(theme.muted) }
                 if nameChanged { block("Name", before: baseName, after: name.trimmingCharacters(in: .whitespaces)) }
+                if seriesChanged || isNew { block("Series", before: isNew ? "" : seriesName(baseSeries), after: seriesName(seriesChoice)) }
+                if showsBooks && (booksChanged || (isNew && !bookSel.isEmpty)) { block("Appears in", before: isNew ? "" : bookNames(baseBooks), after: bookNames(bookSel)) }
                 if aliasesChanged { block("Also known as", before: baseAliases, after: Self.parse(aliasText).joined(separator: ", ")) }
                 if bodyChanged {
                     let b = Self.plain(baseBody), a = Self.plain(bodyText)
@@ -189,16 +239,17 @@ struct CodexEditSheet: View {
     private func apply() async {
         saving = true; defer { saving = false }
         guard let id else {
-            if let newId = await model.create(name: name.trimmingCharacters(in: .whitespaces), type: newType, aliases: Self.parse(aliasText), body: bodyText, client: client) { dismiss(); onCreated(newId) }
+            if let newId = await model.create(name: name.trimmingCharacters(in: .whitespaces), type: newType, aliases: Self.parse(aliasText), body: bodyText, series: seriesChoice, bookIds: showsBooks ? Array(bookSel) : nil, client: client) { dismiss(); onCreated(newId) }
             else { message = "The entry could not be created." }
             return
         }
-        let result = await model.apply(id: id, name: name.trimmingCharacters(in: .whitespaces), aliases: Self.parse(aliasText), body: bodyText, baseStamp: baseStamp ?? "", client: client)
+        let result = await model.apply(id: id, name: name.trimmingCharacters(in: .whitespaces), aliases: Self.parse(aliasText), body: bodyText, series: seriesChoice, bookIds: showsBooks ? Array(bookSel).sorted() : nil, baseStamp: baseStamp ?? "", client: client)
         switch result {
         case .saved: dismiss()
         case .stale(let d):
             // Keep what was typed, but compare it with the entry as it is now.
             fill(name: d.name, aliases: d.aliases ?? [], body: d.body ?? "", stamp: d.updatedAt, keepDrafts: true)
+            baseSeries = d.seriesId; baseBooks = Set(d.bookIds ?? [])
             message = "This entry changed since you opened it, so nothing was written. The marked-up change below is now against the current version. Check it, then Apply again."
         case .failed(let text): message = text
         }

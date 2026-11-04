@@ -83,6 +83,16 @@ struct CodexDetail: Decodable, Sendable {
     let appearancesByBook: [CodexBookRef]?
     let portraitPath: String?
     let portraitStatus: String?
+    /// The books the author set the entry to feature in (not the chapters it is linked from).
+    let bookIds: [Int]?
+}
+
+struct CodexBook: Decodable, Identifiable, Hashable, Sendable {
+    let id: Int
+    let number: Int?
+    let title: String
+    let seriesId: Int?
+    let seriesName: String?
 }
 
 struct CodexSeries: Decodable, Identifiable, Hashable, Sendable {
@@ -103,12 +113,21 @@ private struct CodexSave: Encodable {
     let body: String
     let aliases: [String]
     let baseUpdatedAt: String
-    private enum CodingKeys: String, CodingKey { case name, body, aliases, baseUpdatedAt = "base_updated_at" }
+    let seriesId: Int?
+    let bookIds: [Int]?
+    private enum CodingKeys: String, CodingKey { case name, body, aliases, baseUpdatedAt = "base_updated_at", seriesId = "series_id", bookIds = "book_ids" }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(name, forKey: .name); try c.encode(body, forKey: .body); try c.encode(aliases, forKey: .aliases)
+        try c.encode(baseUpdatedAt, forKey: .baseUpdatedAt)
+        try c.encode(seriesId, forKey: .seriesId)          // null clears the series
+        try c.encodeIfPresent(bookIds, forKey: .bookIds)
+    }
 }
 private struct CodexSaved: Decodable { let id: Int }
 private struct CodexNew: Encodable {
-    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?
-    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id" }
+    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?; let bookIds: [Int]?
+    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id", bookIds = "book_ids" }
 }
 private struct CodexDeleted: Decodable { let ok: Bool? }
 
@@ -117,6 +136,7 @@ enum CodexApplyResult { case saved, stale(CodexDetail), failed(String) }
 @MainActor @Observable
 final class CodexModel {
     var series: [CodexSeries] = []
+    var books: [CodexBook] = []
     /// nil = every series.
     private(set) var seriesId: Int?
     var entries: [CodexEntry] = []
@@ -172,6 +192,28 @@ final class CodexModel {
         } catch let e as APIError { loadError = e.message } catch { loadError = "The Codex could not be read." }
     }
 
+    func loadBooks() async {
+        guard let client, books.isEmpty, let b: [CodexBook] = try? await client.get("/api/books") else { return }
+        books = b
+    }
+
+    /// Follows the server's change notices. A reload on every (re)connect catches what happened while the app was
+    /// asleep; `codex.changed` (once the server sends it) catches an entry added or edited on another device.
+    func listen(client: APIClient) async {
+        var pending: Task<Void, Never>?
+        for await name in ServerEvents.stream(client: client) {
+            guard name == "connected" || name == "codex.changed" else { continue }
+            pending?.cancel()
+            pending = Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled, let self else { return }
+                self.details = [:]
+                await self.reload()
+                if let id = self.selection { await self.loadDetail(id) }
+            }
+        }
+    }
+
     func loadDetail(_ id: Int) async {
         guard let client, details[id] == nil else { return }
         if let d: CodexDetail = try? await client.get("/api/codex/\(id)") { details[id] = d }
@@ -179,11 +221,11 @@ final class CodexModel {
 
     /// Writes an edit the author has reviewed. The entry is read again first: if it changed since the edit began, nothing
     /// is written (and the server, once it carries the same guard, refuses too).
-    func apply(id: Int, name: String, aliases: [String], body: String, baseStamp: String, client: APIClient) async -> CodexApplyResult {
+    func apply(id: Int, name: String, aliases: [String], body: String, series: Int?, bookIds: [Int]?, baseStamp: String, client: APIClient) async -> CodexApplyResult {
         do {
             let now: CodexDetail = try await client.get("/api/codex/\(id)")
             if (now.updatedAt ?? "") != baseStamp { details[id] = now; return .stale(now) }
-            let _: CodexSaved = try await client.put("/api/codex/\(id)", body: CodexSave(name: name, body: body, aliases: aliases, baseUpdatedAt: baseStamp))
+            let _: CodexSaved = try await client.put("/api/codex/\(id)", body: CodexSave(name: name, body: body, aliases: aliases, baseUpdatedAt: baseStamp, seriesId: series, bookIds: bookIds))
             details[id] = nil
             await loadDetail(id)
             await reload()
@@ -195,10 +237,10 @@ final class CodexModel {
         } catch let e as APIError { return .failed(e.message) } catch { return .failed("The change could not be saved.") }
     }
 
-    /// Creates an entry in the series being viewed (or none, when every series is shown). Returns its id.
-    func create(name: String, type: CodexType, aliases: [String], body: String, client: APIClient) async -> Int? {
+    /// Creates an entry. Returns its id.
+    func create(name: String, type: CodexType, aliases: [String], body: String, series: Int?, bookIds: [Int]?, client: APIClient) async -> Int? {
         do {
-            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: seriesId))
+            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: series, bookIds: bookIds))
             await reload()
             return saved.id
         } catch { return nil }

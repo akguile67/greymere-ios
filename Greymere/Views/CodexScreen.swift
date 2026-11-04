@@ -41,6 +41,7 @@ struct CodexScreen: View {
         .topBand(true, title: "Codex")
         .glassBar(isOpen: false) { model.banner = "Godric isn't on the Codex panel yet." }
         .task { await model.start(client: client) }
+        .task { await model.listen(client: client) }
     }
 }
 
