@@ -42,6 +42,7 @@ struct CodexScreen: View {
         .glassBar(isOpen: false) { model.banner = "Godric isn't on the Codex panel yet." }
         .task { await model.start(client: client) }
         .task { await model.listen(client: client) }
+        .task { await model.poll() }
     }
 }
 
@@ -415,7 +416,7 @@ private struct CodexTypeList: View {
             }
             ForEach(hits) { h in CodexLink(model: model, id: h.id) { CodexRow(model: model, hit: h, showWhy: !query.isEmpty) } }
         }
-        .scrollContentBackground(.hidden)
+        .scrollContentBackground(.hidden).refreshable { await model.reload() }
         .background(connection.theme.background)
         .safeAreaInset(edge: .top, spacing: 0) {
             HStack(spacing: 8) {
@@ -516,7 +517,7 @@ private struct CodexEntryView: View {
                 .padding()
             }
             .background(connection.theme.background)
-            .task(id: id) { await model.loadDetail(id) }
+            .task(id: id) { await model.refreshDetail(id) }
             .confirmationDialog("Delete \(e.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete for good", role: .destructive) { Task { _ = await model.delete(id, client: client) } }
                 Button("Keep it", role: .cancel) {}

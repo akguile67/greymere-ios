@@ -243,6 +243,33 @@ final class CodexModel {
         }
     }
 
+    /// Reads an entry again, whatever is cached, so an edit made on another device shows. An entry the server no longer
+    /// has is dropped here too (deleted elsewhere).
+    func refreshDetail(_ id: Int) async {
+        guard let client else { return }
+        do {
+            let d: CodexDetail = try await client.get("/api/codex/\(id)")
+            details[id] = d
+            if let i = entries.firstIndex(where: { $0.id == id }), entries[i].updatedAt != d.updatedAt { await reload() }
+        } catch APIError.badStatus(404) {
+            entries.removeAll { $0.id == id }; details[id] = nil
+            if selection == id { selection = nil }
+            menuPath.removeAll { $0 == .entry(id) }
+        } catch {}
+    }
+
+    /// Until the server announces Codex changes (`codex.changed`), look again every so often while the panel is open, so
+    /// what another device adds, edits or deletes turns up without leaving the panel.
+    func poll() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(15))
+            if Task.isCancelled { break }
+            await reload()
+            if let id = selection { await refreshDetail(id) }
+            else if case .entry(let id)? = menuPath.last { await refreshDetail(id) }
+        }
+    }
+
     func loadDetail(_ id: Int) async {
         guard let client, details[id] == nil else { return }
         if let d: CodexDetail = try? await client.get("/api/codex/\(id)") { details[id] = d }
