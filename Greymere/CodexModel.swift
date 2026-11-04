@@ -85,6 +85,7 @@ struct CodexDetail: Decodable, Sendable {
     let portraitStatus: String?
     /// The books the author set the entry to feature in (not the chapters it is linked from).
     let bookIds: [Int]?
+    let chains: [CodexChain]?
 }
 
 struct CodexBook: Decodable, Identifiable, Hashable, Sendable {
@@ -95,6 +96,15 @@ struct CodexBook: Decodable, Identifiable, Hashable, Sendable {
     let seriesName: String?
 }
 
+/// A top-level Series (Crime Fiction, Historical Fiction, ...). The server calls it a chain.
+struct CodexChain: Decodable, Identifiable, Hashable, Sendable {
+    let id: Int
+    let name: String
+}
+private struct CodexChains: Decodable, Sendable { let chains: [CodexChain] }
+private struct CodexTag: Encodable {}
+
+/// A Book series (Greymere, Ellen's Story, ...): the server's `series` row.
 struct CodexSeries: Decodable, Identifiable, Hashable, Sendable {
     let id: Int
     let name: String
@@ -126,8 +136,8 @@ private struct CodexSave: Encodable {
 }
 private struct CodexSaved: Decodable { let id: Int }
 private struct CodexNew: Encodable {
-    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?; let bookIds: [Int]?
-    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id", bookIds = "book_ids" }
+    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?; let bookIds: [Int]?; let chainIds: [Int]
+    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id", bookIds = "book_ids", chainIds = "chain_ids" }
 }
 private struct CodexDeleted: Decodable { let ok: Bool? }
 
@@ -137,6 +147,8 @@ enum CodexApplyResult { case saved, stale(CodexDetail), failed(String) }
 final class CodexModel {
     var series: [CodexSeries] = []
     var books: [CodexBook] = []
+    var chains: [CodexChain] = []
+    private(set) var chainId: Int?
     /// nil = every series.
     private(set) var seriesId: Int?
     var entries: [CodexEntry] = []
@@ -156,6 +168,7 @@ final class CodexModel {
     var query = ""
 
     private var client: APIClient?
+    private static let chainKey = "greymere.codexChainId"
     private static let seriesKey = "greymere.codexSeriesId"
     private static let recentsKey = "greymere.codexRecents"
 
@@ -163,6 +176,8 @@ final class CodexModel {
         let saved = UserDefaults.standard.integer(forKey: Self.seriesKey)
         seriesId = saved == 0 ? nil : saved
         recents = (UserDefaults.standard.array(forKey: Self.recentsKey) as? [Int]) ?? []
+        let c = UserDefaults.standard.integer(forKey: Self.chainKey)
+        chainId = c == 0 ? nil : c
     }
 
     func start(client: APIClient) async {
@@ -172,7 +187,18 @@ final class CodexModel {
             if let id = seriesId, !s.contains(where: { $0.id == id }) { seriesId = nil }
             if seriesId == nil && UserDefaults.standard.object(forKey: Self.seriesKey) == nil, let first = s.first { seriesId = first.id }
         }
+        if chains.isEmpty, let c: CodexChains = try? await client.get("/api/chains") {
+            chains = c.chains
+            if let id = chainId, !c.chains.contains(where: { $0.id == id }) { chainId = nil }
+        }
         await reload()
+    }
+
+    /// Picks the top-level Series to show (nil = all) and remembers it.
+    func chooseChain(_ id: Int?) {
+        chainId = id
+        UserDefaults.standard.set(id ?? 0, forKey: Self.chainKey)
+        Task { await reload() }
     }
 
     /// Picks the series to show (nil = all) and remembers it.
@@ -185,7 +211,10 @@ final class CodexModel {
     func reload() async {
         guard let client else { return }
         loading = true; defer { loading = false }
-        let path = seriesId.map { "/api/codex?series_id=\($0)" } ?? "/api/codex"
+        var q: [String] = []
+        if let seriesId { q.append("series_id=\(seriesId)") }
+        if let chainId { q.append("chain_id=\(chainId)") }
+        let path = "/api/codex" + (q.isEmpty ? "" : "?" + q.joined(separator: "&"))
         do {
             entries = try await client.get(path)
             loadError = nil
@@ -221,11 +250,15 @@ final class CodexModel {
 
     /// Writes an edit the author has reviewed. The entry is read again first: if it changed since the edit began, nothing
     /// is written (and the server, once it carries the same guard, refuses too).
-    func apply(id: Int, name: String, aliases: [String], body: String, series: Int?, bookIds: [Int]?, baseStamp: String, client: APIClient) async -> CodexApplyResult {
+    func apply(id: Int, name: String, aliases: [String], body: String, series: Int?, bookIds: [Int]?, chainIds: Set<Int>, baseChains: Set<Int>, baseStamp: String, client: APIClient) async -> CodexApplyResult {
         do {
             let now: CodexDetail = try await client.get("/api/codex/\(id)")
             if (now.updatedAt ?? "") != baseStamp { details[id] = now; return .stale(now) }
             let _: CodexSaved = try await client.put("/api/codex/\(id)", body: CodexSave(name: name, body: body, aliases: aliases, baseUpdatedAt: baseStamp, seriesId: series, bookIds: bookIds))
+            // Series membership is its own set of routes: add before removing, because the server never lets an entry
+            // lose its last Series.
+            for c in chainIds.subtracting(baseChains) { let _: CodexDeleted = try await client.post("/api/chains/\(c)/codex/\(id)", body: CodexTag()) }
+            for c in baseChains.subtracting(chainIds) { let _: CodexDeleted = try await client.delete("/api/chains/\(c)/codex/\(id)") }
             details[id] = nil
             await loadDetail(id)
             await reload()
@@ -238,9 +271,9 @@ final class CodexModel {
     }
 
     /// Creates an entry. Returns its id.
-    func create(name: String, type: CodexType, aliases: [String], body: String, series: Int?, bookIds: [Int]?, client: APIClient) async -> Int? {
+    func create(name: String, type: CodexType, aliases: [String], body: String, series: Int?, bookIds: [Int]?, chainIds: Set<Int>, client: APIClient) async -> Int? {
         do {
-            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: series, bookIds: bookIds))
+            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: series, bookIds: bookIds, chainIds: Array(chainIds).sorted()))
             await reload()
             return saved.id
         } catch { return nil }
@@ -260,7 +293,11 @@ final class CodexModel {
 
     // MARK: reading the list
 
-    var scopeName: String { seriesId.flatMap { id in series.first { $0.id == id }?.name } ?? "All series" }
+    var scopeName: String {
+        let c = chainId.flatMap { id in chains.first { $0.id == id }?.name }
+        let b = seriesId.flatMap { id in series.first { $0.id == id }?.name }
+        switch (c, b) { case (nil, nil): return "All series"; case (let c?, nil): return c; case (nil, let b?): return b; case (let c?, let b?): return "\(c) · \(b)" }
+    }
 
     func entry(_ id: Int) -> CodexEntry? { entries.first { $0.id == id } }
     func count(_ type: CodexType?) -> Int { type == nil ? entries.count : entries.filter { $0.type == type }.count }

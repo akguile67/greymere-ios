@@ -301,8 +301,12 @@ private struct CodexHome: View {
                 }
                 if query.isEmpty {
                     Section {
+                        Menu { CodexChainPicker(model: model) } label: {
+                            HStack { Label(model.chainId.flatMap { id in model.chains.first { $0.id == id }?.name } ?? "All series", systemImage: "square.stack.3d.up"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) }
+                                .padding(.vertical, 6).contentShape(Rectangle())
+                        }.codexRow()
                         Menu { CodexSeriesPicker(model: model) } label: {
-                            HStack { Label(model.scopeName, systemImage: "books.vertical"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) }
+                            HStack { Label(model.seriesId.flatMap { id in model.series.first { $0.id == id }?.name } ?? "All book series", systemImage: "books.vertical"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) }
                                 .padding(.vertical, 6).contentShape(Rectangle())
                         }.codexRow()
                     }
@@ -348,9 +352,19 @@ private struct CodexHome: View {
 private struct CodexSeriesPicker: View {
     @Bindable var model: CodexModel
     var body: some View {
-        Picker("Series", selection: Binding(get: { model.seriesId ?? 0 }, set: { model.chooseSeries($0 == 0 ? nil : $0) })) {
-            Text("All series").tag(0)
+        Picker("Book series", selection: Binding(get: { model.seriesId ?? 0 }, set: { model.chooseSeries($0 == 0 ? nil : $0) })) {
+            Text("All book series").tag(0)
             ForEach(model.series) { Text($0.name).tag($0.id) }
+        }
+    }
+}
+
+private struct CodexChainPicker: View {
+    @Bindable var model: CodexModel
+    var body: some View {
+        Picker("Series", selection: Binding(get: { model.chainId ?? 0 }, set: { model.chooseChain($0 == 0 ? nil : $0) })) {
+            Text("All series").tag(0)
+            ForEach(model.chains) { Text($0.name).tag($0.id) }
         }
     }
 }
@@ -369,7 +383,8 @@ private struct CodexFilterMenu: View {
                     Button { onType(t) } label: { Label("\(t.title) (\(model.count(t)))", systemImage: t.symbol) }
                 }
             }
-            Section("Series") { CodexSeriesPicker(model: model) }
+            Section("Series") { CodexChainPicker(model: model) }
+            Section("Book series") { CodexSeriesPicker(model: model) }
             Toggle("Show contained places", isOn: $model.showContained)
         } label: {
             Image(systemName: "line.3.horizontal.decrease").font(.body.weight(.semibold)).foregroundStyle(connection.theme.text)
@@ -466,7 +481,7 @@ private struct CodexEntryView: View {
                                 }
                                 .buttonStyle(.plain).disabled(detail == nil)
                             }
-                            Text("\(e.type.single) · \(model.scopeName)").font(.subheadline).foregroundStyle(connection.theme.muted)
+                            Text(([e.type.single] + (detail?.chains ?? []).map(\.name) + [detail?.seriesId.flatMap { id in model.series.first { $0.id == id }?.name }].compactMap { $0 }).joined(separator: " · ")).font(.subheadline).foregroundStyle(connection.theme.muted)
                             let aliases = detail?.aliases ?? e.allAliases
                             if !aliases.isEmpty { Text("Also known as: " + aliases.joined(separator: ", ")).font(.footnote).foregroundStyle(connection.theme.text) }
                             let books = (detail?.appearancesByBook ?? []).compactMap(\.bookTitle)
