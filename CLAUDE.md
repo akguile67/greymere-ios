@@ -21,6 +21,10 @@ of the Greymere server, which lives in `~/Code/greymere` (GitHub
   Godric-made, thumbnails), Standardise, Find missing, Godric with the open entry as context, Ask the Codex. Exit
   checklist: `docs/codex-exit-checklist.md`; release notes: `docs/release-0.9.0.md`. Server work still owed (aliases and
   parent ids in the list, a stale-write guard, a `codex.changed` event) is in the notes folder.
+- **iOS 0.10.0** adds the Structure panel (ADR 0.60.0, server 0.60.0; minimum server version 0.60.0): the acts as cards in a
+  grid as in Creation, the six-field briefing on a card (summary headline and five sections), add, rename, delete, hold-and-drag
+  reorder within an act, Godric's one Structure thread, live refresh and a stale-write sheet. Draft opens Creation, which offers a
+  way back to Structure. Exit checklist: `docs/structure-exit-checklist.md`; release notes: `docs/release-0.10.0.md`.
 - **Builds happen on the MacBook Pro only** (Xcode, Team ID D25P46655T). Two
   bundle IDs, prod and pre-prod, distributed through TestFlight. Connection is
   over Tailscale.

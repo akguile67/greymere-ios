@@ -251,6 +251,16 @@ private struct CreationChapterView: View {
                     }
                 }
                 .buttonStyle(.glass).accessibilityLabel("Chapters")
+                if let back = model.returnToStructure {
+                    Button { back() } label: {
+                        if sizeClass == .compact && (activeSeg != nil || draftFocused) && !model.isLocked {
+                            Image(systemName: "rectangle.3.group").font(.subheadline.weight(.semibold)).padding(.horizontal, 2)
+                        } else {
+                            Label("Structure", systemImage: "rectangle.3.group").font(.subheadline.weight(.semibold))
+                        }
+                    }
+                    .buttonStyle(.glass).accessibilityLabel("Back to Structure")
+                }
                 Spacer(minLength: 6)
                 if model.doc != nil { textTools }
             }

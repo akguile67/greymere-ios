@@ -236,6 +236,8 @@ final class CreationModel {
 
     // an open chapter
     var chapterId: Int?
+    /// Set when the chapter was opened by Draft in Structure: a way back to that card. Cleared when the chapter is left.
+    var returnToStructure: (() -> Void)?
     var doc: CreationChapterDoc?
     var opening = false
     var openError: String?
@@ -369,8 +371,9 @@ final class CreationModel {
 
     /// Leaving a chapter drops any empty beat the author left behind.
     func close() async {
-        guard let id = chapterId, let client else { chapterId = nil; return }
+        guard let id = chapterId, let client else { chapterId = nil; returnToStructure = nil; return }
         chapterId = nil; doc = nil; proposal = nil; briefEditing = false
+        returnToStructure = nil
         discardEdits(); lastAccept = nil; stops = [:]; notes = []
         godric.resetCreation()
         _ = try? await client.post("/api/creation/chapters/\(id)/prune-empty-beats", body: EmptyBody(), as: Ignored.self)
