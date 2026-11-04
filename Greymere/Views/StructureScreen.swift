@@ -180,6 +180,12 @@ private struct StructureActCard: View {
     @Environment(ConnectionModel.self) private var connection
     private var synopsisOpen: Bool { model.openActSynopsis.contains(act.id) }
 
+    /// The synopsis and the briefing fields carry Markdown (bold, italics): shown as written, not as asterisks.
+    static func md(_ s: String) -> AttributedString {
+        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        return (try? AttributedString(markdown: s, options: options)) ?? AttributedString(s)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -220,7 +226,7 @@ private struct StructureActCard: View {
                 }.foregroundStyle(connection.theme.text)
             }.buttonStyle(.plain)
             if synopsisOpen {
-                Text(act.synopsis?.isEmpty == false ? act.synopsis! : "No synopsis text for this act.")
+                Text(Self.md(act.synopsis?.isEmpty == false ? act.synopsis! : "No synopsis text for this act."))
                     .font(.footnote).foregroundStyle(connection.theme.muted)
             }
         }
@@ -343,7 +349,7 @@ private struct StructureCard: View {
     private func summary(_ ro: Bool) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("SUMMARY HEADLINE").font(.caption2.weight(.semibold)).foregroundStyle(connection.theme.muted)
-            if ro { Text(chapter.summary?.isEmpty == false ? chapter.summary! : "No summary yet.") }
+            if ro { Text(StructureActCard.md(chapter.summary?.isEmpty == false ? chapter.summary! : "No summary yet.")) }
             else {
                 TextField("One line on what this chapter is", text: binding(.summary), axis: .vertical).lineLimit(1...5).focused($focus, equals: .summary)
             }
@@ -366,7 +372,7 @@ private struct StructureCard: View {
                 .contentShape(Rectangle())
             }.buttonStyle(.plain)
             if open {
-                if ro { Text(value.isEmpty ? "—" : value).font(.callout).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8) }
+                if ro { Text(StructureActCard.md(value.isEmpty ? "—" : value)).font(.callout).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8) }
                 else {
                     TextField(f.title, text: binding(f), axis: .vertical).lineLimit(2...10).focused($focus, equals: f)
                         .padding(8).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 8, style: .continuous)).padding(.top, 8)
