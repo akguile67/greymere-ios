@@ -34,9 +34,12 @@ struct LandscapeLayout: View {
             let maxW = max(300, geo.size.width * 0.6)
             let w = min(max(store.leftWidth, 260), maxW)
             HStack(spacing: 0) {
-                if !store.fullScreen {
-                    PhoneLayout().frame(width: w).transition(.move(edge: .leading))
-                }
+                // The menu is never torn down: full screen only collapses its column and fades it, so its drill-down
+                // position, scroll and search come back exactly as left, with nothing to rebuild.
+                PhoneLayout().frame(width: w, alignment: .leading)
+                    .frame(width: store.fullScreen ? 0 : w, alignment: .leading)
+                    .opacity(store.fullScreen ? 0 : 1)
+                    .allowsHitTesting(!store.fullScreen)
                 handle(maxW: maxW)
                 Group {
                     if let id = store.selection, store.entry(id) != nil {
@@ -54,6 +57,8 @@ struct LandscapeLayout: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .background(Color(.systemBackground))
+                .zIndex(1)
             }
         }
         .animation(.snappy, value: store.fullScreen)
