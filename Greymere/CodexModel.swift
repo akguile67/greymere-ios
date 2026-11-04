@@ -103,6 +103,8 @@ struct CodexChain: Decodable, Identifiable, Hashable, Sendable {
 }
 private struct CodexChains: Decodable, Sendable { let chains: [CodexChain] }
 private struct CodexTag: Encodable {}
+private struct CodexQuestion: Encodable { let question: String }
+struct CodexAnswer: Decodable, Sendable { let answer: String; let citedEntryIds: [Int]?; let truncated: Bool? }
 struct CodexCraft: Decodable, Sendable { let prompt: String }
 struct CodexGenerated: Decodable, Sendable { let imageUrl: String; let costUsd: Double?; let ms: Int? }
 private struct CodexPromptBody: Encodable { let prompt: String }
@@ -286,6 +288,13 @@ final class CodexModel {
     func standardise(_ id: Int) async -> Result<String, CodexFailure> {
         guard let client else { return .failure(CodexFailure(text: "Not connected.")) }
         do { let r: CodexStandardised = try await client.post("/api/codex/\(id)/standardise", body: CodexTag()); return .success(r.proposedBody) }
+        catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
+    }
+
+    /// Asks Godric a free-form question against the whole Codex. The answer cites entries as [Entry N].
+    func ask(_ question: String) async -> Result<CodexAnswer, CodexFailure> {
+        guard let client else { return .failure(CodexFailure(text: "Not connected.")) }
+        do { return .success(try await client.post("/api/codex/ask", body: CodexQuestion(question: question))) }
         catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
     }
 

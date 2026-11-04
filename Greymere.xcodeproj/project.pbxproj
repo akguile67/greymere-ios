@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		01F29B0422E75DEFD938FFEE /* CreationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C417B077DAD4D6E1ECF78D /* CreationModel.swift */; };
 		05455015380B24CAE085B9C7 /* SeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A9CC34C152F6AFD24C1434 /* SeedModel.swift */; };
+		087161F210BC9CF16521C229 /* CodexAskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB60C5A6E70B15CB0FAB13F /* CodexAskSheet.swift */; };
 		0894BC020E6A67E0754DB455 /* Info-Dev.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5BF3384BB04D3FC636E7E49C /* Info-Dev.plist */; };
 		08E1A361E79702D4E37EF7F9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6AB11F2597837B284FD01B /* RootView.swift */; };
 		0A7DD41CDC6454A1E67FB979 /* CreationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF1334D54A055964A887194 /* CreationScreen.swift */; };
@@ -67,6 +68,7 @@
 		520F9F94B3E088B20399C764 /* GreymereApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AD8D6D4E771915CA1ED45F6 /* GreymereApp.swift */; };
 		525361C9125FE5D8A153037E /* Format.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901A2EB047E4FF0A1128484A /* Format.swift */; };
 		525518DB75D71E982367A28B /* CreationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DF1334D54A055964A887194 /* CreationScreen.swift */; };
+		527DB56E9F6AA96E021A7855 /* CodexAskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB60C5A6E70B15CB0FAB13F /* CodexAskSheet.swift */; };
 		52E3F4F03F40C570B4ADD9C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E86DC597154FB476C5247EE5 /* Assets.xcassets */; };
 		534CA086806BC2F948ADA178 /* ConnectionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E06BF0FA1501CB617A8E82 /* ConnectionModel.swift */; };
 		5954B0CD655B38E7A1710CE7 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF8E1132B247929CB788E3D /* Theme.swift */; };
@@ -149,12 +151,14 @@
 		E9B1276CC08FA34A15890CBD /* CodexModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A32479B0A41E4AF9A75C99DB /* CodexModel.swift */; };
 		EB18D8EBBCAFA49821A3E1A4 /* TaskCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5320B6EEC12C775FF9A813D /* TaskCards.swift */; };
 		F0A8C9A54C35571EF50D67C6 /* EBGaramond-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE0C9F495E031CF35793F6BB /* EBGaramond-Regular.ttf */; };
+		F1BA0AE99DA1B875E8246787 /* CodexAskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB60C5A6E70B15CB0FAB13F /* CodexAskSheet.swift */; };
 		F67C8CAE370976D8AFB7DC6D /* ConnectionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70EFFD6B7492B5BF4EA4663 /* ConnectionViews.swift */; };
 		FA546BCA458A9F935B2A2869 /* ProtoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F19D6312633685B5A5F6072 /* ProtoData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0B3F2A8714A25A2B8C36FF53 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		0BB60C5A6E70B15CB0FAB13F /* CodexAskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAskSheet.swift; sourceTree = "<group>"; };
 		18A7175A3DB8CCEF791ACBCB /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		1DF1334D54A055964A887194 /* CreationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreationScreen.swift; sourceTree = "<group>"; };
 		1F19D6312633685B5A5F6072 /* ProtoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtoData.swift; sourceTree = "<group>"; };
@@ -229,6 +233,7 @@
 			children = (
 				6AF06AA5B4CB1D03DF1D5D82 /* BookDetailView.swift */,
 				2098A157E6F1C67602BDC88B /* ChatTextView.swift */,
+				0BB60C5A6E70B15CB0FAB13F /* CodexAskSheet.swift */,
 				499A91D7E359596816D7E05B /* CodexEditSheet.swift */,
 				2258A1F266F9C027CCCB400A /* CodexFindMissingSheet.swift */,
 				F717E8E665D04D6F94B82186 /* CodexPortraitSheet.swift */,
@@ -499,6 +504,7 @@
 				14BD7AD964370B5F6FE59792 /* API.swift in Sources */,
 				B5C094E404334BA2E476D07E /* BookDetailView.swift in Sources */,
 				705B429F229DA11ED19DD282 /* ChatTextView.swift in Sources */,
+				087161F210BC9CF16521C229 /* CodexAskSheet.swift in Sources */,
 				16C0CCC746BCF62FB32399D7 /* CodexEditSheet.swift in Sources */,
 				369D0A532C33CDA66792ECC2 /* CodexFindMissingSheet.swift in Sources */,
 				B595689C950398FEF33B2243 /* CodexModel.swift in Sources */,
@@ -546,6 +552,7 @@
 				C5400965AD89424C3CE29EB5 /* API.swift in Sources */,
 				BAB4DB81E33A31B3FCD496AA /* BookDetailView.swift in Sources */,
 				0F5305787184101F81C49939 /* ChatTextView.swift in Sources */,
+				F1BA0AE99DA1B875E8246787 /* CodexAskSheet.swift in Sources */,
 				6A6EF70B647DC34A4C8CC636 /* CodexEditSheet.swift in Sources */,
 				17ED176656A1145533153F00 /* CodexFindMissingSheet.swift in Sources */,
 				E9B1276CC08FA34A15890CBD /* CodexModel.swift in Sources */,
@@ -605,6 +612,7 @@
 				C9BFEDE241B071C7C6F3F3A8 /* API.swift in Sources */,
 				4DB3199C3961F6ABB4DC14C9 /* BookDetailView.swift in Sources */,
 				1336BC8215523E18B5508656 /* ChatTextView.swift in Sources */,
+				527DB56E9F6AA96E021A7855 /* CodexAskSheet.swift in Sources */,
 				9ED2B9479FDE4DD56B2A24D6 /* CodexEditSheet.swift in Sources */,
 				0DBF516A982D485EC990E609 /* CodexFindMissingSheet.swift in Sources */,
 				81F37232FE9A2C590C382C61 /* CodexModel.swift in Sources */,

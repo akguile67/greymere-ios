@@ -8,9 +8,15 @@ struct CodexScreen: View {
     @Bindable var model: CodexModel
     let client: APIClient
     @Environment(ConnectionModel.self) private var connection
-    /// Orientation read from a probe that ignores the keyboard. The keyboard shrinks the panel's own height, and a phone
-    /// held upright with the keyboard up is then wider than it is tall: it flipped to the landscape layout, rebuilt the
-    /// search field, and dropped its focus a moment after the tap.
+    @State private var godric = GodricModel(thread: .codex)
+    @State private var chatOpen = false
+
+    /// The entry on screen: the right-hand panel's in landscape, the top page of the drill-down in portrait.
+    private var openEntryId: Int? {
+        if model.landscape { return model.selection }
+        if case .entry(let id)? = model.menuPath.last { return id }
+        return nil
+    }
 
     /// The window's own shape: it does not change when the keyboard comes up (the panel's does).
     private func windowLandscape(fallback: Bool) -> Bool {
@@ -39,7 +45,17 @@ struct CodexScreen: View {
         }
         .background(connection.theme.background.ignoresSafeArea())
         .topBand(true, title: "Codex")
-        .glassBar(isOpen: false) { model.banner = "Godric isn't on the Codex panel yet." }
+        .glassBar(isOpen: chatOpen) { chatOpen.toggle() }
+        .sheet(isPresented: $chatOpen) {
+            GodricChatView(model: godric, client: client, showsBar: false, book: nil, onClose: { chatOpen = false })
+                .presentationDetents([.medium, .large])
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+        }
+        .onChange(of: chatOpen) { _, open in if !open { godric.leaveHistory() } }
+        .onAppear {
+            godric.codexContext = { CodexPanelContext(filter: "all", entryId: openEntryId) }
+            godric.onCodexApplied = { model.details = [:]; await model.reload(); if let id = openEntryId { await model.refreshDetail(id) } }
+        }
         .task { await model.start(client: client) }
         .task { await model.listen(client: client) }
         .task { await model.poll() }
@@ -290,6 +306,7 @@ private struct CodexHome: View {
     @Environment(ConnectionModel.self) private var connection
     @State private var creating = false
     @State private var finding = false
+    @State private var asking = false
     @FocusState private var searchFocused: Bool
     /// A phone on its side with the keyboard up has a few lines of height: the search row tightens so results show.
     private var compact: Bool { model.landscape && searchFocused }
@@ -331,7 +348,10 @@ private struct CodexHome: View {
                             Divider().frame(height: 22)
                             Button { finding = true } label: { Label("Find missing", systemImage: "doc.text.magnifyingglass").frame(maxWidth: .infinity).padding(.vertical, 6).contentShape(Rectangle()) }
                                 .buttonStyle(.plain)
-                        }.font(.subheadline.weight(.medium)).codexRow()
+                            Divider().frame(height: 22)
+                            Button { asking = true } label: { Label("Ask", systemImage: "questionmark.bubble").frame(maxWidth: .infinity).padding(.vertical, 6).contentShape(Rectangle()) }
+                                .buttonStyle(.plain)
+                        }.font(.subheadline.weight(.medium)).lineLimit(1).minimumScaleFactor(0.8).codexRow()
                     }
                     let recent = model.recents.compactMap(model.entry)
                     if !recent.isEmpty {
@@ -355,6 +375,13 @@ private struct CodexHome: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .sheet(isPresented: $asking) {
+                CodexAskSheet(model: model) { id in
+                    model.touch(id)
+                    if model.landscape { model.selection = id } else { push(.entry(id)) }
+                    asking = false
+                }
+            }
             .sheet(isPresented: $finding) {
                 CodexFindMissingSheet(model: model, client: client) { id in
                     model.touch(id)
@@ -457,7 +484,7 @@ private struct CodexTypeList: View {
 
 // MARK: the entry (read-only in this slice)
 
-private struct CodexFlow: Layout {
+struct CodexFlow: Layout {
     var spacing: CGFloat = 6
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let w = proposal.width ?? 320
