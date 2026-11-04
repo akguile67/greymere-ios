@@ -27,6 +27,8 @@ struct CodexEditSheet: View {
     @State private var dictation = DictationModel()
     @State private var prose = ProseController()
     @State private var newType: CodexType = .characters
+    @State private var standardising = false
+    @State private var beforeStandardise: String?
     @State private var seriesChoice: Int?
     @State private var chainSel: Set<Int> = []
     @State private var baseChains: Set<Int> = []
@@ -121,7 +123,11 @@ struct CodexEditSheet: View {
                 }
                 if showsBooks { booksField }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Body").font(.footnote).foregroundStyle(theme.muted)
+                    HStack {
+                        Text("Body").font(.footnote).foregroundStyle(theme.muted)
+                        Spacer()
+                        if !isNew && entryType == .locations { standardiseControl }
+                    }
                     // The manuscript's own editor: bold and italic show as bold and italic, the markers are hidden until the
                     // caret touches them.
                     ProseTextView(text: $bodyText, selection: $selection, editable: true,
@@ -189,6 +195,30 @@ struct CodexEditSheet: View {
                 if model.books.isEmpty { Text("Loading books…").font(.footnote).foregroundStyle(theme.muted) }
             }
             .padding(.horizontal, 14).padding(.vertical, 8).glassEffect(.regular, in: .rect(cornerRadius: 16))
+        }
+    }
+
+    /// Locations only: reorganise the text under the location template. The result lands in the body field as a
+    /// proposal (Review shows it as a diff); Undo puts the old text back.
+    @ViewBuilder private var standardiseControl: some View {
+        if standardising {
+            HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Reorganising…").font(.footnote).foregroundStyle(theme.muted) }
+        } else if let before = beforeStandardise {
+            Button { bodyText = before; beforeStandardise = nil } label: { Label("Undo standardise", systemImage: "arrow.uturn.backward").font(.footnote.weight(.medium)) }
+        } else {
+            Button { Task { await standardise() } } label: {
+                Label("Standardise", systemImage: "list.bullet.rectangle").font(.footnote.weight(.medium)).foregroundStyle(theme.accent)
+                    .padding(.horizontal, 12).padding(.vertical, 6).glassEffect(.regular.interactive(), in: .capsule)
+            }.buttonStyle(.plain)
+        }
+    }
+
+    private func standardise() async {
+        guard let id else { return }
+        standardising = true; message = nil; defer { standardising = false }
+        switch await model.standardise(id) {
+        case .success(let text): beforeStandardise = bodyText; bodyText = text
+        case .failure(let f): dictation.notice = f.text
         }
     }
 

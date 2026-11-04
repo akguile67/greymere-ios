@@ -108,6 +108,7 @@ struct CodexGenerated: Decodable, Sendable { let imageUrl: String; let costUsd: 
 private struct CodexPromptBody: Encodable { let prompt: String }
 private struct CodexUrlBody: Encodable { let url: String }
 private struct CodexOk: Decodable, Sendable { let ok: Bool? }
+private struct CodexStandardised: Decodable, Sendable { let proposedBody: String; let level: String? }
 
 /// A Book series (Greymere, Ellen's Story, ...): the server's `series` row.
 struct CodexSeries: Decodable, Identifiable, Hashable, Sendable {
@@ -262,6 +263,14 @@ final class CodexModel {
 
     /// A server image path made into an address, for the list thumbnails.
     func imageURL(_ path: String?) -> URL? { client?.asset(path) }
+
+    /// Asks the server to reorganise a location's text under its template's headings. Nothing is written: the result is
+    /// a proposal for the editor.
+    func standardise(_ id: Int) async -> Result<String, CodexFailure> {
+        guard let client else { return .failure(CodexFailure(text: "Not connected.")) }
+        do { let r: CodexStandardised = try await client.post("/api/codex/\(id)/standardise", body: CodexTag()); return .success(r.proposedBody) }
+        catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
+    }
 
     func loadBooks() async {
         guard let client, books.isEmpty, let b: [CodexBook] = try? await client.get("/api/books") else { return }
