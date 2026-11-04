@@ -431,6 +431,7 @@ private struct CodexEntryView: View {
     let client: APIClient
     let id: Int
     @State private var showAllChildren = false
+    @State private var editing = false
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
 
@@ -442,7 +443,15 @@ private struct CodexEntryView: View {
                     HStack(alignment: .top, spacing: 12) {
                         portrait(detail?.portraitPath ?? e.portraitPath, type: e.type)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(e.name).font(.serif(26)).foregroundStyle(connection.theme.text)
+                            HStack(alignment: .top) {
+                                Text(e.name).font(.serif(26)).foregroundStyle(connection.theme.text)
+                                Spacer(minLength: 8)
+                                Button { editing = true } label: {
+                                    Label("Edit", systemImage: "pencil").font(.footnote.weight(.medium)).foregroundStyle(connection.theme.accent)
+                                        .padding(.horizontal, 12).padding(.vertical, 6).glassEffect(.regular.interactive(), in: .capsule)
+                                }
+                                .buttonStyle(.plain).disabled(detail == nil)
+                            }
                             Text("\(e.type.single) · \(model.scopeName)").font(.subheadline).foregroundStyle(connection.theme.muted)
                             let aliases = detail?.aliases ?? e.allAliases
                             if !aliases.isEmpty { Text("Also known as: " + aliases.joined(separator: ", ")).font(.footnote).foregroundStyle(connection.theme.text) }
@@ -474,6 +483,7 @@ private struct CodexEntryView: View {
             }
             .background(connection.theme.background)
             .task(id: id) { await model.loadDetail(id) }
+            .sheet(isPresented: $editing) { CodexEditSheet(model: model, client: client, id: id) }
         } else {
             ContentUnavailableView("Entry not found", systemImage: "questionmark.folder")
         }

@@ -98,6 +98,17 @@ struct CodexHit: Identifiable {
     var id: Int { entry.id }
 }
 
+private struct CodexSave: Encodable {
+    let name: String
+    let body: String
+    let aliases: [String]
+    let baseUpdatedAt: String
+    private enum CodingKeys: String, CodingKey { case name, body, aliases, baseUpdatedAt = "base_updated_at" }
+}
+private struct CodexSaved: Decodable { let id: Int }
+
+enum CodexApplyResult { case saved, stale(CodexDetail), failed(String) }
+
 @MainActor @Observable
 final class CodexModel {
     var series: [CodexSeries] = []
@@ -159,6 +170,24 @@ final class CodexModel {
     func loadDetail(_ id: Int) async {
         guard let client, details[id] == nil else { return }
         if let d: CodexDetail = try? await client.get("/api/codex/\(id)") { details[id] = d }
+    }
+
+    /// Writes an edit the author has reviewed. The entry is read again first: if it changed since the edit began, nothing
+    /// is written (and the server, once it carries the same guard, refuses too).
+    func apply(id: Int, name: String, aliases: [String], body: String, baseStamp: String, client: APIClient) async -> CodexApplyResult {
+        do {
+            let now: CodexDetail = try await client.get("/api/codex/\(id)")
+            if (now.updatedAt ?? "") != baseStamp { details[id] = now; return .stale(now) }
+            let _: CodexSaved = try await client.put("/api/codex/\(id)", body: CodexSave(name: name, body: body, aliases: aliases, baseUpdatedAt: baseStamp))
+            details[id] = nil
+            await loadDetail(id)
+            await reload()
+            banner = "Saved."
+            return .saved
+        } catch APIError.http(409, _) {
+            if let now: CodexDetail = try? await client.get("/api/codex/\(id)") { details[id] = now; return .stale(now) }
+            return .failed("This entry changed since you opened it.")
+        } catch let e as APIError { return .failed(e.message) } catch { return .failed("The change could not be saved.") }
     }
 
     // MARK: reading the list
