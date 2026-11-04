@@ -8,6 +8,8 @@ struct CodexEditSheet: View {
     /// nil = a new entry.
     let id: Int?
     var onCreated: (Int) -> Void = { _ in }
+    /// A Find missing item being developed: the name and type to start from, and the item the new entry will fill.
+    var prefill: (name: String, type: CodexType, gapItemId: Int)?
     @Environment(\.dismiss) private var dismiss
     @Environment(ConnectionModel.self) private var connection
 
@@ -87,7 +89,7 @@ struct CodexEditSheet: View {
 
     private func load() {
         guard baseStamp == nil else { return }
-        guard let id else { baseStamp = ""; seriesChoice = model.seriesId ?? model.series.first?.id; baseSeries = nil; chainSel = model.chainId.map { [$0] } ?? (model.chains.first.map { [$0.id] } ?? []); return }
+        guard let id else { baseStamp = ""; if let p = prefill { name = p.name; newType = p.type }; seriesChoice = model.seriesId ?? model.series.first?.id; baseSeries = nil; chainSel = model.chainId.map { [$0] } ?? (model.chains.first.map { [$0.id] } ?? []); return }
         guard let d = model.details[id], let e = model.entry(id) else { return }
         fill(name: d.name, aliases: d.aliases ?? e.allAliases, body: d.body ?? e.snippet, stamp: d.updatedAt, keepDrafts: false)
         baseSeries = d.seriesId; seriesChoice = d.seriesId
@@ -296,7 +298,7 @@ struct CodexEditSheet: View {
     private func apply() async {
         saving = true; defer { saving = false }
         guard let id else {
-            if let newId = await model.create(name: name.trimmingCharacters(in: .whitespaces), type: newType, aliases: Self.parse(aliasText), body: bodyText, series: seriesChoice, bookIds: showsBooks ? Array(bookSel) : nil, chainIds: chainSel, client: client) { dismiss(); onCreated(newId) }
+            if let newId = await model.create(name: name.trimmingCharacters(in: .whitespaces), type: newType, aliases: Self.parse(aliasText), body: bodyText, series: seriesChoice, bookIds: showsBooks ? Array(bookSel) : nil, chainIds: chainSel, gapItemId: prefill?.gapItemId, client: client) { dismiss(); onCreated(newId) }
             else { message = "The entry could not be created." }
             return
         }

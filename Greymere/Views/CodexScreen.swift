@@ -289,6 +289,7 @@ private struct CodexHome: View {
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
     @State private var creating = false
+    @State private var finding = false
     @FocusState private var searchFocused: Bool
     /// A phone on its side with the keyboard up has a few lines of height: the search row tightens so results show.
     private var compact: Bool { model.landscape && searchFocused }
@@ -332,6 +333,8 @@ private struct CodexHome: View {
                     Section {
                         Button { creating = true } label: { Label("New entry", systemImage: "plus").frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle()) }
                             .buttonStyle(.plain).codexRow()
+                        Button { finding = true } label: { Label("Find missing", systemImage: "doc.text.magnifyingglass").frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle()) }
+                            .buttonStyle(.plain).codexRow()
                     }
                     Section("Browse by type · \(model.count(nil)) in scope") {
                         ForEach(CodexType.allCases) { t in
@@ -349,6 +352,13 @@ private struct CodexHome: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .sheet(isPresented: $finding) {
+                CodexFindMissingSheet(model: model, client: client) { id in
+                    model.touch(id)
+                    if model.landscape { model.selection = id } else { push(.entry(id)) }
+                    finding = false
+                }
+            }
             .sheet(isPresented: $creating) {
                 CodexEditSheet(model: model, client: client, id: nil) { newId in
                     model.touch(newId)

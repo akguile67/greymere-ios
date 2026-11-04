@@ -108,6 +108,23 @@ struct CodexGenerated: Decodable, Sendable { let imageUrl: String; let costUsd: 
 private struct CodexPromptBody: Encodable { let prompt: String }
 private struct CodexUrlBody: Encodable { let url: String }
 private struct CodexOk: Decodable, Sendable { let ok: Bool? }
+/// Accepts whatever the server answers, for calls whose answer is not needed.
+private struct CodexAnyReply: Decodable, Sendable { init(from decoder: Decoder) throws {} }
+
+/// Find missing (the server's worklist for a book): what its synopsis names that the Codex does not have.
+struct CodexGap: Decodable, Identifiable, Hashable, Sendable {
+    struct Entry: Decodable, Hashable, Sendable { let id: Int; let name: String? }
+    let id: Int
+    let name: String
+    let type: String
+    let state: String          // open, created, dismissed, existing
+    let entry: Entry?
+    var codexType: CodexType { CodexType(server: type == "character" ? "characters" : type == "location" ? "locations" : type == "object" ? "objects" : type == "lore" ? "lore" : "other") }
+}
+struct CodexGapCounts: Decodable, Hashable, Sendable { let open: Int; let created: Int; let dismissed: Int; let existing: Int }
+struct CodexGapList: Decodable, Sendable { let counts: CodexGapCounts; let items: [CodexGap] }
+struct CodexWorklist: Decodable, Sendable { let hasSynopsis: Bool; let findMissing: CodexGapList }
+private struct CodexFill: Encodable { let codexEntryId: Int; private enum CodingKeys: String, CodingKey { case codexEntryId = "codex_entry_id" } }
 private struct CodexStandardised: Decodable, Sendable { let proposedBody: String; let level: String? }
 
 /// A Book series (Greymere, Ellen's Story, ...): the server's `series` row.
@@ -142,8 +159,8 @@ private struct CodexSave: Encodable {
 }
 private struct CodexSaved: Decodable { let id: Int }
 private struct CodexNew: Encodable {
-    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?; let bookIds: [Int]?; let chainIds: [Int]
-    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id", bookIds = "book_ids", chainIds = "chain_ids" }
+    let name: String; let type: String; let body: String; let aliases: [String]; let seriesId: Int?; let bookIds: [Int]?; let chainIds: [Int]; let gapItemId: Int?
+    private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id", bookIds = "book_ids", chainIds = "chain_ids", gapItemId = "gap_item_id" }
 }
 private struct CodexDeleted: Decodable { let ok: Bool? }
 
@@ -272,6 +289,27 @@ final class CodexModel {
         catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
     }
 
+    // MARK: Find missing
+
+    func worklist(book: Int) async -> Result<CodexWorklist, CodexFailure> {
+        guard let client else { return .failure(CodexFailure(text: "Not connected.")) }
+        do { return .success(try await client.get("/api/wcd/books/\(book)/worklist")) }
+        catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
+    }
+    /// Reads the book's synopsis and lists what is missing from the Codex (one model call).
+    func scan(book: Int, force: Bool) async -> String? {
+        await gapCall { let _: CodexAnyReply = try await $0.post("/api/wcd/books/\(book)/worklist/build" + (force ? "?force=1" : ""), body: CodexTag()) }
+    }
+    func dismissGap(_ item: Int) async -> String? { await gapCall { let _: CodexAnyReply = try await $0.post("/api/wcd/items/\(item)/defer", body: CodexTag()) } }
+    func reopenGap(_ item: Int) async -> String? { await gapCall { let _: CodexAnyReply = try await $0.post("/api/wcd/items/\(item)/reopen", body: CodexTag()) } }
+    func linkGap(_ item: Int, to entry: Int) async -> String? { await gapCall { let _: CodexAnyReply = try await $0.post("/api/wcd/items/\(item)/fill", body: CodexFill(codexEntryId: entry)) } }
+    func clearGaps(book: Int) async -> String? { await gapCall { let _: CodexAnyReply = try await $0.post("/api/wcd/books/\(book)/worklist/clear", body: CodexTag()) } }
+    private func gapCall(_ work: (APIClient) async throws -> Void) async -> String? {
+        guard let client else { return "Not connected." }
+        do { try await work(client) } catch let e as APIError { return e.message } catch { return "That did not work." }
+        return nil
+    }
+
     func loadBooks() async {
         guard let client, books.isEmpty, let b: [CodexBook] = try? await client.get("/api/books") else { return }
         books = b
@@ -349,9 +387,9 @@ final class CodexModel {
     }
 
     /// Creates an entry. Returns its id.
-    func create(name: String, type: CodexType, aliases: [String], body: String, series: Int?, bookIds: [Int]?, chainIds: Set<Int>, client: APIClient) async -> Int? {
+    func create(name: String, type: CodexType, aliases: [String], body: String, series: Int?, bookIds: [Int]?, chainIds: Set<Int>, gapItemId: Int? = nil, client: APIClient) async -> Int? {
         do {
-            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: series, bookIds: bookIds, chainIds: Array(chainIds).sorted()))
+            let saved: CodexSaved = try await client.post("/api/codex", body: CodexNew(name: name, type: type.rawValue, body: body, aliases: aliases, seriesId: series, bookIds: bookIds, chainIds: Array(chainIds).sorted(), gapItemId: gapItemId))
             await reload()
             return saved.id
         } catch { return nil }
