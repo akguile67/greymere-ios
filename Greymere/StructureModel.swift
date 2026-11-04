@@ -372,9 +372,13 @@ final class StructureModel {
     // MARK: stale writes
 
     private func handleStale(_ error: APIError, id: Int, thenCommit: Bool) async -> Bool {
-        guard case .http(409, let body) = error, let data = body.data(using: .utf8) else { return false }
+        guard case .http(409, let body) = error else { return false }
         let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase
-        guard let r = try? d.decode(StaleReply.self, from: data), r.error == "stale", let current = r.current else { return false }
+        guard let data = body.data(using: .utf8), let r = try? d.decode(StaleReply.self, from: data), r.error == "stale", let current = r.current else {
+            // A clash whose details could not be read: look again rather than show a bare status.
+            await reload(); say("This chapter was changed on another device. It has been reloaded; try again.")
+            return true
+        }
         var diffs: [StructureConflict.Diff] = []
         for f in BriefField.allCases {
             let mine = edits[id]?[f] ?? f.value(in: chapter(id) ?? current)
