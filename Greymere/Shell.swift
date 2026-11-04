@@ -16,7 +16,7 @@ enum Panel: String, CaseIterable, Identifiable, Hashable {
     }
 
     /// The panels the app has so far.
-    var isAvailable: Bool { self == .planning || self == .ideation || self == .codex || self == .creation }
+    var isAvailable: Bool { self == .planning || self == .ideation || self == .codex || self == .structure || self == .creation }
 }
 
 enum Destination: Equatable {
@@ -91,6 +91,7 @@ struct AppShell: View {
     @State private var creation = CreationModel()
     @State private var planning = PlanningModel()
     @State private var codex = CodexModel()
+    @State private var structure = StructureModel()
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
@@ -110,6 +111,13 @@ struct AppShell: View {
             if case .panel(.codex) = shell.destination {
                 CodexScreen(model: codex, client: client)
                     .transition(.opacity)
+            }
+            if case .panel(.structure) = shell.destination {
+                StructureScreen(model: structure, home: home, client: client) { chapterId in
+                    shell.open(.creation)
+                    Task { await creation.open(chapterId, client: client) }
+                }
+                .transition(.opacity)
             }
             if case .panel(.creation) = shell.destination {
                 CreationScreen(model: creation, home: home, client: client)

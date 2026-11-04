@@ -110,7 +110,7 @@ struct GodricChatView: View {
             statusChip
             Spacer()
             // A chapter has the one thread, so Creation has neither History nor New chat.
-            if model.thread != .creation {
+            if model.thread != .creation && model.thread != .structure {
                 Button { showHistory = true } label: { Image(systemName: "clock.arrow.circlepath").padding(6) }
                     .buttonStyle(.glass).buttonBorderShape(.circle).accessibilityLabel("History")
                 Button { Task { await model.newChat(client: client) } } label: { Image(systemName: "square.and.pencil").padding(6) }

@@ -127,6 +127,18 @@ struct SynopsisProposal: Decodable, Sendable, Identifiable, Equatable {
 }
 
 private struct CreationSend: Encodable { let text: String }
+struct StructureServerMessage: Decodable, Sendable { let role: String; let kind: String; let text: String; let createdAt: String? }
+private struct StructureSend: Encodable {
+    let text: String; let focusChapterId: Int?; var sourcePane = "right_panel"
+    private enum CodingKeys: String, CodingKey { case text, focusChapterId = "focus_chapter_id", sourcePane = "source_pane" }
+}
+struct StructureReply: Decodable, Sendable {
+    struct Staged: Decodable, Sendable { struct Ch: Decodable, Sendable { let id: Int }; let chapter: Ch? }
+    let text: String
+    let stagedBriefing: Staged?
+    let pendingCodexChange: CodexChangeCard?
+    let failed: Bool?
+}
 private struct IdeationSend: Encodable { let text: String; let source_pane = "right_panel" }
 
 /// The server reads these keys as written (camelCase). `quickOpen` asks for the fixed greeting instead of a model-written brief.
@@ -155,17 +167,21 @@ enum GodricStatus { case ready, thinking, offline }
 @MainActor @Observable
 final class GodricModel {
     /// Which panel's thread this is. Home chat is `/api/godric/*`; Ideation is the book's own thread; Creation is the open chapter's.
-    enum Thread { case home, ideation, creation, codex }
+    enum Thread { case home, ideation, creation, codex, structure }
 
     let thread: Thread
     init(thread: Thread = .home) { self.thread = thread }
 
     /// The panel context the server keys the thread by.
-    var contextName: String { switch thread { case .home: "home"; case .ideation: "ideation"; case .creation: "creation"; case .codex: "codex" } }
+    var contextName: String { switch thread { case .home: "home"; case .ideation: "ideation"; case .creation: "creation"; case .codex: "codex"; case .structure: "structure" } }
     /// Codex only: what is open now, read each time a message is sent.
     var codexContext: (() -> CodexPanelContext)?
     /// Codex only: a drafted change was applied, so the Codex should look again.
     var onCodexApplied: (() async -> Void)?
+    /// Structure only: the open chapter, sent as the focus hint with each turn.
+    var structureFocus: (() -> Int?)?
+    /// Structure only: a turn staged a brief (the chapter's id) or applied a codex change, so the board looks again.
+    var onStructureTurn: ((_ stagedChapter: Int?) async -> Void)?
 
     var messages: [ChatMessage] = []
     var status: GodricStatus = .ready
@@ -246,7 +262,7 @@ final class GodricModel {
     func newChat(client: APIClient) async {
         guard !busy else { return }
         if thread == .ideation { await onNewConversation?(); return }
-        if thread == .creation { return }
+        if thread == .creation || thread == .structure { return }
         status = .thinking
         do {
             let r: ConversationResponse = try await client.post("/api/godric/conversation/new",
@@ -290,6 +306,24 @@ final class GodricModel {
         loaded = true
     }
 
+    // MARK: structure thread
+
+    /// Puts the book's one Structure thread on screen. The server keeps it per book, so there is no History or New chat.
+    func seedStructure(bookId: Int, title: String?, messages server: [StructureServerMessage]) {
+        focusedBookId = bookId
+        activeKey = "s-\(bookId)"
+        let opener = ChatMessage(role: .note, text: "Structure conversation" + (title.map { " — \($0)" } ?? ""), time: nil)
+        let turns = server.filter { $0.kind == "chat" || $0.kind == "opening" }.map {
+            ChatMessage(role: $0.role == "user" ? .user : .godric, text: $0.text, time: Self.parse($0.createdAt))
+        }
+        activeMessages = [opener] + turns
+        messages = activeMessages
+        status = .ready
+        loaded = true
+    }
+
+    func resetStructure() { activeMessages = []; messages = []; viewing = nil; loaded = false; focusedBookId = nil; status = .ready }
+
     func resetCreation() {
         activeMessages = []; messages = []; viewing = nil; loaded = false; focusedChapterId = nil; status = .ready
     }
@@ -328,6 +362,18 @@ final class GodricModel {
             busy = false
             return
         }
+        if thread == .structure, let bookId = focusedBookId {
+            do {
+                let r: StructureReply = try await client.post("/api/structure/books/\(bookId)/messages",
+                    body: StructureSend(text: text, focusChapterId: structureFocus?()))
+                messages.append(ChatMessage(role: r.failed == true ? .error : .godric, text: r.text, time: Date(), codexChange: r.pendingCodexChange))
+                status = .ready
+                await onStructureTurn?(r.stagedBriefing?.chapter?.id)
+            } catch { fail(error, opening: false) }
+            activeMessages = messages
+            busy = false
+            return
+        }
         if thread == .creation, let chapterId = focusedChapterId {
             do {
                 // A reply is one JSON response and can take about a minute; APIClient's POST waits up to ten.
@@ -361,11 +407,12 @@ final class GodricModel {
     func resolveCodexChange(_ card: CodexChangeCard, apply: Bool, client: APIClient) async {
         guard let i = messages.firstIndex(where: { $0.codexChange?.id == card.id }) else { return }
         do {
-            let _: Present = try await client.post(apply ? "/api/godric/codex-proposal/apply" : "/api/godric/codex-proposal/discard",
+            let base = thread == .structure ? "/api/structure/codex-proposal" : "/api/godric/codex-proposal"
+            let _: Present = try await client.post(apply ? "\(base)/apply" : "\(base)/discard",
                                                    body: CodexProposalCall(conversationId: card.conversationId, proposalId: card.proposalId))
             messages[i].outcome = apply ? "Applied" : "Discarded"
             activeMessages = messages
-            if apply { await onCodexApplied?() }
+            if apply { await onCodexApplied?(); await onStructureTurn?(nil) }
         } catch let e as APIError { messages.append(ChatMessage(role: .error, text: e.message, time: nil)) }
         catch { messages.append(ChatMessage(role: .error, text: "That did not work.", time: nil)) }
     }
@@ -417,6 +464,7 @@ final class GodricModel {
         case .creation: return true
         case .home: return entry.key.hasPrefix("g-") && (entry.panel ?? "home") == "home"
         case .codex: return entry.key.hasPrefix("g-") && entry.panel == "codex"
+        case .structure: return true
         }
     }
 
