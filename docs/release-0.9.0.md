@@ -23,4 +23,4 @@ Camera as an image source, changing an entry's type, alias search and room-in-bu
 
 ## Not tested
 
-Photos upload and image approve, reject and delete; saving an entry developed from Find missing; the app against a production server (production is on 0.58.0).
+Photos upload; image approve, reject and delete as separate buttons; the app against a production server (production is on 0.58.0).

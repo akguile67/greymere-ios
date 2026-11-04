@@ -17,13 +17,15 @@
 | 6.1 | Ask the Codex, with source chips | |
 | 6.2 | Godric with the open entry as context; his drafted changes appear as a diff with Apply and Discard | |
 | 6.3 | Dictation into the editor | |
+| 3.1 | Rename an entry (AK Guile to AK Guile Man), seen on all three screens | |
+| 5.3 | Develop an item from Find missing opens the same New entry form, pre-filled | |
 | Sync | Devices follow each other within about 15 seconds while the panel is open | A polling stop-gap, see below |
 
 ## Built, not run by the author
 
-- 3.1 body editing of headings in the editor (seen once, not all cases).
-- 4.1 upload an image from Photos; 4.3 approve, reject and delete an image.
-- Find missing: saving a developed entry (the form opened and was pre-filled).
+- 4.1 upload an image from Photos (the author had nothing to upload).
+- 4.3 approve, reject and delete an image (the author used generated images; the three buttons are not separately confirmed).
+- Headings (`##`) inside a body in the editor: seen once.
 
 ## Not shipped
 
