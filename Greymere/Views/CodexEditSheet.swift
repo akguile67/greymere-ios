@@ -23,6 +23,7 @@ struct CodexEditSheet: View {
     @State private var saving = false
     @State private var message: String?
     @State private var dictation = DictationModel()
+    @State private var prose = ProseController()
 
     private var theme: ThemeStore { connection.theme }
     private var nameChanged: Bool { name.trimmingCharacters(in: .whitespaces) != baseName }
@@ -77,11 +78,18 @@ struct CodexEditSheet: View {
                         Spacer()
                         micButton
                     }
-                    TextEditor(text: $bodyText, selection: $selection)
-                        .scrollContentBackground(.hidden).frame(minHeight: 320)
+                    // The manuscript's own editor: bold and italic show as bold and italic, the markers are hidden until the
+                    // caret touches them.
+                    ProseTextView(text: $bodyText, selection: $selection, editable: true,
+                                  hideKeyboard: dictation.state == .listening || dictation.state == .starting,
+                                  trailingBreak: false, controller: prose)
+                        .frame(maxWidth: .infinity, minHeight: 320, alignment: .topLeading)
                         .padding(10).glassEffect(.regular, in: .rect(cornerRadius: 16))
                     if let notice = dictation.notice { Text(notice).font(.caption).foregroundStyle(.orange).onTapGesture { dictation.notice = nil } }
-                    Text("Markdown: ## for a heading, - for a bullet, **bold**, *italic*.").font(.caption).foregroundStyle(theme.faint)
+                    HStack(spacing: 10) {
+                        formatButton("bold", "Bold") { prose.format(.bold) }
+                        formatButton("italic", "Italic") { prose.format(.italic) }
+                    }
                 }
             }
             .padding()
@@ -94,6 +102,14 @@ struct CodexEditSheet: View {
             Text(title).font(.footnote).foregroundStyle(theme.muted)
             content().padding(.horizontal, 14).padding(.vertical, 12).glassEffect(.regular, in: .rect(cornerRadius: 16))
         }
+    }
+
+    private func formatButton(_ symbol: String, _ label: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.footnote.weight(.semibold)).foregroundStyle(theme.text)
+                .frame(width: 40, height: 32).glassEffect(.regular.interactive(), in: .capsule)
+        }
+        .buttonStyle(.plain).accessibilityLabel(label)
     }
 
     private var micButton: some View {
