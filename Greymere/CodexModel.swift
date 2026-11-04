@@ -103,6 +103,11 @@ struct CodexChain: Decodable, Identifiable, Hashable, Sendable {
 }
 private struct CodexChains: Decodable, Sendable { let chains: [CodexChain] }
 private struct CodexTag: Encodable {}
+struct CodexCraft: Decodable, Sendable { let prompt: String }
+struct CodexGenerated: Decodable, Sendable { let imageUrl: String; let costUsd: Double?; let ms: Int? }
+private struct CodexPromptBody: Encodable { let prompt: String }
+private struct CodexUrlBody: Encodable { let url: String }
+private struct CodexOk: Decodable, Sendable { let ok: Bool? }
 
 /// A Book series (Greymere, Ellen's Story, ...): the server's `series` row.
 struct CodexSeries: Decodable, Identifiable, Hashable, Sendable {
@@ -140,6 +145,8 @@ private struct CodexNew: Encodable {
     private enum CodingKeys: String, CodingKey { case name, type, body, aliases, seriesId = "series_id", bookIds = "book_ids", chainIds = "chain_ids" }
 }
 private struct CodexDeleted: Decodable { let ok: Bool? }
+
+struct CodexFailure: Error { let text: String }
 
 enum CodexApplyResult { case saved, stale(CodexDetail), failed(String) }
 
@@ -219,6 +226,38 @@ final class CodexModel {
             entries = try await client.get(path)
             loadError = nil
         } catch let e as APIError { loadError = e.message } catch { loadError = "The Codex could not be read." }
+    }
+
+    // MARK: images (the server calls them portraits)
+
+    /// Runs one image action, then reads the entry again so the picture and its status are current. Returns an error
+    /// message, or nil on success.
+    private func portraitCall(_ id: Int, _ work: (APIClient) async throws -> Void) async -> String? {
+        guard let client else { return "Not connected." }
+        do { try await work(client) } catch let e as APIError { return e.message } catch { return "That did not work." }
+        await refreshDetail(id); await reload()
+        return nil
+    }
+    func uploadPortrait(_ id: Int, jpeg: Data) async -> String? {
+        await portraitCall(id) { let _: CodexOk = try await $0.postRaw("/api/codex/\(id)/portrait?ext=jpg", data: jpeg, contentType: "image/jpeg") }
+    }
+    func approvePortrait(_ id: Int) async -> String? { await portraitCall(id) { let _: CodexOk = try await $0.post("/api/codex/\(id)/portrait/approve", body: CodexTag()) } }
+    func rejectPortrait(_ id: Int) async -> String? { await portraitCall(id) { let _: CodexOk = try await $0.post("/api/codex/\(id)/portrait/reject", body: CodexTag()) } }
+    func deletePortrait(_ id: Int) async -> String? { await portraitCall(id) { let _: CodexOk = try await $0.delete("/api/codex/\(id)/portrait") } }
+    func savePortrait(_ id: Int, url: String) async -> String? {
+        await portraitCall(id) { let _: CodexOk = try await $0.post("/api/codex/\(id)/portrait/save", body: CodexUrlBody(url: url)) }
+    }
+    /// Godric writes the prompt for the image (a short model call, no image yet).
+    func craftPrompt(_ id: Int) async -> Result<String, CodexFailure> {
+        guard let client else { return .failure(CodexFailure(text: "Not connected.")) }
+        do { let c: CodexCraft = try await client.post("/api/codex/\(id)/portrait/craft-prompt", body: CodexTag()); return .success(c.prompt) }
+        catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
+    }
+    /// Makes the image. This is the step that costs money (about $0.04) and takes about 15 seconds.
+    func generatePortrait(_ id: Int, prompt: String) async -> Result<CodexGenerated, CodexFailure> {
+        guard let client else { return .failure(CodexFailure(text: "Not connected.")) }
+        do { let g: CodexGenerated = try await client.post("/api/codex/\(id)/portrait/generate", body: CodexPromptBody(prompt: prompt)); return .success(g) }
+        catch let e as APIError { return .failure(CodexFailure(text: e.message)) } catch { return .failure(CodexFailure(text: "That did not work.")) }
     }
 
     func loadBooks() async {

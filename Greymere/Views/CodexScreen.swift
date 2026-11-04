@@ -462,6 +462,7 @@ private struct CodexEntryView: View {
     @State private var showAllChildren = false
     @State private var editing = false
     @State private var confirmDelete = false
+    @State private var imaging = false
     @Environment(\.codexPush) private var push
     @Environment(ConnectionModel.self) private var connection
 
@@ -471,7 +472,7 @@ private struct CodexEntryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(alignment: .top, spacing: 12) {
-                        portrait(detail?.portraitPath ?? e.portraitPath, type: e.type)
+                        Button { imaging = true } label: { portrait(detail?.portraitPath ?? e.portraitPath, type: e.type) }.buttonStyle(.plain).accessibilityLabel("Image")
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(alignment: .top) {
                                 Text(e.name).font(.serif(26)).foregroundStyle(connection.theme.text)
@@ -482,7 +483,7 @@ private struct CodexEntryView: View {
                                 }
                                 .buttonStyle(.plain).disabled(detail == nil)
                             }
-                            Text(([e.type.single] + (detail?.chains ?? []).map(\.name) + [detail?.seriesId.flatMap { id in model.series.first { $0.id == id }?.name }].compactMap { $0 }).joined(separator: " · ")).font(.subheadline).foregroundStyle(connection.theme.muted)
+                            Text(subtitle(e, detail)).font(.subheadline).foregroundStyle(connection.theme.muted)
                             let aliases = detail?.aliases ?? e.allAliases
                             if !aliases.isEmpty { Text("Also known as: " + aliases.joined(separator: ", ")).font(.footnote).foregroundStyle(connection.theme.text) }
                             let books = (detail?.appearancesByBook ?? []).compactMap(\.bookTitle)
@@ -523,9 +524,17 @@ private struct CodexEntryView: View {
                 Button("Keep it", role: .cancel) {}
             } message: { Text("Its aliases and image go with it, and any Find missing item it filled reopens. This can't be undone.") }
             .sheet(isPresented: $editing) { CodexEditSheet(model: model, client: client, id: id) }
+            .sheet(isPresented: $imaging) { CodexPortraitSheet(model: model, client: client, id: id) }
         } else {
             ContentUnavailableView("Entry not found", systemImage: "questionmark.folder")
         }
+    }
+
+    private func subtitle(_ e: CodexEntry, _ detail: CodexDetail?) -> String {
+        var parts: [String] = [e.type.single]
+        for c in detail?.chains ?? [] { parts.append(c.name) }
+        if let sid = detail?.seriesId, let name = model.series.first(where: { $0.id == sid })?.name { parts.append(name) }
+        return parts.joined(separator: " · ")
     }
 
     @ViewBuilder private func portrait(_ path: String?, type: CodexType) -> some View {
