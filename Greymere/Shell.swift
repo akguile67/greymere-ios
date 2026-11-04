@@ -115,7 +115,10 @@ struct AppShell: View {
             if case .panel(.structure) = shell.destination {
                 StructureScreen(model: structure, home: home, client: client) { chapterId in
                     shell.open(.creation)
-                    Task { await creation.open(chapterId, client: client) }
+                    Task {
+                        await creation.open(chapterId, client: client)
+                        creation.returnToStructure = { shell.open(.structure) }
+                    }
                 }
                 .transition(.opacity)
             }
