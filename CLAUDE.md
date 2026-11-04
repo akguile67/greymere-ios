@@ -16,6 +16,11 @@ of the Greymere server, which lives in `~/Code/greymere` (GitHub
   **GreymereDev** (`com.greymere.ios.dev`), points at a laptop dev server (its address is in `project.yml`).
 - **iOS 0.8.0** adds the Planning panel (the Kanban with the current step's dates and standing against the baseline; hold-and-drop on an iPad, a Move to menu on an iPhone) and the Home task cards (tick with hours, swipe, reorder, add by typing or dictation). Both stay live with the desktop over `/api/events`. ADR 0.58.0; server 0.58.0 and minimum server version 0.58.0. Wireframes: `docs/wireframes/planning-wireframes.html`. The dev server is the one the Godric Client (Dev) app starts, on port 3001; never run a second server on the same database beside it (they cannot share events).
 - **iOS 0.8.1** adds the studio offers on Home as cards with Add to today and Pin first, and Back to offers on a task that came from the studio (the desktop's `/api/home/studio/*` routes; no server change, minimum server version stays 0.58.0).
+- **iOS 0.9.0** adds the Codex panel (ADR 0.59.0, platform card 0.59.0; iOS 0.8.0 is skipped on purpose; minimum server version 0.59.0).
+  Browse, search, filter by Series and Book series, edit through review and Apply, new and delete, images (Photos upload,
+  Godric-made, thumbnails), Standardise, Find missing, Godric with the open entry as context, Ask the Codex. Exit
+  checklist: `docs/codex-exit-checklist.md`; release notes: `docs/release-0.9.0.md`. Server work still owed (aliases and
+  parent ids in the list, a stale-write guard, a `codex.changed` event) is in the notes folder.
 - **Builds happen on the MacBook Pro only** (Xcode, Team ID D25P46655T). Two
   bundle IDs, prod and pre-prod, distributed through TestFlight. Connection is
   over Tailscale.

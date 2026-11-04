@@ -81,6 +81,25 @@ struct APIClient: Sendable {
         try await send("DELETE", path, body: EmptyBody())
     }
 
+    /// Sends raw bytes (an image) rather than JSON.
+    func postRaw<T: Decodable>(_ path: String, data: Data, contentType: String, as type: T.Type = T.self) async throws -> T {
+        guard let url = URL(string: path, relativeTo: baseURL) else { throw APIError.unreachable }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        let body: Data, response: URLResponse
+        do { (body, response) = try await Self.chatSession.upload(for: request, from: data) }
+        catch { throw APIError.unreachable }
+        guard let http = response as? HTTPURLResponse else { throw APIError.unreachable }
+        guard (200..<300).contains(http.statusCode) else {
+            throw APIError.http(http.statusCode, String(decoding: body.prefix(1000), as: UTF8.self))
+        }
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        do { return try decoder.decode(T.self, from: body) }
+        catch { throw APIError.unreadable }
+    }
+
     private func send<B: Encodable, T: Decodable>(_ method: String, _ path: String, body: B) async throws -> T {
         guard let url = URL(string: path, relativeTo: baseURL) else { throw APIError.unreachable }
         var request = URLRequest(url: url)

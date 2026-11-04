@@ -157,7 +157,7 @@ struct GodricChatView: View {
             ScrollView {
                 LazyVStack(spacing: 8) {
                     ForEach(model.messages) { m in
-                        Bubble(message: m).id(m.id)
+                        Bubble(resolve: { card, apply in Task { await model.resolveCodexChange(card, apply: apply, client: client) } }, message: m).id(m.id)
                     }
                     if model.busy { TypingBubble().id("typing") }
                 }
@@ -178,6 +178,26 @@ struct GodricChatView: View {
 }
 
 private struct Bubble: View {
+    var resolve: (CodexChangeCard, Bool) -> Void = { _, _ in }
+    private func codexCard(_ card: CodexChangeCard, _ outcome: String?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(card.kind == "create" ? "Godric drafted a new entry: \(card.entry.name)" : "Godric drafted a change to \(card.entry.name)", systemImage: "square.and.pencil")
+                .font(.footnote.weight(.semibold))
+            if let reason = card.reason, !reason.isEmpty { Text(reason).font(.caption).foregroundStyle(connection.theme.muted) }
+            Text(DiffText.marked(before: card.currentBody, after: card.proposedBody, theme: connection.theme)).font(.caption)
+                .padding(10).frame(maxWidth: .infinity, alignment: .leading).background(connection.theme.background, in: RoundedRectangle(cornerRadius: 10))
+            if let outcome { Text(outcome).font(.caption.weight(.semibold)).foregroundStyle(outcome == "Applied" ? .green : connection.theme.muted) }
+            else {
+                HStack(spacing: 8) {
+                    Button("Apply") { resolve(card, true) }.buttonStyle(.borderedProminent)
+                    Button("Discard") { resolve(card, false) }.buttonStyle(.bordered)
+                }.controlSize(.small)
+            }
+        }
+        .padding(10).frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(connection.theme.faint, style: StrokeStyle(lineWidth: 1, dash: [4])))
+    }
+
     let message: ChatMessage
     @Environment(ConnectionModel.self) private var connection
 
@@ -211,6 +231,7 @@ private struct Bubble: View {
                 Text(rendered).font(.callout).foregroundStyle(connection.theme.text).textSelection(.enabled)
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                if let card = message.codexChange { codexCard(card, message.outcome) }
                 if message.hasProposal {
                     Text("Godric drafted a change. Review and apply it on the desktop.")
                         .font(.caption).foregroundStyle(connection.theme.muted)

@@ -25,9 +25,47 @@ struct ConversationResponse: Decodable, Sendable {
 /// Present when the server returned the field with a value; the app only needs to know a draft exists.
 struct Present: Decodable, Sendable { init(from decoder: Decoder) throws {} }
 
+/// A proposal id as the server sends it (text or a number), sent back the way it came.
+struct FlexID: Codable, Hashable, Sendable {
+    let text: String
+    let isNumber: Bool
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if let i = try? c.decode(Int.self) { text = String(i); isNumber = true } else { text = try c.decode(String.self); isNumber = false }
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        if isNumber, let i = Int(text) { try c.encode(i) } else { try c.encode(text) }
+    }
+}
+
+/// A change to a Codex entry that Godric drafted in chat. Nothing is written until the author presses Apply.
+struct CodexChangeCard: Decodable, Sendable, Equatable, Identifiable {
+    struct Entry: Decodable, Sendable, Equatable { let id: Int?; let name: String; let type: String }
+    let proposalId: FlexID
+    let conversationId: Int
+    let kind: String
+    let entry: Entry
+    let currentBody: String
+    let proposedBody: String
+    let newAliases: [String]?
+    let reason: String?
+    var id: String { proposalId.text }
+    static func == (a: CodexChangeCard, b: CodexChangeCard) -> Bool { a.proposalId == b.proposalId && a.conversationId == b.conversationId }
+}
+
+/// What the open Codex screen tells Godric (the server reads the open entry from the database).
+struct CodexPanelContext: Encodable, Sendable {
+    let filter: String
+    let entryId: Int?
+    private enum CodingKeys: String, CodingKey { case filter, entryId = "entry_id" }
+}
+private struct CodexProposalCall: Encodable { let conversationId: Int; let proposalId: FlexID
+    private enum CodingKeys: String, CodingKey { case conversationId = "conversation_id", proposalId = "proposal_id" } }
+
 struct ChatReply: Decodable, Sendable {
     let text: String
-    let pendingCodexChange: Present?
+    let pendingCodexChange: CodexChangeCard?
     let pendingContentDraft: Present?
     let pendingCoverBriefChange: Present?
     let pendingCoverBriefExport: Present?
@@ -93,7 +131,7 @@ private struct IdeationSend: Encodable { let text: String; let source_pane = "ri
 
 /// The server reads these keys as written (camelCase). `quickOpen` asks for the fixed greeting instead of a model-written brief.
 private struct ConversationRequest: Encodable { let context: String; let bookId: Int?; var quickOpen = true }
-private struct ChatRequest: Encodable { let context: String; let message: String; let bookId: Int?; var quickOpen = true }
+private struct ChatRequest: Encodable { let context: String; let message: String; let bookId: Int?; var quickOpen = true; var codexPanelContext: CodexPanelContext? }
 private struct ContinueRequest: Encodable { let key: String; let context: String; let bookId: Int?; let into: String? }
 private struct BookSwitchRequest: Encodable { let screen: String; let bookId: Int; let bookTitle: String }
 private struct Ignored: Decodable, Sendable {}
@@ -105,6 +143,9 @@ struct ChatMessage: Identifiable, Equatable {
     let text: String
     let time: Date?
     var hasProposal = false
+    var codexChange: CodexChangeCard?
+    /// Set once the author has dealt with the drafted change: "Applied" or "Discarded".
+    var outcome: String?
 }
 
 enum GodricStatus { case ready, thinking, offline }
@@ -114,13 +155,17 @@ enum GodricStatus { case ready, thinking, offline }
 @MainActor @Observable
 final class GodricModel {
     /// Which panel's thread this is. Home chat is `/api/godric/*`; Ideation is the book's own thread; Creation is the open chapter's.
-    enum Thread { case home, ideation, creation }
+    enum Thread { case home, ideation, creation, codex }
 
     let thread: Thread
     init(thread: Thread = .home) { self.thread = thread }
 
     /// The panel context the server keys the thread by.
-    var contextName: String { switch thread { case .home: "home"; case .ideation: "ideation"; case .creation: "creation" } }
+    var contextName: String { switch thread { case .home: "home"; case .ideation: "ideation"; case .creation: "creation"; case .codex: "codex" } }
+    /// Codex only: what is open now, read each time a message is sent.
+    var codexContext: (() -> CodexPanelContext)?
+    /// Codex only: a drafted change was applied, so the Codex should look again.
+    var onCodexApplied: (() async -> Void)?
 
     var messages: [ChatMessage] = []
     var status: GodricStatus = .ready
@@ -157,7 +202,7 @@ final class GodricModel {
 
     /// Opens (or restores) this panel's thread. A book in focus is sent, and noted when it changes.
     func open(client: APIClient, book: (id: Int, title: String)? = nil) async {
-        guard thread == .home else { return }   // Ideation's thread is loaded with its synopsis, by IdeationModel
+        guard thread == .home || thread == .codex else { return }   // Ideation's thread is loaded with its synopsis, by IdeationModel
         if loaded, viewing == nil {
             await noteBook(book, client: client)
             return
@@ -302,14 +347,27 @@ final class GodricModel {
         }
         do {
             let r: ChatReply = try await client.post("/api/godric/chat",
-                body: ChatRequest(context: contextName, message: text, bookId: focusedBookId))
-            messages.append(ChatMessage(role: .godric, text: r.text, time: Date(), hasProposal: r.hasProposal))
+                body: ChatRequest(context: contextName, message: text, bookId: focusedBookId, codexPanelContext: thread == .codex ? codexContext?() : nil))
+            messages.append(ChatMessage(role: .godric, text: r.text, time: Date(), hasProposal: r.hasProposal && r.pendingCodexChange == nil, codexChange: r.pendingCodexChange))
             status = .ready
         } catch {
             fail(error, opening: false)
         }
         activeMessages = messages
         busy = false
+    }
+
+    /// Applies or discards a Codex change Godric drafted. Apply is refused by the server if the entry moved on.
+    func resolveCodexChange(_ card: CodexChangeCard, apply: Bool, client: APIClient) async {
+        guard let i = messages.firstIndex(where: { $0.codexChange?.id == card.id }) else { return }
+        do {
+            let _: Present = try await client.post(apply ? "/api/godric/codex-proposal/apply" : "/api/godric/codex-proposal/discard",
+                                                   body: CodexProposalCall(conversationId: card.conversationId, proposalId: card.proposalId))
+            messages[i].outcome = apply ? "Applied" : "Discarded"
+            activeMessages = messages
+            if apply { await onCodexApplied?() }
+        } catch let e as APIError { messages.append(ChatMessage(role: .error, text: e.message, time: nil)) }
+        catch { messages.append(ChatMessage(role: .error, text: "That did not work.", time: nil)) }
     }
 
     private func fail(_ error: Error, opening: Bool) {
@@ -358,6 +416,7 @@ final class GodricModel {
         case .ideation: return entry.key.hasPrefix("i-") && entry.bookId == focusedBookId
         case .creation: return true
         case .home: return entry.key.hasPrefix("g-") && (entry.panel ?? "home") == "home"
+        case .codex: return entry.key.hasPrefix("g-") && entry.panel == "codex"
         }
     }
 
