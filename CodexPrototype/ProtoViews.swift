@@ -34,11 +34,9 @@ struct LandscapeLayout: View {
             let maxW = max(300, geo.size.width * 0.6)
             let w = min(max(store.leftWidth, 260), maxW)
             HStack(spacing: 0) {
-                // The menu keeps its own width and is clipped away, so the panel slides over in one motion
-                // instead of the menu re-laying out while it leaves.
-                PhoneLayout().frame(width: w, alignment: .leading)
-                    .frame(width: store.fullScreen ? 0 : w, alignment: .leading)
-                    .allowsHitTesting(!store.fullScreen)
+                if !store.fullScreen {
+                    PhoneLayout().frame(width: w).transition(.move(edge: .leading))
+                }
                 handle(maxW: maxW)
                 Group {
                     if let id = store.selection, store.entry(id) != nil {
@@ -55,16 +53,10 @@ struct LandscapeLayout: View {
                         }
                     }
                 }
-                // A fresh panel per mode: UIKit's nav bar re-lays itself out late (a visible jump) when its width
-                // changes under it, so the old panel fades out and a panel already at the final size fades in.
-                .id(store.fullScreen)
-                .transition(.opacity)
                 .frame(maxWidth: .infinity)
-                .background(Color(.systemBackground))
-                .zIndex(1)
             }
         }
-        .animation(.smooth(duration: 0.3), value: store.fullScreen)
+        .animation(.snappy, value: store.fullScreen)
     }
 
     /// Inline in the panel's top bar, left-aligned with the entry picture; same size as the search icon.
