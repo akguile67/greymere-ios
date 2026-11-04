@@ -76,17 +76,3 @@ targets:
           NSExceptionDomains:
             100.87.110.63:
               NSExceptionAllowsInsecureHTTPLoads: true
-  # THROWAWAY (ADR 0.59.0 Sprint 1, step 3): navigation-only Codex prototype with dummy data.
-  # Own sources folder, own bundle ID; shares nothing with the shipped targets and is deleted after the author gate.
-  GreymereCodexProto:
-    type: application
-    platform: iOS
-    sources: [CodexPrototype]
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.greymere.ios.codexproto
-        INFOPLIST_KEY_CFBundleDisplayName: Codex Proto
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
