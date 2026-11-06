@@ -36,6 +36,15 @@ struct DayItem: Decodable, Sendable, Identifiable {
     let isOverride: Bool?
     let daysUntilDue: Int?
     let baselineStart: String?
+    /// Drafting only, today only (server 0.60.1): the server's own line and whether the target is met. Never recomputed here.
+    let progress: Progress?
+    struct Progress: Decodable, Sendable {
+        let createdToday: Int?
+        let target: Int?
+        let remaining: Int?
+        let done: Bool
+        let text: String
+    }
     var id: String { "\(bookId)-\(phase)-\(stepName ?? "")-\(actLabel ?? "")" }
     var isDue: Bool { due != false }
 }

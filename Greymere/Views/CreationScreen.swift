@@ -59,10 +59,16 @@ struct CreationScreen: View {
                     .presentationBackgroundInteraction(.enabled(upThrough: .medium))
             }
         }
+        .sheet(item: $model.gapsFor) { g in
+            CodexGapsSheet(chapterId: g.id, client: client) { Task { await model.reloadBook() } }
+        }
         .task { await model.loadBooks(client: client, preferred: activeBookId) }
         .onChange(of: model.chapterId) { _, id in if id == nil { chatOpen = false } }
         .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await model.refreshOnForeground() } } }
-        .onDisappear { Task { await model.close() } }
+        .onDisappear {
+            // Leaving the panel cannot ask a question, so unsaved brief edits keep the chapter open as it was: coming back finds them.
+            if !model.hasUnsavedWork { Task { await model.close() } }
+        }
     }
 }
 
@@ -156,7 +162,10 @@ private struct CreationPicker: View {
                     Spacer(minLength: 6)
                     if let w = ch.codexWarning, !w.isEmpty {
                         Image(systemName: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
-                            .accessibilityLabel("Codex gap: \(w.map(\.name).joined(separator: ", "))")
+                            .padding(8).contentShape(Rectangle()).padding(-8)
+                            .onTapGesture { model.gapsFor = GapTarget(id: ch.id) }
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityLabel("Codex gap: \(w.map(\.name).joined(separator: ", ")). Link, create or dismiss")
                     }
                     StatusChip(status: ch.creationStatus, briefed: ch.briefed)
                 }
@@ -242,7 +251,7 @@ private struct CreationChapterView: View {
         VStack(spacing: 0) {
             // Pinned, so the way back to the chapter list is always on screen.
             HStack {
-                Button { if model.briefEditing { confirmLeave = true } else { Task { await model.close() } } } label: {
+                Button { if model.hasUnsavedWork { confirmLeave = true } else { Task { await model.close() } } } label: {
                     // On a phone, with the formatting buttons showing, the way back is the arrow alone.
                     if sizeClass == .compact && (activeSeg != nil || draftFocused) && !model.isLocked {
                         Image(systemName: "chevron.backward").font(.subheadline.weight(.semibold)).padding(.horizontal, 2)
@@ -295,9 +304,16 @@ private struct CreationChapterView: View {
             .refreshable { await model.refreshOnForeground() }
             actions
         }
-        .confirmationDialog("Discard your changes to the brief?", isPresented: $confirmLeave, titleVisibility: .visible) {
-            Button("Discard and leave", role: .destructive) { Task { await model.close() } }
-            Button("Keep editing", role: .cancel) {}
+        .confirmationDialog(model.hasPendingProposal ? "Godric's drafted beat change isn't applied" : "You have unsaved changes to the brief",
+                            isPresented: $confirmLeave, titleVisibility: .visible) {
+            if model.hasPendingProposal && !model.isLocked {
+                Button("Apply the change and leave") { Task { await model.applyProposal(); if !model.hasPendingProposal { await model.close() } } }
+            }
+            if model.briefChanged {
+                Button("Save brief and leave") { Task { await model.saveBrief(); if !model.briefEditing { await model.close() } } }
+            }
+            Button(model.hasPendingProposal ? "Leave without applying" : "Discard and leave", role: .destructive) { Task { await model.close() } }
+            Button("Stay here", role: .cancel) {}
         }
         .task(id: client.baseURL) { await dictation.check(client: client) }
         .onChange(of: activeText) { _, new in dictation.textChanged(to: new) }

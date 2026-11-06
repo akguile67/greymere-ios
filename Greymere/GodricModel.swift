@@ -50,6 +50,9 @@ struct CodexChangeCard: Decodable, Sendable, Equatable, Identifiable {
     let proposedBody: String
     let newAliases: [String]?
     let reason: String?
+    /// Creation's chapter thread names its own routes (server 0.60.1); the other threads use their fixed ones.
+    let applyUrl: String?
+    let discardUrl: String?
     var id: String { proposalId.text }
     static func == (a: CodexChangeCard, b: CodexChangeCard) -> Bool { a.proposalId == b.proposalId && a.conversationId == b.conversationId }
 }
@@ -206,6 +209,8 @@ final class GodricModel {
     var onProposal: ((SynopsisProposal?) -> Void)?
     /// Creation only: Godric drafted a change to a beat in this turn. It is only a draft: the author applies it.
     var onBeatProposal: ((BeatProposalCard?) -> Void)?
+    /// Godric opened an empty beat this turn: the chapter document is read again so its card appears.
+    var onBeatOpened: (() async -> Void)?
     /// Ideation only: reload the book's thread and synopsis after a Continue.
     var onContinued: (() async -> Void)?
 
@@ -378,7 +383,8 @@ final class GodricModel {
             do {
                 // A reply is one JSON response and can take about a minute; APIClient's POST waits up to ten.
                 let r: CreationReply = try await client.post("/api/creation/chapters/\(chapterId)/godric", body: CreationSend(text: text))
-                messages.append(ChatMessage(role: .godric, text: r.text, time: Date()))
+                messages.append(ChatMessage(role: .godric, text: r.text, time: Date(), codexChange: r.pendingCodexChange))
+                if r.beatOpened == true { await onBeatOpened?() }
                 if let p = r.pendingBeatChange {
                     onBeatProposal?(p)
                     messages.append(ChatMessage(role: .note, text: "Godric drafted a change to a beat. Close this to review it. Apply and Discard are on the chapter; nothing changes until you press Apply.", time: nil))
@@ -408,11 +414,16 @@ final class GodricModel {
         guard let i = messages.firstIndex(where: { $0.codexChange?.id == card.id }) else { return }
         do {
             let base = thread == .structure ? "/api/structure/codex-proposal" : "/api/godric/codex-proposal"
-            let _: Present = try await client.post(apply ? "\(base)/apply" : "\(base)/discard",
+            let path = (apply ? card.applyUrl : card.discardUrl) ?? (apply ? "\(base)/apply" : "\(base)/discard")
+            let _: Present = try await client.post(path,
                                                    body: CodexProposalCall(conversationId: card.conversationId, proposalId: card.proposalId))
             messages[i].outcome = apply ? "Applied" : "Discarded"
             activeMessages = messages
             if apply { await onCodexApplied?(); await onStructureTurn?(nil) }
+        } catch APIError.http(409, _) where card.applyUrl != nil {
+            // Held in memory on the server: a restart, or a second Apply, leaves nothing to apply. Not an error.
+            messages[i].outcome = "Expired or already dealt with"
+            activeMessages = messages
         } catch let e as APIError { messages.append(ChatMessage(role: .error, text: e.message, time: nil)) }
         catch { messages.append(ChatMessage(role: .error, text: "That did not work.", time: nil)) }
     }

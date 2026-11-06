@@ -121,12 +121,18 @@ struct TodayCard: View {
             }
             return "\(Fmt.activity(i)) — \(Fmt.amount(i))\(hrs)"
         }.joined(separator: " · ")
+        // 0.60.1: a day whose drafting target is met ticks itself (every item of the book carries progress and all are done).
+        let allMet = group.allSatisfy { $0.progress?.done == true }
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 8) {
+                if allMet { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).accessibilityLabel("Done") }
                 pill("P\(first.bookPriority ?? 0)")
                 Text(first.bookTitle).font(.subheadline.weight(.semibold)).foregroundStyle(theme.text)
             }
             Text(parts).font(.footnote).foregroundStyle(theme.muted)
+            ForEach(group.compactMap(\.progress), id: \.text) { p in
+                Text(p.text).font(.footnote.weight(.bold)).foregroundStyle(p.done ? Color.green : theme.text)
+            }
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)

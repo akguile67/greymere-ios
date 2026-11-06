@@ -110,8 +110,8 @@ struct StructureConflict: Identifiable {
 }
 
 enum StructureSheet: Identifiable {
-    case add(Int), rename(Int), delete(Int)
-    var id: String { switch self { case .add(let a): "add\(a)"; case .rename(let c): "ren\(c)"; case .delete(let c): "del\(c)" } }
+    case add(Int), rename(Int), delete(Int), gaps(Int)
+    var id: String { switch self { case .add(let a): "add\(a)"; case .rename(let c): "ren\(c)"; case .delete(let c): "del\(c)"; case .gaps(let c): "gap\(c)" } }
 }
 
 struct StructureBanner: Identifiable { let id = UUID(); let text: String }

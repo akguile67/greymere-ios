@@ -63,6 +63,7 @@ struct StructureScreen: View {
             case .add(let a): StructureAddSheet(model: model, actId: a)
             case .rename(let c): StructureRenameSheet(model: model, chapterId: c)
             case .delete(let c): StructureDeleteSheet(model: model, chapterId: c)
+            case .gaps(let c): CodexGapsSheet(chapterId: c, client: client) { Task { await model.reload() } }
             }
         }
         .sheet(item: $model.conflict) { c in StructureConflictSheet(model: model, conflict: c) }
@@ -258,8 +259,12 @@ private struct StructureChapterRow: View {
                     Text(model.badges[chapter.id] ?? "Ch \(chapter.number)").font(.caption.weight(.semibold)).foregroundStyle(connection.theme.muted)
                     Spacer(minLength: 6)
                     if chapter.codexWarning?.isEmpty == false {
+                        // Tapping the triangle opens the chapter's gaps (0.60.1); the rest of the card still opens the briefing.
                         Image(systemName: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
-                            .accessibilityLabel("Codex gap: \(chapter.codexWarning!.map(\.name).joined(separator: ", "))")
+                            .padding(8).contentShape(Rectangle()).padding(-8)
+                            .onTapGesture { model.sheet = .gaps(chapter.id) }
+                            .accessibilityAddTraits(.isButton)
+                            .accessibilityLabel("Codex gap: \(chapter.codexWarning!.map(\.name).joined(separator: ", ")). Link, create or dismiss")
                     }
                     StructureStateChip(chapter: chapter, creation: stage)
                 }
@@ -325,8 +330,10 @@ private struct StructureCard: View {
                     }
                     Text(chapter.title).font(.serif(26))
                     if let gaps = chapter.codexWarning, !gaps.isEmpty {
-                        Label("Codex gaps: " + gaps.map(\.name).joined(separator: ", "), systemImage: "exclamationmark.triangle.fill")
-                            .font(.caption).foregroundStyle(.orange)
+                        Button { model.sheet = .gaps(chapter.id) } label: {
+                            Label("Codex gaps: " + gaps.map(\.name).joined(separator: ", ") + " — link, create or dismiss", systemImage: "exclamationmark.triangle.fill")
+                                .font(.caption).multilineTextAlignment(.leading)
+                        }.buttonStyle(.plain).foregroundStyle(.orange)
                     }
                     summary(ro)
                     ForEach(BriefField.allCases.filter { $0 != .summary }) { section($0, ro) }
@@ -476,5 +483,139 @@ private struct StructureConflictSheet: View {
         }
         .presentationDetents([.medium, .large])
         .interactiveDismissDisabled()
+    }
+}
+
+
+// MARK: codex gaps (server 0.60.1, #333)
+
+private struct GapSuggestion: Decodable, Sendable, Identifiable, Hashable { let id: Int; let name: String; let type: String }
+private struct ChapterGap: Decodable, Sendable, Identifiable {
+    let name: String
+    let suggestions: [GapSuggestion]
+    let offerFirst: String
+    var id: String { name }
+}
+private struct GapsReply: Decodable, Sendable { let gaps: [ChapterGap] }
+private struct ResolveBody: Encodable { let name: String; let action: String; let entryId: Int?; let type: String?
+    private enum CodingKeys: String, CodingKey { case name, action, entryId = "entry_id", type } }
+private struct ResolveReply: Decodable, Sendable { let action: String? }
+
+/// A chapter's codex gaps, each with the three things to do about it: link it to an entry that exists under another
+/// name, create the entry (a stub marked needs development), or say it is not required. The server decides what a gap is.
+/// Opened from the warning triangle in Structure and in Creation; same wording and order as the desktop dialog.
+struct CodexGapsSheet: View {
+    let chapterId: Int
+    let client: APIClient
+    var onChanged: () -> Void = {}
+    @Environment(\.dismiss) private var dismiss
+    @Environment(ConnectionModel.self) private var connection
+    @State private var gaps: [ChapterGap] = []
+    @State private var loaded = false
+    @State private var loadError: String?
+    @State private var note: String?
+    @State private var busyName: String?
+    @State private var rowError: [String: String] = [:]
+    @State private var pickLink: [String: Int] = [:]
+    @State private var pickType: [String: String] = [:]
+
+    private static let types = [("characters", "Character"), ("locations", "Place"), ("objects", "Object")]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("The brief names these, and the codex has no entry that matches. Pick what to do with each.")
+                        .font(.footnote).foregroundStyle(connection.theme.muted)
+                    if let note { Text(note).font(.footnote).foregroundStyle(.green) }
+                    if let loadError { Text(loadError).font(.footnote).foregroundStyle(.red) }
+                    else if !loaded { ProgressView().frame(maxWidth: .infinity) }
+                    else if gaps.isEmpty { Text("No gaps left on this chapter.").font(.body) }
+                    ForEach(gaps) { row($0) }
+                }
+                .padding(16)
+            }
+            .navigationTitle("Codex gaps in this chapter")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Close") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
+        .task { await load() }
+        .onDisappear { onChanged() }
+    }
+
+    @ViewBuilder private func row(_ g: ChapterGap) -> some View {
+        let busy = busyName == g.name
+        VStack(alignment: .leading, spacing: 10) {
+            Text(g.name).font(.headline)
+            if g.offerFirst == "link" { linkLine(g, busy); createLine(g, busy) } else { createLine(g, busy); linkLine(g, busy) }
+            Button("Not required") { Task { await resolve(g, action: "dismiss", entry: nil, type: nil, ok: "\"\(g.name)\" dismissed.") } }
+                .buttonStyle(.bordered).disabled(busy)
+            Text("Drops this warning. Other gaps on the chapter stay.").font(.caption).foregroundStyle(connection.theme.faint)
+            if let e = rowError[g.name] { Text(e).font(.footnote).foregroundStyle(.red) }
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+        .background(connection.theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    @ViewBuilder private func linkLine(_ g: ChapterGap, _ busy: Bool) -> some View {
+        if g.suggestions.isEmpty {
+            Text("No entry looks like this one.").font(.footnote).foregroundStyle(connection.theme.muted)
+        } else {
+            let sel = pickLink[g.name] ?? g.suggestions[0].id
+            HStack {
+                Picker("Entry", selection: Binding(get: { sel }, set: { pickLink[g.name] = $0 })) {
+                    ForEach(g.suggestions) { Text("\($0.name) (\(Self.label($0.type)))").tag($0.id) }
+                }.labelsHidden()
+                Button("Link to this entry") { Task { await resolve(g, action: "link", entry: sel, type: nil, ok: "\"\(g.name)\" linked.") } }
+                    .buttonStyle(.borderedProminent).disabled(busy)
+            }
+            Text("\"\(g.name)\" becomes another name for the entry, so the brief finds it.").font(.caption).foregroundStyle(connection.theme.faint)
+        }
+    }
+
+    @ViewBuilder private func createLine(_ g: ChapterGap, _ busy: Bool) -> some View {
+        let t = pickType[g.name] ?? "characters"
+        HStack {
+            Picker("Type", selection: Binding(get: { t }, set: { pickType[g.name] = $0 })) {
+                ForEach(Self.types, id: \.0) { Text($0.1).tag($0.0) }
+            }.labelsHidden()
+            Button("Create entry") { Task { await resolve(g, action: "create", entry: nil, type: t, ok: "\"\(g.name)\" created, marked needs development.") } }
+                .buttonStyle(.bordered).disabled(busy)
+        }
+        Text("Makes a new entry marked needs development; develop it with Godric afterwards.").font(.caption).foregroundStyle(connection.theme.faint)
+    }
+
+    private static func label(_ type: String) -> String {
+        type == "locations" ? "place" : type == "objects" ? "object" : type == "lore" ? "lore" : "character"
+    }
+
+    private func load() async {
+        do {
+            let r: GapsReply = try await client.get("/api/structure/chapters/\(chapterId)/codex-gaps")
+            gaps = r.gaps; loadError = nil
+        } catch { loadError = "Could not load the gaps." }
+        loaded = true
+    }
+
+    private func resolve(_ g: ChapterGap, action: String, entry: Int?, type: String?, ok: String) async {
+        busyName = g.name; rowError[g.name] = nil
+        defer { busyName = nil }
+        do {
+            let _: ResolveReply = try await client.post("/api/structure/chapters/\(chapterId)/codex-gaps/resolve",
+                body: ResolveBody(name: g.name, action: action, entryId: entry, type: type))
+            note = ok
+            await load(); onChanged()
+        } catch APIError.http(409, _) {
+            // Resolved elsewhere (the desktop, or another device): show what is left.
+            note = "\"\(g.name)\" was already dealt with elsewhere. The list is up to date now."
+            await load(); onChanged()
+        } catch APIError.http(404, _) {
+            rowError[g.name] = "That entry no longer exists. Pick another or create one."
+            await load()
+        } catch APIError.http(400, _) {
+            rowError[g.name] = "The server did not understand that action."
+        } catch let e as APIError { rowError[g.name] = e.message }
+        catch { rowError[g.name] = "That didn't go through." }
     }
 }

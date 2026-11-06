@@ -25,6 +25,10 @@ of the Greymere server, which lives in `~/Code/greymere` (GitHub
   grid as in Creation, the six-field briefing on a card (summary headline and five sections), add, rename, delete, hold-and-drag
   reorder within an act, Godric's one Structure thread, live refresh and a stale-write sheet. Draft opens Creation, which offers a
   way back to Structure. Exit checklist: `docs/structure-exit-checklist.md`; release notes: `docs/release-0.10.0.md`.
+- **iOS 0.11.0** brings the app to server 0.60.1 (minimum server version 0.60.1): the drafting progress line and tick on Home's Today card,
+  the codex-gap sheet (Link, Create, Not required) from the warning triangle in Structure and Creation, Godric's codex draft card and
+  `beat_opened` in Creation's chapter chat, and a warning before leaving the brief editor with unsaved edits. Handoff:
+  `~/Code/greymere/docs/ios-handoff-0.60.1.md`; exit checklist: `docs/parity-0.60.1-exit-checklist.md`; release notes: `docs/release-0.11.0.md`.
 - **Builds happen on the MacBook Pro only** (Xcode, Team ID D25P46655T). Two
   bundle IDs, prod and pre-prod, distributed through TestFlight. Connection is
   over Tailscale.

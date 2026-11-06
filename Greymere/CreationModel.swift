@@ -3,6 +3,8 @@ import Observation
 
 // What the Creation endpoints send and take (ADR 0.55.0; docs/adrs/adr-0.55.0-step0-audit-note.md in the server repo).
 
+struct GapTarget: Identifiable { let id: Int }
+
 struct CreationBookSummary: Decodable, Sendable, Identifiable {
     let id: Int
     let title: String
@@ -192,6 +194,9 @@ struct CreationChat: Decodable, Sendable {
 struct CreationReply: Decodable, Sendable {
     let text: String
     let pendingBeatChange: BeatProposalCard?
+    /// Server 0.60.1: a codex entry Godric drafted (applied by the author's button), and an empty beat he opened.
+    let pendingCodexChange: CodexChangeCard?
+    let beatOpened: Bool?
 }
 
 struct ReferenceCandidate: Decodable, Sendable, Identifiable, Hashable {
@@ -247,6 +252,8 @@ final class CreationModel {
 
     // the brief, edited in place
     var briefEditing = false
+    /// The chapter whose codex gaps sheet is open (server 0.60.1).
+    var gapsFor: GapTarget?
     var briefDraft = CreationBrief()
     private var briefBase = CreationBrief()
 
@@ -316,6 +323,7 @@ final class CreationModel {
     func loadBooks(client: APIClient, preferred: Int) async {
         self.client = client
         godric.onBeatProposal = { [weak self] p in self?.proposal = p }
+        godric.onBeatOpened = { [weak self] in _ = await self?.reloadChapter() }
         loading = true; loadError = nil
         defer { loading = false }
         do {
@@ -353,6 +361,7 @@ final class CreationModel {
     /// chapter becomes "drafting" as a side effect), and the chapter conversation is read.
     func open(_ id: Int, client: APIClient) async {
         self.client = client
+        if chapterId == id && briefChanged { return }   // coming back to a chapter with unsaved brief edits: keep them
         godric.resetCreation()
         chapterId = id; doc = nil; openError = nil; banner = nil; proposal = nil
         briefEditing = false
@@ -423,6 +432,19 @@ final class CreationModel {
     }
 
     func cancelBriefEdit() { briefEditing = false }
+
+    /// Godric drafted a beat change that hasn't been applied or discarded. Leaving would prune the empty beat it sits on.
+    var hasPendingProposal: Bool { proposal?.pending == true }
+    /// Anything the author would lose by leaving the chapter.
+    var hasUnsavedWork: Bool { briefChanged || hasPendingProposal }
+
+    /// The brief has been edited and not saved (edits reach the server only on Save brief).
+    var briefChanged: Bool {
+        briefEditing && (briefDraft.setting ?? "") != (briefBase.setting ?? "") || briefEditing && (briefDraft.who ?? "") != (briefBase.who ?? "")
+            || briefEditing && (briefDraft.whatHappens ?? "") != (briefBase.whatHappens ?? "")
+            || briefEditing && (briefDraft.readerLearns ?? "") != (briefBase.readerLearns ?? "")
+            || briefEditing && (briefDraft.achieves ?? "") != (briefBase.achieves ?? "")
+    }
 
     /// Only the fields the author changed are sent, so a field changed on the laptop meanwhile is not written back.
     func saveBrief() async {
